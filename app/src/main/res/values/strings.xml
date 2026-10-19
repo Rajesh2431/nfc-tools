@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NFC Studio</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_scan">Scan</string>
+    <string name="nav_write">Write</string>
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_history">History</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- NFC status -->
+    <string name="nfc_state_ready">NFC is ready</string>
+    <string name="nfc_state_ready_detail">NFC is on and this app can scan tags when the reader is built (M2).</string>
+    <string name="nfc_state_disabled">NFC is turned off</string>
+    <string name="nfc_state_disabled_detail">Enable NFC in system settings; the app cannot read or write tags while it is off.</string>
+    <string name="nfc_state_disabled_action">Open NFC settings</string>
+    <string name="nfc_state_no_hardware">No NFC hardware</string>
+    <string name="nfc_state_no_hardware_detail">This device has no NFC chip. Scanning and writing stay unavailable; other screens remain for reference.</string>
+
+    <!-- Home -->
+    <string name="home_title">NFC Studio</string>
+    <string name="home_quick_scan">Scan</string>
+    <string name="home_quick_scan_detail">Read and decode a nearby tag.</string>
+    <string name="home_quick_write">Write</string>
+    <string name="home_quick_write_detail">Compose a message and write it to a tag.</string>
+    <string name="home_upcoming">Coming next</string>
+    <string name="home_upcoming_detail">History view lands in milestone M4; task profiles in M5. This screen shows only real device state, never sample tag data.</string>
+
+    <!-- Placeholder screens -->
+    <string name="not_implemented_title">Not implemented yet</string>
+    <string name="scan_placeholder_title">Scanner arrives with M2</string>
+    <string name="scan_placeholder_detail">Tag discovery, NDEF parsing and the tag detail screen are milestone M2 work. Until then no tag is read, and no simulated tag data is shown.</string>
+    <string name="write_placeholder_title">Writer arrives with M3</string>
+    <string name="write_placeholder_detail">The record builder, encoded-size preview, capacity checks and verified writing are milestone M3 work. Nothing is written to a tag yet.</string>
+    <string name="tasks_placeholder_title">Task profiles arrive with M5</string>
+    <string name="tasks_placeholder_detail">Allowlisted actions, confirmation policy and a local execution log are milestone M5 work. Tag payloads are never auto-executed.</string>
+    <string name="history_placeholder_title">History arrives with M4</string>
+    <string name="history_placeholder_detail">Local scan history, search, favourites and export are milestone M4 work. No scan data is stored yet.</string>
+    <string name="settings_placeholder_title">Settings arrive with M4</string>
+    <string name="settings_placeholder_detail">Theme, privacy and export preferences follow the persistence milestone (M4). The app currently follows the system theme.</string>
+    <string name="placeholder_action_home">Back to Home</string>
+</resources>
