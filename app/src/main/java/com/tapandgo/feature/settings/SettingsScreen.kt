@@ -47,8 +47,12 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
     var confirmClear by rememberSaveable { mutableStateOf(false) }
     var confirmApdu by rememberSaveable { mutableStateOf(false) }
 
+    var exportPassword by rememberSaveable { mutableStateOf<String?>(null) }
+    var askExportPassword by rememberSaveable { mutableStateOf(false) }
+    var importPassword by rememberSaveable { mutableStateOf("") }
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        uri?.let(vm::exportAll)
+        uri?.let { vm.exportAll(it, exportPassword?.toCharArray()) }
+        exportPassword = null
     }
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(vm::import)
@@ -62,6 +66,17 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         message?.let { BackupMessage(it, vm::dismissMessage) }
+        if (message == com.tapandgo.data.export.BackupService.Outcome.NeedsPassword || message == com.tapandgo.data.export.BackupService.Outcome.WrongPassword) {
+            androidx.compose.material3.OutlinedTextField(
+                value = importPassword, onValueChange = { importPassword = it }, singleLine = true,
+                label = { Text(stringResource(R.string.backup_password)) },
+                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            androidx.compose.material3.Button(onClick = { vm.importWithPassword(importPassword.toCharArray()); importPassword = "" }, enabled = importPassword.isNotEmpty()) {
+                Text(stringResource(R.string.settings_import))
+            }
+        }
         val s = settings ?: return@Column
 
         Section(stringResource(R.string.settings_appearance)) {
@@ -133,7 +148,8 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
         Section(stringResource(R.string.settings_data)) {
             Muted(stringResource(R.string.settings_data_detail))
-            OutlinedButton(onClick = { exportLauncher.launch("nfc-studio-backup.json") }) { Text(stringResource(R.string.settings_export)) }
+            OutlinedButton(onClick = { exportPassword = null; exportLauncher.launch("tapandgo-backup.json") }) { Text(stringResource(R.string.settings_export)) }
+            OutlinedButton(onClick = { askExportPassword = true }) { Text(stringResource(R.string.settings_export_encrypted)) }
             OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/plain")) }) {
                 Text(stringResource(R.string.settings_import))
             }
@@ -146,6 +162,31 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         }
     }
 
+    if (askExportPassword) {
+        var p1 by rememberSaveable { mutableStateOf("") }
+        var p2 by rememberSaveable { mutableStateOf("") }
+        val valid = p1.length >= com.tapandgo.core.security.BackupCrypto.MIN_PASSWORD && p1 == p2
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { askExportPassword = false },
+            title = { Text(stringResource(R.string.settings_export_encrypted)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.backup_encrypt_explain, com.tapandgo.core.security.BackupCrypto.MIN_PASSWORD))
+                    androidx.compose.material3.OutlinedTextField(p1, { p1 = it }, singleLine = true, label = { Text(stringResource(R.string.backup_password)) },
+                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation())
+                    androidx.compose.material3.OutlinedTextField(p2, { p2 = it }, singleLine = true, label = { Text(stringResource(R.string.password_repeat)) },
+                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation())
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.Button(enabled = valid, onClick = {
+                    exportPassword = p1; askExportPassword = false
+                    exportLauncher.launch("tapandgo-backup-encrypted.json")
+                }) { Text(stringResource(R.string.settings_export)) }
+            },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = { askExportPassword = false }) { Text(stringResource(android.R.string.cancel)) } },
+        )
+    }
     if (confirmClear) {
         Confirm(
             title = stringResource(R.string.history_clear_title),

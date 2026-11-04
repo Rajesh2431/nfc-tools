@@ -220,9 +220,9 @@
 
     <!-- Backup (M4) -->
     <string name="export_done">Export complete</string>
-    <string name="export_done_detail">Saved to the chosen file. Scans: %1$d, templates: %2$d, task profiles: %3$d.</string>
+    <string name="export_done_detail">Saved to the chosen file. Scans: %1$d, templates: %2$d, task profiles: %3$d, library tags: %4$d.</string>
     <string name="import_done">Import complete</string>
-    <string name="import_done_detail">Added scans: %1$d, templates: %2$d, task profiles: %3$d. Skipped as invalid: %4$d. Existing data was not changed.</string>
+    <string name="import_done_detail">Added scans: %1$d, templates: %2$d, task profiles: %3$d, library tags: %4$d. Skipped as invalid: %5$d. Existing data was not changed.</string>
     <string name="import_rejected">Import rejected</string>
     <string name="import_too_large">The file is larger than 5 MiB.</string>
     <string name="import_not_json">The file is not valid JSON.</string>
@@ -589,4 +589,47 @@
     <string name="about_limits_detail">Behaviour depends on the phone and the tag. Apps cannot toggle Wi-Fi or Bluetooth on recent Android versions without root. Tap &amp; Go does not clone payment, transit or access cards and copies NDEF content only, never a tag\'s identity.</string>
     <string name="about_privacy">Privacy</string>
     <string name="about_privacy_detail">Everything stays on this device. Nothing is uploaded; exports happen only when you pick a file.</string>
+
+    <!-- Tag library -->
+    <string name="library_title">Tag library</string>
+    <string name="tools_library_detail">Named, organised tags you saved; restore them to a new tag</string>
+    <string name="library_search">Search names, notes and labels</string>
+    <string name="library_sort_updated">Recently changed</string>
+    <string name="library_sort_name">Name</string>
+    <string name="library_sort_scanned">Scan date</string>
+    <string name="library_export_csv">Export CSV</string>
+    <string name="library_export_txt">Export TXT</string>
+    <string name="library_exported">Exported to the chosen file. CSV includes raw payload hex.</string>
+    <string name="library_empty">Library is empty</string>
+    <string name="library_empty_detail">Read a tag and tap Save to library. Saved tags keep their full NDEF content so you can restore it later.</string>
+    <string name="library_folder">Folder</string>
+    <string name="library_labels">Labels (comma separated)</string>
+    <string name="library_icon">Icon</string>
+    <string name="library_notes">Notes</string>
+    <string name="library_text_too_long">Description, notes or folder is too long.</string>
+    <string name="library_labels_invalid">Use at most 20 labels of up to 30 characters, without commas.</string>
+    <string name="library_record_count">Record count</string>
+    <string name="library_restore">Restore to a tag</string>
+    <string name="library_photo">Add photo</string>
+    <string name="library_photo_of">Photo of %1$s</string>
+    <string name="library_photo_failed">The photo could not be imported (maximum 10 MiB).</string>
+    <string name="library_compare">Compare</string>
+    <string name="library_compare_with">Compare with</string>
+    <string name="library_compare_title">%1$s ◀ ▶ %2$s</string>
+    <string name="library_compare_same">No differences in technologies, chip, format, capacity or records.</string>
+    <string name="library_details">Details</string>
+    <string name="library_saved">Saved to the library.</string>
+    <string name="library_delete_title">Delete from library?</string>
+    <string name="library_delete_detail">The saved entry and its photo are removed from this device. Physical tags are not affected.</string>
+    <string name="library_save">Save to library</string>
+    <string name="library_save_note">The full NDEF content is stored on this device so it can be restored, even if history payload saving is off.</string>
+    <string name="library_duplicates">Already in your library: %1$s</string>
+    <string name="library_save_anyway">Save anyway</string>
+    <string name="settings_export_encrypted">Export encrypted…</string>
+    <string name="export_encrypted_note">Encrypted with your password (AES-256-GCM).</string>
+    <string name="backup_password">Backup password</string>
+    <string name="backup_encrypt_explain">Use at least %1$d characters. Without the password the backup cannot be opened by anyone, including you.</string>
+    <string name="backup_needs_password">Encrypted backup</string>
+    <string name="backup_needs_password_detail">Enter the password used when this backup was created.</string>
+    <string name="backup_wrong_password">Wrong password, or the file was modified.</string>
 </resources>

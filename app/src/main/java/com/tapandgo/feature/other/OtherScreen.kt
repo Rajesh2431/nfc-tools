@@ -105,7 +105,7 @@ private fun Op.detail(): Int = when (this) {
 private val DESTRUCTIVE = setOf(Op.ERASE, Op.LOCK, Op.FORMAT, Op.SET_PASSWORD)
 
 @Composable
-fun OtherScreen(initialOp: String? = null, modifier: Modifier = Modifier) {
+fun OtherScreen(initialOp: String? = null, restoreId: Long? = null, modifier: Modifier = Modifier) {
     val vm: OtherViewModel = hiltViewModel()
     val phase by vm.phase.collectAsStateWithLifecycle()
     val prepareError by vm.prepareError.collectAsStateWithLifecycle()
@@ -118,6 +118,7 @@ fun OtherScreen(initialOp: String? = null, modifier: Modifier = Modifier) {
     androidx.compose.runtime.LaunchedEffect(initialOp) {
         Op.entries.firstOrNull { it.name == initialOp }?.let(vm::start)
     }
+    androidx.compose.runtime.LaunchedEffect(restoreId) { restoreId?.takeIf { it > 0 }?.let(vm::startRestore) }
 
     Column(
         modifier

@@ -36,12 +36,28 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun exportAll(target: Uri) {
-        viewModelScope.launch { _message.value = backup.export(target, BackupService.Section.entries.toSet()) }
+    /** @param password null for a plain JSON backup, else an encrypted envelope. */
+    fun exportAll(target: Uri, password: CharArray?) {
+        viewModelScope.launch {
+            _message.value = backup.export(target, BackupService.Section.entries.toSet(), password)
+            password?.fill('\u0000')
+        }
     }
 
-    fun import(source: Uri) {
-        viewModelScope.launch { _message.value = backup.import(source) }
+    private var pendingImport: Uri? = null
+
+    fun import(source: Uri, password: CharArray? = null) {
+        viewModelScope.launch {
+            val r = backup.import(source, password)
+            password?.fill('\u0000')
+            pendingImport = if (r == BackupService.Outcome.NeedsPassword || r == BackupService.Outcome.WrongPassword) source else null
+            _message.value = r
+        }
+    }
+
+    /** Retries the last encrypted import with a password. */
+    fun importWithPassword(password: CharArray) {
+        pendingImport?.let { import(it, password) }
     }
 
     fun clearHistory() {

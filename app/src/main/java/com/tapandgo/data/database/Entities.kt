@@ -71,3 +71,35 @@ data class TaskLogEntity(
     val reason: String?,
     val createdAt: Long,
 )
+
+/**
+ * A tag the user explicitly saved to the library (schema v4). Unlike history,
+ * the NDEF message is always kept because the user chose to save it; it is
+ * what "Restore to tag" writes back.
+ */
+@Entity(tableName = "saved_tags", indices = [Index("folder"), Index("updatedAt")])
+data class SavedTagEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val description: String = "",
+    val notes: String = "",
+    /** LibraryIcon name. */
+    val icon: String = "TAG",
+    val folder: String = "",
+    /** Comma-separated labels. */
+    val labels: String = "",
+    val favourite: Boolean = false,
+    val uidHex: String? = null,
+    val technologies: String = "",
+    val chipName: String? = null,
+    val ndefType: String? = null,
+    val capacityBytes: Int? = null,
+    val writable: Boolean? = null,
+    /** Encoded NDEF message; null when the tag held none. */
+    val payloadHex: String? = null,
+    /** File name inside app-private storage (tag-photos/), never an external URI. */
+    val photoFile: String? = null,
+    val scannedAt: Long,
+    val createdAt: Long,
+    val updatedAt: Long,
+)

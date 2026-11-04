@@ -142,3 +142,50 @@ interface TaskDao {
     @Query("DELETE FROM task_log")
     suspend fun clearLog()
 }
+
+@Dao
+interface SavedTagDao {
+    @Query(
+        """
+        SELECT * FROM saved_tags
+        WHERE (:query = '' OR name LIKE '%' || :query || '%' ESCAPE '\\'
+               OR description LIKE '%' || :query || '%' ESCAPE '\\'
+               OR notes LIKE '%' || :query || '%' ESCAPE '\\'
+               OR labels LIKE '%' || :query || '%' ESCAPE '\\')
+          AND (:folder IS NULL OR folder = :folder)
+          AND (:favouritesOnly = 0 OR favourite = 1)
+        ORDER BY
+          CASE WHEN :sort = 'NAME' THEN name END COLLATE NOCASE ASC,
+          CASE WHEN :sort = 'SCANNED' THEN scannedAt END DESC,
+          updatedAt DESC
+        """,
+    )
+    fun observe(query: String, folder: String?, favouritesOnly: Boolean, sort: String): Flow<List<SavedTagEntity>>
+
+    @Query("SELECT DISTINCT folder FROM saved_tags WHERE folder != '' ORDER BY folder COLLATE NOCASE")
+    fun observeFolders(): Flow<List<String>>
+
+    @Query("SELECT * FROM saved_tags WHERE id = :id")
+    fun observeById(id: Long): Flow<SavedTagEntity?>
+
+    @Query("SELECT * FROM saved_tags WHERE id = :id")
+    suspend fun byId(id: Long): SavedTagEntity?
+
+    @Query("SELECT * FROM saved_tags WHERE (:uid IS NOT NULL AND uidHex = :uid) OR (:payload IS NOT NULL AND payloadHex = :payload)")
+    suspend fun duplicates(uid: String?, payload: String?): List<SavedTagEntity>
+
+    @Query("SELECT * FROM saved_tags ORDER BY createdAt ASC")
+    suspend fun all(): List<SavedTagEntity>
+
+    @Insert
+    suspend fun insert(tag: SavedTagEntity): Long
+
+    @Insert
+    suspend fun insertAll(tags: List<SavedTagEntity>)
+
+    @Update
+    suspend fun update(tag: SavedTagEntity)
+
+    @Query("DELETE FROM saved_tags WHERE id = :id")
+    suspend fun delete(id: Long)
+}

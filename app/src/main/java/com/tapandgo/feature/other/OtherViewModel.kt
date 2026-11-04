@@ -31,10 +31,33 @@ import java.util.concurrent.atomic.AtomicBoolean
  * current content is shown (AGENTS rule 7); unknown content counts as data.
  */
 @HiltViewModel
-class OtherViewModel @Inject constructor(
+class OtherViewModel(
     private val gateway: TagGateway,
-    @com.tapandgo.di.IoDispatcher private val io: CoroutineDispatcher = Dispatchers.IO,
+    private val io: CoroutineDispatcher = Dispatchers.IO,
+    private val loadSaved: suspend (Long) -> ByteArray? = { null },
 ) : ViewModel() {
+
+    @Inject constructor(gateway: TagGateway, @com.tapandgo.di.IoDispatcher io: CoroutineDispatcher, library: com.tapandgo.data.library.LibraryRepository) :
+        this(gateway, io, { id -> library.byId(id)?.payloadHex?.hexToBytesOrNull() })
+
+    /**
+     * Restores a saved library message: skips the source step of Copy and
+     * goes straight to "hold the target tag" with the usual checks,
+     * overwrite confirmation and read-back verification.
+     */
+    fun startRestore(savedId: Long) {
+        if (_phase.value !is Phase.Menu) return
+        viewModelScope.launch {
+            val bytes = loadSaved(savedId)
+            if (bytes == null || bytes.isEmpty()) {
+                _phase.value = Phase.Failed(Op.COPY, OtherError.NothingToCopy)
+                return@launch
+            }
+            reset()
+            copySource = bytes
+            _phase.value = Phase.Awaiting(Op.COPY, copyTarget = true, copiedBytes = bytes.size)
+        }
+    }
 
     enum class Op { COPY, ERASE, LOCK, FORMAT, SET_PASSWORD, REMOVE_PASSWORD, READ_MEMORY }
 

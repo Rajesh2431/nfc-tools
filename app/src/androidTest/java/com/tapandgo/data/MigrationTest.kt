@@ -7,6 +7,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.tapandgo.data.database.AppDatabase
 import com.tapandgo.data.database.MIGRATION_1_2
 import com.tapandgo.data.database.MIGRATION_2_3
+import com.tapandgo.data.database.MIGRATION_3_4
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -70,8 +71,25 @@ class MigrationTest {
     }
 
     @Test
+    fun migrate3To4AddsEmptyLibraryAndKeepsData() = runTest {
+        helper.createDatabase(dbName, 3).apply {
+            execSQL("INSERT INTO templates (name, description, recordsJson, createdAt, updatedAt) VALUES ('t', '', '[]', 1, 1)")
+            close()
+        }
+        helper.runMigrationsAndValidate(dbName, 4, true, MIGRATION_3_4).close()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val db = Room.databaseBuilder(context, AppDatabase::class.java, dbName).addMigrations(*AppDatabase.MIGRATIONS).build()
+        try {
+            assertEquals("t", db.templateDao().all().single().name)
+            assertEquals(0, db.savedTagDao().all().size)
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
     fun everyVersionHasAMigrationPath() {
         helper.createDatabase(dbName, 1).close()
-        helper.runMigrationsAndValidate(dbName, 3, true, *AppDatabase.MIGRATIONS).close()
+        helper.runMigrationsAndValidate(dbName, 4, true, *AppDatabase.MIGRATIONS).close()
     }
 }

@@ -13,9 +13,11 @@ Resume from the first IN_PROGRESS / NOT_STARTED row of the current phase.
 | 1 | Gradle modularization | NOT_STARTED | deferred: single :app keeps KSP/Room/Hilt simple while features land; packages are layered (core/data/domain/feature) so extraction is mechanical. Revisit in phase 8. |
 | 2 | Reader, NDEF parser, chip identification, history | TESTED | from NFC Studio; hardware pending |
 | 2 | Writer (text/URI/phone/SMS/email/vCard/geo/Wi-Fi/BT/AAR/MIME) | TESTED | hardware pending |
-| 2 | Tag library (names, folders, photos, notes, compare) | NOT_STARTED | history + favourites exist |
+| 2 | Tag library: names, descriptions, notes, icons, folders, labels, favourites, photos, search/filter/sort, duplicate detection, compare, restore to tag | IMPLEMENTED | schema v4 + MIGRATION_3_4; LibraryTest, OtherViewModelTest restore; DAO + migration instrumented tests written, NOT yet run (emulator stopped: host low on memory) |
+| 2 | Encrypted backup (PBKDF2-SHA256 + AES-256-GCM) | TESTED | BackupCryptoTest (found + fixed missing envelope fields) |
 | 3 | Copy/erase/lock/format/NTAG password/memory dump | TESTED | hardware pending |
-| 3 | CSV/TXT export, scan comparison, raw NDEF editor | NOT_STARTED | JSON export exists |
+| 3 | CSV/TXT export (library), tag comparison | TESTED | CSV formula-injection guard tested |
+| 3 | Raw NDEF editor, hex editor | NOT_STARTED | |
 | 4 | Task profiles, allowlisted actions, task tags, opt-in auto-run | TESTED | ADR 0001 |
 | 4 | Workflow engine (conditions, loops, variables ${VAR}) | NOT_STARTED | |
 | 4 | Device actions (flashlight, volume, ringer, brightness, alarm, TTS…) | NOT_STARTED | Wi-Fi/BT toggles need root on Android 10+/13+ |

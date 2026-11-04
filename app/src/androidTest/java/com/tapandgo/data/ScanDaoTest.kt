@@ -59,6 +59,26 @@ class ScanDaoTest {
     }
 
     @Test
+    fun libraryQueriesSearchFolderSortAndDuplicates() = runTest {
+        val dao = db.savedTagDao()
+        fun t(name: String, folder: String = "", fav: Boolean = false, uid: String? = null, payload: String? = null, scanned: Long = 1, updated: Long = 1) =
+            com.tapandgo.data.database.SavedTagEntity(name = name, folder = folder, favourite = fav, uidHex = uid, payloadHex = payload, scannedAt = scanned, createdAt = 1, updatedAt = updated)
+        dao.insertAll(listOf(t("beta", "Home", uid = "04aa", updated = 5), t("Alpha", "Work", fav = true, payload = "d1", scanned = 9), t("gamma_x", notes())))
+        suspend fun q(query: String = "", folder: String? = null, fav: Boolean = false, sort: String = "UPDATED") =
+            dao.observe(escapeLike(query), folder, fav, sort).first().map { it.name }
+        assertEquals(listOf("Alpha", "beta", "gamma_x"), q(sort = "NAME"))
+        assertEquals("Alpha", q(sort = "SCANNED").first())
+        assertEquals(listOf("beta"), q(folder = "Home"))
+        assertEquals(listOf("Alpha"), q(fav = true))
+        assertEquals(listOf("gamma_x"), q("_x"))
+        assertEquals(listOf("Home", "Work"), dao.observeFolders().first())
+        assertEquals(listOf("beta"), dao.duplicates("04aa", null).map { it.name })
+        assertEquals(listOf("Alpha"), dao.duplicates(null, "d1").map { it.name })
+    }
+
+    private fun notes() = ""
+
+    @Test
     fun pruningKeepsFavourites() = runTest {
         val dao = db.scanDao()
         dao.insertAll(listOf(entry(1, "old"), entry(2, "old fav", fav = true), entry(10, "new")))

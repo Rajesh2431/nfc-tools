@@ -14,7 +14,8 @@ fun BackupMessage(outcome: BackupService.Outcome, onDismiss: () -> Unit) {
     val (title, body, tone) = when (outcome) {
         is BackupService.Outcome.Exported -> Triple(
             stringResource(R.string.export_done),
-            stringResource(R.string.export_done_detail, outcome.history, outcome.templates, outcome.profiles),
+            stringResource(R.string.export_done_detail, outcome.history, outcome.templates, outcome.profiles, outcome.library) +
+                if (outcome.encrypted) " " + stringResource(R.string.export_encrypted_note) else "",
             Tone.SUCCESS,
         )
 
@@ -25,7 +26,8 @@ fun BackupMessage(outcome: BackupService.Outcome, onDismiss: () -> Unit) {
                 outcome.bundle.history.size,
                 outcome.bundle.templates.size,
                 outcome.bundle.profiles.size,
-                outcome.bundle.skippedHistory + outcome.bundle.skippedTemplates + outcome.bundle.skippedProfiles,
+                outcome.bundle.library.size,
+                outcome.bundle.skippedHistory + outcome.bundle.skippedTemplates + outcome.bundle.skippedProfiles + outcome.bundle.skippedLibrary,
             ),
             Tone.SUCCESS,
         )
@@ -41,6 +43,14 @@ fun BackupMessage(outcome: BackupService.Outcome, onDismiss: () -> Unit) {
                 is ImportResult.Ok -> ""
             },
             Tone.ERROR,
+        )
+
+        BackupService.Outcome.NeedsPassword -> Triple(
+            stringResource(R.string.backup_needs_password), stringResource(R.string.backup_needs_password_detail), Tone.NEUTRAL,
+        )
+
+        BackupService.Outcome.WrongPassword -> Triple(
+            stringResource(R.string.import_rejected), stringResource(R.string.backup_wrong_password), Tone.ERROR,
         )
 
         BackupService.Outcome.IoFailed -> Triple(

@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
@@ -38,6 +39,7 @@ data class ToolEntry(val icon: ImageVector, val title: Int, val detail: Int, val
 fun ToolsScreen(
     onTagOperations: () -> Unit,
     onHistory: () -> Unit,
+    onLibrary: () -> Unit,
     onDeveloper: () -> Unit,
     onSettings: () -> Unit,
     onAbout: () -> Unit,
@@ -53,6 +55,7 @@ fun ToolsScreen(
         ToolGroup(
             R.string.tools_group_tags,
             listOf(
+                ToolEntry(Icons.Filled.CollectionsBookmark, R.string.library_title, R.string.tools_library_detail, onLibrary),
                 ToolEntry(Icons.Filled.Tune, R.string.tools_tag_ops, R.string.tools_tag_ops_detail, onTagOperations),
                 ToolEntry(Icons.Filled.History, R.string.nav_history, R.string.tools_history_detail, onHistory),
             ),

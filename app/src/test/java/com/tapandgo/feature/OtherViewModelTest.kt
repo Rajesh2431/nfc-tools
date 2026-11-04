@@ -46,6 +46,25 @@ class OtherViewModelTest {
     }
 
     @Test
+    fun `restore writes a saved message after overwrite confirmation`() {
+        val g = FakeTagGateway(NfcResult.Ok(ndefTag(content = NdefContent.Malformed)))
+        val vm = OtherViewModel(g, main.dispatcher, loadSaved = { id -> if (id == 7L) message else null })
+        vm.startRestore(7)
+        assertEquals(Phase.Awaiting(Op.COPY, copyTarget = true, copiedBytes = message.size), vm.phase.value)
+        vm.onTag(TestTag)
+        assertTrue(vm.phase.value is Phase.Confirm)
+        vm.confirm()
+        assertArrayEquals(message, g.rawWrites.single())
+    }
+
+    @Test
+    fun `restore of a missing entry fails truthfully`() {
+        val vm = OtherViewModel(FakeTagGateway(NfcResult.Ok(ndefTag())), main.dispatcher)
+        vm.startRestore(1)
+        assertEquals(Phase.Failed(Op.COPY, OtherError.NothingToCopy), vm.phase.value)
+    }
+
+    @Test
     fun `copy refuses the same tag and asks before overwriting`() {
         val g = FakeTagGateway(NfcResult.Ok(source))
         val vm = vm(g)

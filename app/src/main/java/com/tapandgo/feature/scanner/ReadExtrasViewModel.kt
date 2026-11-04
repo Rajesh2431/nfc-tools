@@ -25,7 +25,31 @@ class ReadExtrasViewModel @Inject constructor(
     tasks: TaskRepository,
     settings: SettingsRepository,
     private val exporter: DiagnosticsExporter,
+    private val library: com.tapandgo.data.library.LibraryRepository,
 ) : ViewModel() {
+
+    sealed interface SaveState {
+        data class Duplicates(val names: List<String>) : SaveState
+        data class Saved(val id: Long) : SaveState
+        data class Invalid(val problem: com.tapandgo.data.library.LibraryMeta.Problem) : SaveState
+    }
+
+    private val _save = MutableStateFlow<SaveState?>(null)
+    val saveState: StateFlow<SaveState?> = _save.asStateFlow()
+
+    /** Saves to the library; warns once about duplicates unless [force]. */
+    fun saveToLibrary(snapshot: TagSnapshot, meta: com.tapandgo.data.library.LibraryMeta, force: Boolean) {
+        meta.validate()?.let { _save.value = SaveState.Invalid(it); return }
+        viewModelScope.launch {
+            if (!force) {
+                val dups = library.duplicatesOf(snapshot, meta)
+                if (dups.isNotEmpty()) { _save.value = SaveState.Duplicates(dups.map { it.name }); return@launch }
+            }
+            library.save(snapshot, meta)?.let { _save.value = SaveState.Saved(it) }
+        }
+    }
+
+    fun clearSave() { _save.value = null }
     val profiles: StateFlow<List<StoredProfile>> = tasks.observeProfiles().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val settings: StateFlow<AppSettings?> = settings.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 

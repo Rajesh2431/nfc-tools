@@ -5,6 +5,7 @@ import com.tapandgo.core.ndef.NdefMessageCodec
 import com.tapandgo.data.database.ContentKind
 import com.tapandgo.data.database.ScanEntryEntity
 import com.tapandgo.data.database.TemplateEntity
+import com.tapandgo.data.database.SavedTagEntity
 import com.tapandgo.data.database.TaskProfileEntity
 import com.tapandgo.data.repository.TaskRepository
 import com.tapandgo.data.repository.TemplateRepository
@@ -29,6 +30,7 @@ data class ExportFile(
     val history: List<HistoryDto> = emptyList(),
     val templates: List<TemplateDto> = emptyList(),
     val profiles: List<ProfileDto> = emptyList(),
+    val library: List<LibraryDto> = emptyList(),
 ) {
     companion object {
         const val FORMAT = "tapandgo-export"
@@ -70,6 +72,27 @@ data class ProfileDto(
     val autoRun: Boolean = false,
 )
 
+@Serializable
+data class LibraryDto(
+    val name: String,
+    val description: String = "",
+    val notes: String = "",
+    val icon: String = "TAG",
+    val folder: String = "",
+    val labels: List<String> = emptyList(),
+    val favourite: Boolean = false,
+    val uidHex: String? = null,
+    val technologies: List<String> = emptyList(),
+    val chipName: String? = null,
+    val ndefType: String? = null,
+    val capacityBytes: Int? = null,
+    val writable: Boolean? = null,
+    val payloadHex: String? = null,
+    val scannedAt: Long,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
 /** Validated content ready to insert. */
 data class ImportBundle(
     val history: List<ScanEntryEntity>,
@@ -78,6 +101,8 @@ data class ImportBundle(
     val skippedTemplates: Int,
     val profiles: List<TaskProfileEntity> = emptyList(),
     val skippedProfiles: Int = 0,
+    val library: List<SavedTagEntity> = emptyList(),
+    val skippedLibrary: Int = 0,
 )
 
 sealed interface ImportResult {
@@ -112,6 +137,7 @@ object ExportCodec {
         templates: List<TemplateEntity>,
         now: Long,
         profiles: List<TaskProfileEntity> = emptyList(),
+        library: List<SavedTagEntity> = emptyList(),
     ): String = json.encodeToString(
         ExportFile.serializer(),
         ExportFile(
@@ -119,6 +145,7 @@ object ExportCodec {
             history = history.map { it.toDto() },
             templates = templates.mapNotNull { it.toDto() },
             profiles = profiles.mapNotNull { row -> TaskRepository.toModel(row)?.toDto() },
+            library = library.map { it.toDto() },
         ),
     )
 
@@ -137,17 +164,19 @@ object ExportCodec {
         if (version != SCHEMA_VERSION) return ImportResult.UnsupportedVersion(version)
         val file = runCatching { json.decodeFromJsonElement(ExportFile.serializer(), root) }.getOrNull()
             ?: return ImportResult.WrongFormat
-        if (file.history.size > MAX_HISTORY || file.templates.size > MAX_TEMPLATES || file.profiles.size > MAX_PROFILES) {
+        if (file.history.size > MAX_HISTORY || file.templates.size > MAX_TEMPLATES || file.profiles.size > MAX_PROFILES || file.library.size > MAX_HISTORY) {
             return ImportResult.TooManyItems
         }
 
         val history = file.history.mapNotNull { it.toEntity(now, keepPayload, keepUid) }
         val templates = file.templates.mapNotNull { it.toEntity(now) }
         val profiles = file.profiles.mapNotNull { it.toEntity(now) }
+        val library = file.library.mapNotNull { it.toEntity(now) }
         return ImportResult.Ok(
             ImportBundle(
                 history, templates, file.history.size - history.size, file.templates.size - templates.size,
                 profiles, file.profiles.size - profiles.size,
+                library, file.library.size - library.size,
             ),
         )
     }
@@ -198,6 +227,40 @@ object ExportCodec {
             recordsJson = RecordJson.encode(specs),
             createdAt = created,
             updatedAt = updatedAt.takeIf { it in created..(now + ONE_DAY) } ?: created,
+        )
+    }
+
+    private fun SavedTagEntity.toDto() = LibraryDto(
+        name, description, notes, icon, folder, labels.split(',').filter { it.isNotBlank() }, favourite, uidHex,
+        technologies.split(',').filter { it.isNotBlank() }, chipName, ndefType, capacityBytes, writable, payloadHex,
+        scannedAt, createdAt, updatedAt,
+    )
+
+    /** Library entries keep their payload (the user saved them explicitly) but every field is re-validated. */
+    private fun LibraryDto.toEntity(now: Long): SavedTagEntity? {
+        val meta = com.tapandgo.data.library.LibraryMeta(
+            name, description, notes,
+            com.tapandgo.data.library.LibraryIcon.entries.firstOrNull { it.name == icon } ?: com.tapandgo.data.library.LibraryIcon.TAG,
+            folder, labels,
+        )
+        if (meta.validate() != null) return null
+        if (technologies.size > 16 || !technologies.all { TECH.matches(it) }) return null
+        if (uidHex != null && (uidHex.length > 32 || uidHex.hexToBytesOrNull() == null)) return null
+        if (chipName != null && chipName.length > 80 || ndefType != null && ndefType.length > 64) return null
+        if (capacityBytes != null && capacityBytes !in 0..1_000_000) return null
+        if (payloadHex != null) {
+            if (payloadHex.length > MAX_PAYLOAD_HEX) return null
+            val bytes = payloadHex.hexToBytesOrNull() ?: return null
+            if (runCatching { NdefMessageCodec.parse(bytes) }.isFailure) return null
+        }
+        val scanned = scannedAt.takeIf { it in 1..(now + ONE_DAY) } ?: return null
+        return SavedTagEntity(
+            name = meta.name.trim(), description = meta.description.trim(), notes = meta.notes.trim(), icon = meta.icon.name,
+            folder = meta.folder.trim(), labels = meta.labels.joinToString(","), favourite = favourite, uidHex = uidHex?.lowercase(),
+            technologies = technologies.joinToString(","), chipName = chipName, ndefType = ndefType, capacityBytes = capacityBytes,
+            writable = writable, payloadHex = payloadHex?.lowercase(), scannedAt = scanned,
+            createdAt = createdAt.takeIf { it in 1..(now + ONE_DAY) } ?: now,
+            updatedAt = updatedAt.takeIf { it in 1..(now + ONE_DAY) } ?: now,
         )
     }
 

@@ -49,9 +49,11 @@ private const val EDIT_ROUTE = "tasks/edit/{id}"
 private const val RUN_ROUTE = "tasks/run/{id}?auto={auto}"
 private const val APDU_ROUTE = "read/apdu"
 private const val SETTINGS_ROUTE = "settings"
-private const val OPS_ROUTE = "tools/ops?op={op}"
+private const val OPS_ROUTE = "tools/ops?op={op}&restore={restore}"
 private const val HISTORY_ROUTE = "tools/history"
 private const val ABOUT_ROUTE = "tools/about"
+private const val LIBRARY_ROUTE = "tools/library"
+private const val LIBRARY_DETAIL_ROUTE = "tools/library/{id}"
 
 private fun titleFor(route: String?): Int = when {
     route == null -> R.string.app_name
@@ -62,6 +64,7 @@ private fun titleFor(route: String?): Int = when {
     route.startsWith("tools/ops") -> R.string.tools_tag_ops
     route == HISTORY_ROUTE -> R.string.nav_history
     route == ABOUT_ROUTE -> R.string.about_title
+    route == LIBRARY_ROUTE || route == LIBRARY_DETAIL_ROUTE -> R.string.library_title
     else -> TopLevelDestination.entries.firstOrNull { it.route == route }?.labelRes ?: R.string.app_name
 }
 
@@ -172,7 +175,7 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                     createTask = { navController.navigate("tasks/edit/0") },
                     tasks = { tab(TopLevelDestination.TASKS.route) },
                     runProfile = { id -> navController.navigate("tasks/run/$id?auto=false") },
-                    history = { navController.navigate(HISTORY_ROUTE) },
+                    history = { navController.navigate(LIBRARY_ROUTE) },
                     tools = { tab(TopLevelDestination.TOOLS.route) },
                 ),
             )
@@ -188,13 +191,27 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             com.tapandgo.feature.tools.ToolsScreen(
                 onTagOperations = { navController.navigate("tools/ops") },
                 onHistory = { navController.navigate(HISTORY_ROUTE) },
+                onLibrary = { navController.navigate(LIBRARY_ROUTE) },
                 onDeveloper = { navController.navigate(APDU_ROUTE) },
                 onSettings = { navController.navigate(SETTINGS_ROUTE) },
                 onAbout = { navController.navigate(ABOUT_ROUTE) },
             )
         }
-        composable(OPS_ROUTE, arguments = listOf(navArgument("op") { type = NavType.StringType; nullable = true; defaultValue = null })) { entry ->
-            OtherScreen(initialOp = entry.arguments?.getString("op"))
+        composable(
+            OPS_ROUTE,
+            arguments = listOf(
+                navArgument("op") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("restore") { type = NavType.LongType; defaultValue = 0L },
+            ),
+        ) { entry ->
+            OtherScreen(initialOp = entry.arguments?.getString("op"), restoreId = entry.arguments?.getLong("restore"))
+        }
+        composable(LIBRARY_ROUTE) { com.tapandgo.feature.library.LibraryScreen(onOpen = { id -> navController.navigate("tools/library/$id") }) }
+        composable(LIBRARY_DETAIL_ROUTE, arguments = listOf(idArg)) {
+            com.tapandgo.feature.library.LibraryDetailScreen(
+                onRestore = { id -> navController.navigate("tools/ops?restore=$id") },
+                onDeleted = { navController.popBackStack() },
+            )
         }
         composable(ABOUT_ROUTE) { com.tapandgo.feature.tools.AboutScreen() }
         composable(TopLevelDestination.TASKS.route) {

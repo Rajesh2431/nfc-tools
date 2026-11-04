@@ -75,6 +75,18 @@ fun ScanScreen(
 
     NfcReaderEffect { tag -> viewModel.onTag(PlatformTag(tag)) }
 
+    var savingToLibrary by rememberSaveable { mutableStateOf(false) }
+    val saveState by extras.saveState.collectAsStateWithLifecycle()
+    LaunchedEffect(saveState) { if (saveState is ReadExtrasViewModel.SaveState.Saved) savingToLibrary = false }
+    if (savingToLibrary && state.snapshot != null) {
+        com.tapandgo.feature.library.SaveToLibraryDialog(
+            duplicates = (saveState as? ReadExtrasViewModel.SaveState.Duplicates)?.names,
+            problem = (saveState as? ReadExtrasViewModel.SaveState.Invalid)?.problem,
+            onSave = { meta, force -> extras.saveToLibrary(state.snapshot!!, meta, force) },
+            onDismiss = { savingToLibrary = false; extras.clearSave() },
+        )
+    }
+
     val snapshot = state.snapshot
     val records = (snapshot?.ndef?.content as? NdefContent.Records)?.records.orEmpty()
     val matching = profiles.mapNotNull { p -> p.profile?.takeIf { TaskValidator.matches(it, records) } }
@@ -108,11 +120,15 @@ fun ScanScreen(
                 MatchingProfiles(names = matching.map { it.id to it.name }, onRun = { onRunProfile(it, false) })
                 TagDetailsCard(snapshot = snapshot)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { savingToLibrary = true }) { Text(stringResource(R.string.library_save)) }
                     OutlinedButton(onClick = viewModel::clear) { Text(stringResource(R.string.scan_clear)) }
                     OutlinedButton(onClick = { diagnosticsLauncher.launch("tapandgo-diagnostics.json") }) { Text(stringResource(R.string.diagnostics_export)) }
                     if (settings?.advancedMode == true && snapshot.supportsIsoDep) {
                         Button(onClick = onOpenApdu) { Text(stringResource(R.string.apdu_open)) }
                     }
+                }
+                if (saveState is ReadExtrasViewModel.SaveState.Saved) {
+                    Text(stringResource(R.string.library_saved), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                 }
                 diagnosticsResult?.let {
                     Text(stringResource(if (it) R.string.diagnostics_saved else R.string.backup_io_failed_detail), style = MaterialTheme.typography.bodySmall)

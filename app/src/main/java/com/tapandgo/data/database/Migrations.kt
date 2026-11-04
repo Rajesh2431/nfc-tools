@@ -29,3 +29,18 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("ALTER TABLE `task_profiles` ADD COLUMN `autoRun` INTEGER NOT NULL DEFAULT 0")
     }
 }
+
+/** v3 → v4: tag library table. Additive; SQL copied from schemas/4.json. */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `saved_tags` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                "`description` TEXT NOT NULL, `notes` TEXT NOT NULL, `icon` TEXT NOT NULL, `folder` TEXT NOT NULL, `labels` TEXT NOT NULL, " +
+                "`favourite` INTEGER NOT NULL, `uidHex` TEXT, `technologies` TEXT NOT NULL, `chipName` TEXT, `ndefType` TEXT, " +
+                "`capacityBytes` INTEGER, `writable` INTEGER, `payloadHex` TEXT, `photoFile` TEXT, `scannedAt` INTEGER NOT NULL, " +
+                "`createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_saved_tags_folder` ON `saved_tags` (`folder`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_saved_tags_updatedAt` ON `saved_tags` (`updatedAt`)")
+    }
+}
