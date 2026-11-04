@@ -25,6 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import dev.nfcstudio.app.feature.advanced.ApduConsoleScreen
 import dev.nfcstudio.app.feature.history.HistoryScreen
 import dev.nfcstudio.app.feature.home.HomeScreen
 import dev.nfcstudio.app.feature.scanner.ScanScreen
@@ -36,6 +37,7 @@ import dev.nfcstudio.app.feature.writer.WriteScreen
 
 private const val EDIT_ROUTE = "tasks/edit/{id}"
 private const val RUN_ROUTE = "tasks/run/{id}"
+private const val APDU_ROUTE = "scan/apdu"
 
 /**
  * App scaffold: bottom navigation on phones, a navigation rail on wide
@@ -102,7 +104,10 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             )
         }
         composable(TopLevelDestination.SCAN.route) {
-            ScanScreen(onRunProfile = { id -> navController.navigate("tasks/run/$id") })
+            ScanScreen(
+                onRunProfile = { id -> navController.navigate("tasks/run/$id") },
+                onOpenApdu = { navController.navigate(APDU_ROUTE) },
+            )
         }
         composable(TopLevelDestination.WRITE.route) { WriteScreen() }
         composable(TopLevelDestination.TASKS.route) {
@@ -119,5 +124,6 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
         }
         composable(TopLevelDestination.HISTORY.route) { HistoryScreen() }
         composable(TopLevelDestination.SETTINGS.route) { SettingsScreen() }
+        composable(APDU_ROUTE) { ApduConsoleScreen(onDone = { navController.popBackStack() }) }
     }
 }

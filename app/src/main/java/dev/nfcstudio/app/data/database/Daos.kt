@@ -66,6 +66,9 @@ interface ScanDao {
     @Query("DELETE FROM scan_entries WHERE createdAt < :cutoff AND favourite = 0")
     suspend fun deleteOlderThan(cutoff: Long): Int
 
+    @Query("SELECT result FROM scan_entries ORDER BY createdAt DESC LIMIT :limit")
+    suspend fun recentResults(limit: Int): List<String>
+
     @Query("SELECT COUNT(*) FROM scan_entries")
     fun observeCount(): Flow<Int>
 }

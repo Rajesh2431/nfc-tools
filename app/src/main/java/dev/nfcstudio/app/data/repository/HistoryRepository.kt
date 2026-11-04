@@ -54,6 +54,7 @@ class HistoryRepository(
     }
 
     suspend fun byId(id: Long) = dao.byId(id)
+    suspend fun recentResultCodes(limit: Int = 50) = dao.recentResults(limit)
     suspend fun setFavourite(id: Long, favourite: Boolean) = dao.setFavourite(id, favourite)
     suspend fun delete(id: Long) = dao.delete(id)
     suspend fun clear() = dao.clear()

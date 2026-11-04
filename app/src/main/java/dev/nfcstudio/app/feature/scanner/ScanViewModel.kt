@@ -2,6 +2,7 @@ package dev.nfcstudio.app.feature.scanner
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.nfcstudio.app.core.nfc.CurrentTagStore
 import dev.nfcstudio.app.core.nfc.DiscoveredTag
 import dev.nfcstudio.app.core.nfc.NfcError
 import dev.nfcstudio.app.core.nfc.NfcResult
@@ -25,7 +26,7 @@ class ScanViewModel(
     private val gateway: TagGateway,
     private val io: CoroutineDispatcher = Dispatchers.IO,
     private val onScanned: suspend (NfcResult<TagSnapshot>) -> Unit = {},
-    private val onTagRetained: (DiscoveredTag?) -> Unit = {},
+    private val onTagRetained: (CurrentTagStore.Current?) -> Unit = {},
 ) : ViewModel() {
 
     data class State(
@@ -54,7 +55,7 @@ class ScanViewModel(
                         is NfcResult.Err -> State(error = result.error, scanCount = s.scanCount + 1)
                     }
                 }
-                onTagRetained(if (result is NfcResult.Ok) tag else null)
+                onTagRetained((result as? NfcResult.Ok)?.let { CurrentTagStore.Current(tag, it.value) })
                 onScanned(result)
             } finally {
                 busy.set(false)

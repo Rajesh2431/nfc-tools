@@ -402,4 +402,29 @@
     <string name="reason_app_not_found">That app is not installed or cannot be opened.</string>
     <string name="reason_blocked">Blocked by the safety rules.</string>
     <string name="reason_error">Unexpected error.</string>
+
+    <!-- Advanced (M6) -->
+    <string name="diagnostics_export">Export diagnostics</string>
+    <string name="diagnostics_saved">Diagnostics saved. They include device model, Android version, technologies and error codes, but no payload or UID.</string>
+    <string name="apdu_open">Open APDU console</string>
+    <string name="apdu_title">APDU console</string>
+    <string name="apdu_needs_advanced">Turn on Advanced mode in Settings to use the APDU console.</string>
+    <string name="apdu_warning_title">Raw ISO-DEP commands</string>
+    <string name="apdu_warning">For cards you own. Commands that write, erase, change PINs, verify PINs or use proprietary classes are blocked. Keep the card on the phone during the session.</string>
+    <string name="apdu_warning_unlocked">State-changing commands are ALLOWED (Settings). A wrong command can permanently damage the card or lock it.</string>
+    <string name="apdu_no_tag">No ISO-DEP tag</string>
+    <string name="apdu_no_tag_detail">Scan a tag that exposes IsoDep, keep it on the phone and open the console again.</string>
+    <string name="apdu_command">Command APDU (hex)</string>
+    <string name="apdu_hint">CLA INS P1 P2 [Lc data] [Le]; spaces allowed.</string>
+    <string name="apdu_blocked">Blocked: this command can change card state. Enable it in Settings › Advanced if you are sure.</string>
+    <string name="apdu_timeout">Timeout</string>
+    <string name="apdu_send">Send</string>
+    <string name="apdu_close">Close session</string>
+    <string name="apdu_no_sw">The card answered without a status word: %1$s</string>
+    <string name="apdu_problem_hex">Use hex digits only (an even number of them).</string>
+    <string name="apdu_problem_short">A command needs at least 4 bytes: CLA INS P1 P2.</string>
+    <string name="apdu_problem_long">Longer than this tag accepts.</string>
+    <string name="apdu_problem_length">Lc/Le do not match the data length.</string>
+    <string name="apdu_problem_extended">This tag does not support extended-length APDUs.</string>
+    <string name="apdu_problem_cla">CLA FF is reserved.</string>
 </resources>

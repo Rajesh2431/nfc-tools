@@ -3,7 +3,14 @@ package dev.nfcstudio.app
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import dev.nfcstudio.app.core.nfc.CurrentTagStore
+import dev.nfcstudio.app.core.nfc.IsoDepSession
+import dev.nfcstudio.app.core.nfc.NfcState
 import dev.nfcstudio.app.core.nfc.PlatformTagGateway
+import dev.nfcstudio.app.core.nfc.TagSnapshot
+import dev.nfcstudio.app.feature.advanced.ApduConsoleViewModel
+import dev.nfcstudio.app.feature.advanced.DiagnosticsBuilder
+import kotlinx.coroutines.withContext
 import dev.nfcstudio.app.core.nfc.TagGateway
 import dev.nfcstudio.app.data.database.AppDatabase
 import dev.nfcstudio.app.data.export.BackupService
@@ -41,6 +48,7 @@ class AppContainer(context: Context) {
     val templates by lazy { TemplateRepository(database.templateDao()) }
     val backup by lazy { BackupService(database, settings, appContext.contentResolver) }
     val tasks by lazy { TaskRepository(database.taskDao()) }
+    val tagStore = CurrentTagStore()
 
     /** Uses the Activity context so started activities join the app's task. */
     fun actionPerformer(context: Context) = IntentActionPerformer(context)
@@ -50,7 +58,7 @@ class AppContainer(context: Context) {
         appScope.launch { history.prune() }
     }
 
-    fun scanViewModel() = ScanViewModel(gateway = tagGateway, onScanned = { history.record(it) })
+    fun scanViewModel() = ScanViewModel(gateway = tagGateway, onScanned = { history.record(it) }, onTagRetained = tagStore::set)
     fun writeViewModel() = WriteViewModel(gateway = tagGateway)
     fun templatesViewModel() = TemplatesViewModel(templates)
     fun historyViewModel() = HistoryViewModel(history, backup)
@@ -58,6 +66,24 @@ class AppContainer(context: Context) {
     fun homeViewModel() = HomeViewModel(history, templates)
     fun tasksViewModel() = TasksViewModel(tasks)
     fun profileEditorViewModel(id: Long) = ProfileEditorViewModel(tasks, id)
+    /** Opens an ISO-DEP channel only for an IsoDep tag that is still the current one. */
+    fun apduConsoleViewModel(allowStateChanging: Boolean) = ApduConsoleViewModel(
+        channel = tagStore.current.value?.takeIf { it.snapshot.supportsIsoDep }?.let { IsoDepSession(it.tag) },
+        allowStateChanging = allowStateChanging,
+    )
+
+    /** Writes payload-free diagnostics to a user-chosen document. */
+    suspend fun exportDiagnostics(target: android.net.Uri, snapshot: TagSnapshot, nfcState: NfcState): Boolean =
+        withContext(Dispatchers.IO) {
+            val d = DiagnosticsBuilder.build(
+                snapshot, nfcState, BuildConfig.VERSION_NAME, android.os.Build.MANUFACTURER, android.os.Build.MODEL,
+                android.os.Build.VERSION.SDK_INT, history.recentResultCodes(),
+            )
+            runCatching {
+                appContext.contentResolver.openOutputStream(target, "wt")!!.use { it.write(DiagnosticsBuilder.encode(d).toByteArray()) }
+            }.isSuccess
+        }
+
     fun taskRunViewModel(id: Long, context: Context) = TaskRunViewModel(tasks, actionPerformer(context), id)
 }
 
