@@ -37,6 +37,9 @@ product scope: `docs/spec.md` (exported from the original specification docx).
    typed results, never as swallowed exceptions (from M2 on).
 6. Treat every tag payload as untrusted input. Never auto-execute tag data,
    shell commands, or serialized objects; validate URL schemes before opening.
+   Exception (ADR 0001): a profile the user explicitly marked "run
+   automatically" may start when its task-tag token or trigger matches; only
+   in-app display and Settings-screen actions skip confirmation.
 7. Destructive tag operations (overwrite, format, lock) require explicit
    confirmation UI and an explanation that they may be irreversible.
 8. Do not fake results: no mock tag data, no simulated scanner in production

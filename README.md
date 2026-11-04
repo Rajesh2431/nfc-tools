@@ -1,47 +1,37 @@
 # NFC Studio
 
-Android-first NFC reader, writer, tag inspector and task-profile utility.
-Kotlin + Jetpack Compose + Material 3, offline-first. See `docs/spec.md` for
-the full specification and milestone plan.
+Android NFC reader, writer and tag toolkit. Kotlin, Jetpack Compose, Material 3,
+offline-first. Specification: `docs/spec.md`; agent rules: `AGENTS.md`.
+
+## Features
+
+| Tab | What it does |
+|---|---|
+| **Read** | Tag type and chip (NTAG213/215/216, Ultralight, ICODE…), technologies, serial number, ATQA/SAK, memory size, NDEF format, size, writable/lockable, decoded records (text, URI, Smart Poster, contact, Wi-Fi, Bluetooth, app launch, task tag, MIME), hex/ASCII views, safe link opening, diagnostics export, APDU console (Advanced mode). |
+| **Write** | Guided records: text, URL, phone, SMS, email, contact (vCard), location, address, Wi-Fi (WSC), Bluetooth (OOB), app launch (AAR), custom MIME. Exact size preview, capacity/read-only checks, overwrite/format confirmation, same-session read-back verification, templates. |
+| **Other** | Copy tag, erase, lock (two confirmations), format blank tags, set/remove NTAG password, raw memory dump. |
+| **Tasks** | App-side profiles of allowlisted actions; scan triggers, task tags (token only), opt-in auto-run for safe actions (ADR 0001), execution log. |
+| **History** | Search, filters, favourites, delete, export. Settings: theme, privacy, retention, advanced mode, backup/import. |
 
 ## Status
 
-| Milestone | Scope | State |
-|---|---|---|
-| M0 Discovery | Specification, architecture | Done (spec committed) |
-| **M1 Foundation** | Toolchain, Compose shell, navigation, NFC state, tests | **Done** |
-| M2 Reader | Tag discovery, NDEF decoding, tag details | Next |
+| Milestone | State |
+|---|---|
+| M1 Foundation | Done |
+| M2 Reader · M3 Writer · M4 Persistence · M5 Tasks · M6 Advanced · M7 Hardening | Implemented and tested on JVM + emulator |
+| Hardware validation | **Pending** — see `docs/test-plan.md` |
+| M8 Release | Release build OK; signing needs your `keystore.properties` |
 
-## M1 contents
-
-- Gradle 9.7.1 wrapper, version catalog (`gradle/libs.versions.toml`), AGP 9.4.1
-  with built-in Kotlin (no `kotlin-android` plugin), Compose compiler plugin
-  `2.4.21`.
-- Single-activity Compose app: bottom navigation with Home / Scan / Write /
-  Tasks / History / Settings.
-- Real NFC adapter state (`NfcAdapter.getDefaultAdapter` / `isEnabled`),
-  lifecycle-refreshed on every resume, with ready / disabled / no-hardware
-  states and a system-settings deep link when disabled.
-- Truthful placeholders for milestone screens; no mock tag data anywhere.
-- JVM unit tests for the NFC state mapping; Android Lint clean of errors.
+Evidence: `docs/acceptance-v1.md`.
 
 ## Build
 
 ```bash
-./gradlew assembleDebug        # app/build/outputs/apk/debug/app-debug.apk
-./gradlew testDebugUnitTest
+./gradlew assembleDebug                 # debug APK
+./gradlew testDebugUnitTest             # 138 JVM tests
 ./gradlew lintDebug
+./gradlew connectedDebugAndroidTest     # device/emulator tests
+./gradlew assembleRelease               # signed if keystore.properties exists
 ```
 
-Requires JDK 17 and an Android SDK with platform 37 (`local.properties` or
-`ANDROID_HOME`).
-
-## Physical-device testing (M1)
-
-Any Android 8.0+ phone can install the debug APK. Expected behavior:
-- Device with NFC enabled: Home shows "NFC is ready".
-- Device with NFC turned off: "NFC is turned off" plus a working settings
-  deep link.
-- Device without NFC: "No NFC hardware".
-
-No tag scanning exists in M1 by design (that is M2).
+Requires JDK 17 and Android SDK platform 37.

@@ -105,6 +105,7 @@ Treat task profiles as app-side rules associated with a tag or scan workflow; do
 Require confirmation for actions with external effects, such as sending messages, placing calls, or opening unknown domains.
 Validate URLs and schemes; block dangerous schemes and never execute tag-supplied shell commands or arbitrary code.
 Log the action result locally and provide retry/cancel controls.
+Amendment 2026-11-04 (ADR 0001): profiles may opt in to auto-run on a matching scan or task tag; only in-app display and Settings-screen actions skip confirmation in that case.
 System settings changes should use permitted Android APIs or open the relevant Settings screen; document platform restrictions.
 
 ## 4.5 History, templates and data management
