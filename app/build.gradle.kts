@@ -6,14 +6,15 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.hilt)
 }
 
 android {
-    namespace = "dev.nfcstudio.app"
+    namespace = "com.tapandgo"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "dev.nfcstudio.app"
+        applicationId = "com.tapandgo"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 2
@@ -36,15 +37,9 @@ android {
         null
     }
 
-    // `-Pnfcstudio.testMinified` runs instrumented tests against the R8 release
-    // build (signed with the local debug key, test-only) to prove minification
-    // keeps Room and kotlinx.serialization working.
-    val testMinified = providers.gradleProperty("nfcstudio.testMinified").isPresent
-    if (testMinified) testBuildType = "release"
-
     buildTypes {
         release {
-            signingConfig = signing ?: if (testMinified) signingConfigs.getByName("debug") else null
+            signingConfig = signing
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -87,6 +82,9 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
     implementation(libs.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
 

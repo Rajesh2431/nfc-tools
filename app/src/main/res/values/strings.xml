@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">NFC Studio</string>
+    <string name="app_name">Tap &amp; Go</string>
 
     <!-- Bottom navigation -->
     <string name="nav_write">Write</string>
@@ -75,7 +75,7 @@
     <string name="open_uri">Open link</string>
     <string name="open_uri_confirm_title">Open this link?</string>
     <string name="open_uri_blocked_title">Link blocked</string>
-    <string name="open_uri_blocked_detail">This link uses a scheme or characters NFC Studio does not open (only http, https, mailto, tel, sms and geo). You can still copy it.</string>
+    <string name="open_uri_blocked_detail">This link uses a scheme or characters Tap &amp; Go does not open (only http, https, mailto, tel, sms and geo). You can still copy it.</string>
     <string name="open_uri_host">Destination host</string>
     <string name="open_uri_scheme">Opens with: %1$s</string>
     <string name="open_uri_full">Full link</string>
@@ -226,7 +226,7 @@
     <string name="import_rejected">Import rejected</string>
     <string name="import_too_large">The file is larger than 5 MiB.</string>
     <string name="import_not_json">The file is not valid JSON.</string>
-    <string name="import_wrong_format">The file is not an NFC Studio export, or its structure is invalid.</string>
+    <string name="import_wrong_format">The file is not an Tap &amp; Go export, or its structure is invalid.</string>
     <string name="import_unsupported_version">Export schema version %1$d is not supported by this app version.</string>
     <string name="import_too_many">The file contains more items than allowed.</string>
     <string name="backup_io_failed">File access failed</string>
@@ -266,7 +266,7 @@
     <string name="settings_import">Import from file</string>
     <string name="settings_about">About</string>
     <string name="settings_version">Version %1$s (%2$d)</string>
-    <string name="settings_about_detail">NFC Studio reads and writes NDEF tags with Android\'s NFC APIs. It does not emulate cards, clone payment cards or bypass access control. Behaviour varies by phone and tag; identifiers may be random. All data stays on this device unless you export it.</string>
+    <string name="settings_about_detail">Tap &amp; Go reads and writes NDEF tags with Android\'s NFC APIs. It does not emulate cards, clone payment cards or bypass access control. Behaviour varies by phone and tag; identifiers may be random. All data stays on this device unless you export it.</string>
 
     <!-- Tasks (M5) -->
     <string name="tasks_intro">Profiles are app-side lists of allowlisted actions. A tag cannot run them by itself, and anything that leaves the app asks first.</string>
@@ -498,7 +498,7 @@
     <string name="op_set_password">Set password</string>
     <string name="op_set_password_detail">Protect an NTAG213/215/216 against writing</string>
     <string name="op_remove_password">Remove password</string>
-    <string name="op_remove_password_detail">Disable a password set by NFC Studio</string>
+    <string name="op_remove_password_detail">Disable a password set by Tap &amp; Go</string>
     <string name="op_read_memory">Read memory</string>
     <string name="op_read_memory_detail">Raw page/block dump where the chip allows it</string>
     <string name="op_hold_tag">%1$s: hold the tag</string>
@@ -514,7 +514,7 @@
     <string name="op_done_title">%1$s: done</string>
     <string name="op_done_verified">Read back in the same session and verified.</string>
     <string name="password_set_explain">Only NXP NTAG213, NTAG215 and NTAG216 are supported. The password is converted to the tag\'s 4-byte key; other apps cannot remove it with the same text.</string>
-    <string name="password_remove_explain">Enter the password that was set with NFC Studio.</string>
+    <string name="password_remove_explain">Enter the password that was set with Tap &amp; Go.</string>
     <string name="password_label">Password (minimum length: %1$d)</string>
     <string name="password_repeat">Repeat password</string>
     <string name="password_protect_reads">Also protect reading</string>
@@ -523,7 +523,7 @@
     <string name="password_mismatch">The passwords do not match.</string>
     <string name="password_length">Allowed length: %1$d–%2$d.</string>
     <string name="password_confirm_title">Password-protect this tag?</string>
-    <string name="password_confirm_detail">Writing will require the password from now on. NFC Studio cannot recover a forgotten password, and no app can reset it.</string>
+    <string name="password_confirm_detail">Writing will require the password from now on. Tap &amp; Go cannot recover a forgotten password, and no app can reset it.</string>
     <string name="password_set_done">Password set and verified by authenticating with it.</string>
     <string name="password_remove_done">Password protection removed.</string>
     <string name="memory_title">Memory</string>

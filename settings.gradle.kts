@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "NFC Studio"
+rootProject.name = "Tap and Go"
 include(":app")

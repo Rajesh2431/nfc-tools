@@ -19,7 +19,7 @@
     </queries>
 
     <application
-        android:name=".NfcStudioApplication"
+        android:name=".TapAndGoApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -27,7 +27,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.NfcStudio">
+        android:theme="@style/Theme.TapAndGo">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -36,14 +36,14 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Task tags written by this app (external type nfcstudio.dev:task).
+            <!-- Task tags written by this app (external type tapandgo.app:task).
                  The tag holds only a random token; actions stay in the app. -->
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data
                     android:host="ext"
-                    android:pathPrefix="/nfcstudio.dev:task"
+                    android:pathPrefix="/tapandgo.app:task"
                     android:scheme="vnd.android.nfc" />
             </intent-filter>
         </activity>
