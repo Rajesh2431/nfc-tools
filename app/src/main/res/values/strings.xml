@@ -24,19 +24,12 @@
     <string name="home_quick_scan">Scan</string>
     <string name="home_quick_scan_detail">Read and decode a nearby tag.</string>
     <string name="home_quick_write">Write</string>
-    <string name="home_quick_write_detail">Compose a message and write it to a tag.</string>
-    <string name="home_upcoming">Coming next</string>
-    <string name="home_upcoming_detail">History view lands in milestone M4; task profiles in M5. This screen shows only real device state, never sample tag data.</string>
 
     <!-- Placeholder screens -->
     <string name="not_implemented_title">Not implemented yet</string>
     <string name="placeholder_action_home">Back to Home</string>
     <string name="tasks_placeholder_title">Task profiles arrive with M5</string>
     <string name="tasks_placeholder_detail">Allowlisted actions, confirmation policy and a local execution log are milestone M5 work. Tag payloads are never auto-executed.</string>
-    <string name="history_placeholder_title">History arrives with M4</string>
-    <string name="history_placeholder_detail">Local scan history, search, favourites and export are milestone M4 work. No scan data is stored yet.</string>
-    <string name="settings_placeholder_title">Settings arrive with M4</string>
-    <string name="settings_placeholder_detail">Theme, privacy and export preferences follow the persistence milestone (M4). The app currently follows the system theme.</string>
 
     <!-- Common -->
     <string name="copy_value">Copy %1$s</string>
@@ -195,4 +188,121 @@
     <string name="lock_confirm">Lock permanently</string>
     <string name="lock_success_title">Tag locked</string>
     <string name="lock_success_detail">The tag reported success and is now read-only.</string>
+
+    <!-- Home (M4) -->
+    <plurals name="home_quick_write_detail">
+        <item quantity="one">Compose a message or start from %1$d saved template.</item>
+        <item quantity="other">Compose a message or start from %1$d saved templates.</item>
+    </plurals>
+    <string name="home_quick_tasks_detail">Run named profiles of allowlisted actions, with confirmation.</string>
+    <string name="home_recent">Recent scans</string>
+    <string name="home_first_use_title">No scans yet</string>
+    <string name="home_first_use_detail">To scan: unlock the phone, open Scan, and hold the tag flat against the antenna (usually near the camera on the back). Keep it still for a second. Tags you scan appear here.</string>
+
+    <!-- History (M4) -->
+    <string name="history_search">Search content or technology</string>
+    <string name="history_favourites">Favourites</string>
+    <string name="history_success">Read OK</string>
+    <string name="history_failed">Failed</string>
+    <string name="period_all">Any time</string>
+    <string name="period_day">24 h</string>
+    <string name="period_week">7 days</string>
+    <string name="period_month">30 days</string>
+    <string name="history_export">Export history</string>
+    <string name="history_clear">Clear history</string>
+    <string name="history_clear_title">Clear all history?</string>
+    <string name="history_clear_detail">Every saved scan, including favourites, is deleted from this device. Export first if you want a copy.</string>
+    <string name="history_delete">Delete</string>
+    <string name="history_delete_title">Delete this scan?</string>
+    <string name="history_delete_detail">The entry is removed from this device.</string>
+    <string name="history_favourite">Mark as favourite</string>
+    <string name="history_unfavourite">Remove from favourites</string>
+    <string name="history_empty">Nothing here</string>
+    <string name="history_empty_detail">Scans are saved here when history is on (Settings › Privacy). Adjust the filters if you expected results.</string>
+    <string name="history_payload_not_stored">Full payload not stored. Enable it in Settings › Privacy for future scans.</string>
+    <string name="history_kind_records">Tag with records</string>
+    <string name="history_kind_empty">Empty NDEF tag</string>
+    <string name="history_kind_malformed">Tag with malformed NDEF data</string>
+    <string name="history_kind_unreadable">Tag content unreadable</string>
+    <string name="history_kind_no_ndef">Tag without NDEF</string>
+    <string name="history_kind_error">Scan failed (%1$s)</string>
+
+    <!-- Templates (M4) -->
+    <string name="template_save">Save as template</string>
+    <string name="template_save_confirm">Save</string>
+    <plurals name="template_library">
+        <item quantity="one">Templates (%1$d)</item>
+        <item quantity="other">Templates (%1$d)</item>
+    </plurals>
+    <string name="template_library_title">Templates</string>
+    <string name="template_none">No templates yet. Compose records and tap Save as template.</string>
+    <string name="template_name">Name</string>
+    <string name="template_description">Description (optional)</string>
+    <string name="template_load">Load</string>
+    <string name="template_loaded">Template loaded. Review the records before writing.</string>
+    <string name="template_loaded_dropped">Template loaded. Invalid records skipped: %1$d. Review before writing.</string>
+    <string name="template_duplicate">Duplicate %1$s</string>
+    <string name="template_delete">Delete %1$s</string>
+    <string name="template_delete_title">Delete template?</string>
+    <string name="template_delete_detail">The template is removed. Tags written from it are not affected.</string>
+    <string name="template_copy_suffix">(copy)</string>
+    <plurals name="template_records">
+        <item quantity="one">%1$d record</item>
+        <item quantity="other">%1$d records</item>
+    </plurals>
+    <string name="template_invalid">Contains invalid records; cannot be loaded.</string>
+    <string name="template_name_empty">Enter a name.</string>
+    <string name="template_name_too_long">Use at most 80 characters.</string>
+    <string name="template_description_too_long">Use at most 500 characters.</string>
+    <string name="template_no_records">Add 1–32 records first.</string>
+
+    <!-- Backup (M4) -->
+    <string name="export_done">Export complete</string>
+    <string name="export_done_detail">Saved to the chosen file. Scans: %1$d, templates: %2$d.</string>
+    <string name="import_done">Import complete</string>
+    <string name="import_done_detail">Added scans: %1$d, templates: %2$d. Skipped as invalid: %3$d. Existing data was not changed.</string>
+    <string name="import_rejected">Import rejected</string>
+    <string name="import_too_large">The file is larger than 5 MiB.</string>
+    <string name="import_not_json">The file is not valid JSON.</string>
+    <string name="import_wrong_format">The file is not an NFC Studio export, or its structure is invalid.</string>
+    <string name="import_unsupported_version">Export schema version %1$d is not supported by this app version.</string>
+    <string name="import_too_many">The file contains more items than allowed.</string>
+    <string name="backup_io_failed">File access failed</string>
+    <string name="backup_io_failed_detail">The selected file could not be read or written.</string>
+
+    <!-- Settings (M4) -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="theme_system">Follow system</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_dynamic_color">Use wallpaper colours (Android 12+)</string>
+    <string name="settings_privacy">Privacy</string>
+    <string name="settings_history_enabled">Save scans to history</string>
+    <string name="settings_history_enabled_detail">Stores a summary, technologies and time on this device only.</string>
+    <string name="settings_save_payload">Also save full payload</string>
+    <string name="settings_save_payload_detail">Keeps the complete NDEF bytes so records can be viewed later. Tags may contain personal data.</string>
+    <string name="settings_store_uid">Also save tag UID</string>
+    <string name="settings_store_uid_detail">UIDs can link scans to a person carrying the tag. Off by default.</string>
+    <string name="settings_retention">Keep history for</string>
+    <string name="retention_forever">Forever</string>
+    <plurals name="retention_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="settings_retention_detail">Older entries are deleted at app start and when this changes. Favourites are kept.</string>
+    <string name="settings_advanced">Advanced</string>
+    <string name="settings_advanced_mode">Advanced mode</string>
+    <string name="settings_advanced_mode_detail">Shows the ISO-DEP APDU console for compatible tags. For people who know the card protocol.</string>
+    <string name="settings_apdu_write">Allow state-changing APDUs</string>
+    <string name="settings_apdu_write_detail">Off: write, update, erase, delete and PIN-change commands are blocked.</string>
+    <string name="settings_apdu_write_title">Allow state-changing commands?</string>
+    <string name="settings_apdu_write_confirm">Commands that write, erase or block data can permanently damage a card or lock you out of it. Only enable this for cards you own and understand.</string>
+    <string name="settings_apdu_write_enable">Allow</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_data_detail">Backups are plain JSON files saved where you choose. Import validates the file and only adds entries; nothing existing is overwritten.</string>
+    <string name="settings_export">Export everything</string>
+    <string name="settings_import">Import from file</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version %1$s (%2$d)</string>
+    <string name="settings_about_detail">NFC Studio reads and writes NDEF tags with Android\'s NFC APIs. It does not emulate cards, clone payment cards or bypass access control. Behaviour varies by phone and tag; identifiers may be random. All data stays on this device unless you export it.</string>
 </resources>

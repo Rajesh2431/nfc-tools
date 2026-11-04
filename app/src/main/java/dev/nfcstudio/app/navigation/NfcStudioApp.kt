@@ -65,6 +65,7 @@ fun NfcStudioApp() {
                     onOpenScan = { navController.navigate(TopLevelDestination.SCAN.route) },
                     onOpenWrite = { navController.navigate(TopLevelDestination.WRITE.route) },
                     onOpenHistory = { navController.navigate(TopLevelDestination.HISTORY.route) },
+                    onOpenTasks = { navController.navigate(TopLevelDestination.TASKS.route) },
                 )
             }
             composable(TopLevelDestination.SCAN.route) { ScanScreen() }

@@ -12,6 +12,15 @@ activityCompose = "1.13.0"
 lifecycle = "2.11.0"
 coreKtx = "1.19.1"
 junit4 = "4.13.2"
+# Persistence (M4): Room 2.8.x supports KSP2; KSP 2.3.x is Kotlin-version
+# independent and supports AGP 9 built-in Kotlin.
+room = "2.8.5"
+ksp = "2.3.13"
+datastore = "1.3.0"
+# Serialization runtime 1.12.0 is built with Kotlin 2.4.10; plugin follows kotlin.
+serialization = "1.12.0"
+androidxTestRunner = "1.7.0"
+androidxTestExtJunit = "1.3.0"
 # Matches the kotlinx-coroutines version resolved transitively by lifecycle 2.11.0.
 coroutines = "1.9.0"
 
@@ -22,6 +31,9 @@ targetSdk = "36"
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+room = { id = "androidx.room", version.ref = "room" }
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,3 +48,11 @@ compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }

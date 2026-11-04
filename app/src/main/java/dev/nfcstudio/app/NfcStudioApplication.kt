@@ -10,5 +10,6 @@ class NfcStudioApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        container.onStart()
     }
 }

@@ -2,7 +2,6 @@ package dev.nfcstudio.app.feature.writer
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -65,10 +64,7 @@ import dev.nfcstudio.app.ui.components.displayText
  * unless an operation is waiting for one.
  */
 @Composable
-fun WriteScreen(
-    modifier: Modifier = Modifier,
-    templateActions: @Composable ColumnScope.(WriteViewModel) -> Unit = {},
-) {
+fun WriteScreen(modifier: Modifier = Modifier) {
     val container = appContainer()
     val viewModel: WriteViewModel = viewModel(
         factory = viewModelFactory { initializer { container.writeViewModel() } },
@@ -162,7 +158,7 @@ fun WriteScreen(
             modifier = Modifier.fillMaxWidth(),
         ) { Text(stringResource(R.string.writer_write)) }
 
-        if (editable) templateActions(viewModel)
+        if (editable) TemplateSection(viewModel)
 
         TagOperationsCard(
             enabled = editable && nfcReady,
