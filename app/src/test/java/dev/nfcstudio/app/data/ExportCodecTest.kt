@@ -41,6 +41,23 @@ class ExportCodecTest {
     }
 
     @Test
+    fun `profiles round trip and invalid profiles are skipped`() {
+        val good = dev.nfcstudio.app.data.repository.TaskRepository.toEntity(
+            dev.nfcstudio.app.domain.task.TaskProfile(
+                name = "Door", actions = listOf(dev.nfcstudio.app.domain.task.TaskAction.DisplayText("Welcome")),
+                createdAt = now - 10, updatedAt = now - 10,
+            ),
+        )
+        val text = ExportCodec.encode(emptyList(), emptyList(), now, listOf(good))
+        val b = (ExportCodec.decode(text, now, true, true) as ImportResult.Ok).bundle
+        assertEquals(listOf(good), b.profiles)
+        val tampered = text.replace("display_text", "open_url").replace("\"text\": \"Welcome\"", "\"url\": \"javascript:x\"")
+        val t = (ExportCodec.decode(tampered, now, true, true) as ImportResult.Ok).bundle
+        assertEquals(0, t.profiles.size)
+        assertEquals(1, t.skippedProfiles)
+    }
+
+    @Test
     fun `privacy settings strip payload and uid on import`() {
         val e = roundTrip(keepPayload = false, keepUid = false).bundle.history.single()
         assertNull(e.payloadHex)

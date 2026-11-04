@@ -41,3 +41,30 @@ data class TemplateEntity(
     val createdAt: Long,
     val updatedAt: Long,
 )
+
+/** Task profile (spec § 8 TaskProfile). Actions are allowlisted JSON data, re-validated on load. */
+@Entity(tableName = "task_profiles")
+data class TaskProfileEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val enabled: Boolean,
+    val actionsJson: String,
+    /** ConfirmationPolicy name. */
+    val policy: String,
+    val triggerJson: String?,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+/** Local execution log. Stores action type and outcome only — never parameters. */
+@Entity(tableName = "task_log", indices = [Index("createdAt")])
+data class TaskLogEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val profileId: Long,
+    val profileName: String,
+    val actionIndex: Int,
+    val actionType: String,
+    val outcome: String,
+    val reason: String?,
+    val createdAt: Long,
+)

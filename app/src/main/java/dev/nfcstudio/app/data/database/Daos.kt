@@ -97,3 +97,39 @@ interface TemplateDao {
 /** Escapes LIKE wildcards so user input is matched literally (ESCAPE '\'). */
 fun escapeLike(input: String): String =
     input.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+@Dao
+interface TaskDao {
+    @Query("SELECT * FROM task_profiles ORDER BY name COLLATE NOCASE")
+    fun observeProfiles(): Flow<List<TaskProfileEntity>>
+
+    @Query("SELECT * FROM task_profiles ORDER BY createdAt ASC")
+    suspend fun allProfiles(): List<TaskProfileEntity>
+
+    @Query("SELECT * FROM task_profiles WHERE id = :id")
+    suspend fun profile(id: Long): TaskProfileEntity?
+
+    @Insert
+    suspend fun insertProfile(profile: TaskProfileEntity): Long
+
+    @Insert
+    suspend fun insertProfiles(profiles: List<TaskProfileEntity>)
+
+    @Update
+    suspend fun updateProfile(profile: TaskProfileEntity)
+
+    @Query("UPDATE task_profiles SET enabled = :enabled WHERE id = :id")
+    suspend fun setEnabled(id: Long, enabled: Boolean)
+
+    @Query("DELETE FROM task_profiles WHERE id = :id")
+    suspend fun deleteProfile(id: Long)
+
+    @Insert
+    suspend fun insertLog(entry: TaskLogEntity)
+
+    @Query("SELECT * FROM task_log ORDER BY createdAt DESC, id DESC LIMIT :limit")
+    fun observeLog(limit: Int): Flow<List<TaskLogEntity>>
+
+    @Query("DELETE FROM task_log")
+    suspend fun clearLog()
+}

@@ -5,7 +5,14 @@ import dev.nfcstudio.app.core.ndef.NdefMessageCodec
 import dev.nfcstudio.app.data.database.ContentKind
 import dev.nfcstudio.app.data.database.ScanEntryEntity
 import dev.nfcstudio.app.data.database.TemplateEntity
+import dev.nfcstudio.app.data.database.TaskProfileEntity
+import dev.nfcstudio.app.data.repository.TaskRepository
 import dev.nfcstudio.app.data.repository.TemplateRepository
+import dev.nfcstudio.app.domain.task.ConfirmationPolicy
+import dev.nfcstudio.app.domain.task.TaskAction
+import dev.nfcstudio.app.domain.task.TaskProfile
+import dev.nfcstudio.app.domain.task.TaskTrigger
+import dev.nfcstudio.app.domain.task.TaskValidator
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -21,6 +28,7 @@ data class ExportFile(
     val exportedAt: Long,
     val history: List<HistoryDto> = emptyList(),
     val templates: List<TemplateDto> = emptyList(),
+    val profiles: List<ProfileDto> = emptyList(),
 ) {
     companion object {
         const val FORMAT = "nfc-studio-export"
@@ -50,12 +58,25 @@ data class TemplateDto(
     val updatedAt: Long,
 )
 
+@Serializable
+data class ProfileDto(
+    val name: String,
+    val enabled: Boolean,
+    val actions: List<TaskAction>,
+    val policy: ConfirmationPolicy,
+    val trigger: TaskTrigger? = null,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
 /** Validated content ready to insert. */
 data class ImportBundle(
     val history: List<ScanEntryEntity>,
     val templates: List<TemplateEntity>,
     val skippedHistory: Int,
     val skippedTemplates: Int,
+    val profiles: List<TaskProfileEntity> = emptyList(),
+    val skippedProfiles: Int = 0,
 )
 
 sealed interface ImportResult {
@@ -72,6 +93,7 @@ object ExportCodec {
     const val MAX_FILE_BYTES = 5 * 1024 * 1024
     const val MAX_HISTORY = 10_000
     const val MAX_TEMPLATES = 1_000
+    const val MAX_PROFILES = 500
     private const val MAX_PAYLOAD_HEX = 32 * 1024
     private val TECH = Regex("^[A-Za-z0-9]{1,32}$")
     private val CODE = Regex("^[A-Z_]{1,32}$")
@@ -84,15 +106,20 @@ object ExportCodec {
         prettyPrint = true
     }
 
-    fun encode(history: List<ScanEntryEntity>, templates: List<TemplateEntity>, now: Long): String =
-        json.encodeToString(
-            ExportFile.serializer(),
-            ExportFile(
-                exportedAt = now,
-                history = history.map { it.toDto() },
-                templates = templates.mapNotNull { it.toDto() },
-            ),
-        )
+    fun encode(
+        history: List<ScanEntryEntity>,
+        templates: List<TemplateEntity>,
+        now: Long,
+        profiles: List<TaskProfileEntity> = emptyList(),
+    ): String = json.encodeToString(
+        ExportFile.serializer(),
+        ExportFile(
+            exportedAt = now,
+            history = history.map { it.toDto() },
+            templates = templates.mapNotNull { it.toDto() },
+            profiles = profiles.mapNotNull { row -> TaskRepository.toModel(row)?.toDto() },
+        ),
+    )
 
     /**
      * @param keepPayload/keepUid current privacy settings; imported payloads
@@ -109,12 +136,18 @@ object ExportCodec {
         if (version != SCHEMA_VERSION) return ImportResult.UnsupportedVersion(version)
         val file = runCatching { json.decodeFromJsonElement(ExportFile.serializer(), root) }.getOrNull()
             ?: return ImportResult.WrongFormat
-        if (file.history.size > MAX_HISTORY || file.templates.size > MAX_TEMPLATES) return ImportResult.TooManyItems
+        if (file.history.size > MAX_HISTORY || file.templates.size > MAX_TEMPLATES || file.profiles.size > MAX_PROFILES) {
+            return ImportResult.TooManyItems
+        }
 
         val history = file.history.mapNotNull { it.toEntity(now, keepPayload, keepUid) }
         val templates = file.templates.mapNotNull { it.toEntity(now) }
+        val profiles = file.profiles.mapNotNull { it.toEntity(now) }
         return ImportResult.Ok(
-            ImportBundle(history, templates, file.history.size - history.size, file.templates.size - templates.size),
+            ImportBundle(
+                history, templates, file.history.size - history.size, file.templates.size - templates.size,
+                profiles, file.profiles.size - profiles.size,
+            ),
         )
     }
 
@@ -165,5 +198,17 @@ object ExportCodec {
             createdAt = created,
             updatedAt = updatedAt.takeIf { it in created..(now + ONE_DAY) } ?: created,
         )
+    }
+
+    private fun TaskProfile.toDto() = ProfileDto(name, enabled, actions, policy, trigger, createdAt, updatedAt)
+
+    private fun ProfileDto.toEntity(now: Long): TaskProfileEntity? {
+        val created = createdAt.takeIf { it in 1..(now + ONE_DAY) } ?: now
+        val profile = TaskProfile(
+            name = name.trim(), enabled = enabled, actions = actions, policy = policy, trigger = trigger,
+            createdAt = created, updatedAt = updatedAt.takeIf { it in created..(now + ONE_DAY) } ?: created,
+        )
+        if (TaskValidator.validate(profile) != null) return null
+        return TaskRepository.toEntity(profile)
     }
 }

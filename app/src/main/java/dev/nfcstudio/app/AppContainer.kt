@@ -8,6 +8,11 @@ import dev.nfcstudio.app.core.nfc.TagGateway
 import dev.nfcstudio.app.data.database.AppDatabase
 import dev.nfcstudio.app.data.export.BackupService
 import dev.nfcstudio.app.data.repository.HistoryRepository
+import dev.nfcstudio.app.data.repository.TaskRepository
+import dev.nfcstudio.app.feature.tasks.IntentActionPerformer
+import dev.nfcstudio.app.feature.tasks.ProfileEditorViewModel
+import dev.nfcstudio.app.feature.tasks.TaskRunViewModel
+import dev.nfcstudio.app.feature.tasks.TasksViewModel
 import dev.nfcstudio.app.data.repository.TemplateRepository
 import dev.nfcstudio.app.data.settings.SettingsRepository
 import dev.nfcstudio.app.feature.history.HistoryViewModel
@@ -35,6 +40,10 @@ class AppContainer(context: Context) {
     val history by lazy { HistoryRepository(database.scanDao(), settings) }
     val templates by lazy { TemplateRepository(database.templateDao()) }
     val backup by lazy { BackupService(database, settings, appContext.contentResolver) }
+    val tasks by lazy { TaskRepository(database.taskDao()) }
+
+    /** Uses the Activity context so started activities join the app's task. */
+    fun actionPerformer(context: Context) = IntentActionPerformer(context)
 
     /** Applies the retention policy once per process start. */
     fun onStart() {
@@ -47,6 +56,9 @@ class AppContainer(context: Context) {
     fun historyViewModel() = HistoryViewModel(history, backup)
     fun settingsViewModel() = SettingsViewModel(settings, history, backup)
     fun homeViewModel() = HomeViewModel(history, templates)
+    fun tasksViewModel() = TasksViewModel(tasks)
+    fun profileEditorViewModel(id: Long) = ProfileEditorViewModel(tasks, id)
+    fun taskRunViewModel(id: Long, context: Context) = TaskRunViewModel(tasks, actionPerformer(context), id)
 }
 
 @Composable

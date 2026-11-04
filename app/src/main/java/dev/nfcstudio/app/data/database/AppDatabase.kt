@@ -11,19 +11,20 @@ import androidx.room.RoomDatabase
  * Destructive fallback is never enabled (AGENTS rule 4).
  */
 @Database(
-    entities = [ScanEntryEntity::class, TemplateEntity::class],
-    version = 1,
+    entities = [ScanEntryEntity::class, TemplateEntity::class, TaskProfileEntity::class, TaskLogEntity::class],
+    version = 2,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun scanDao(): ScanDao
     abstract fun templateDao(): TemplateDao
+    abstract fun taskDao(): TaskDao
 
     companion object {
         const val NAME = "nfc_studio.db"
 
         /** All migrations, in order. Shared with migration tests. */
-        val MIGRATIONS = arrayOf<androidx.room.migration.Migration>()
+        val MIGRATIONS = arrayOf<androidx.room.migration.Migration>(MIGRATION_1_2)
 
         fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context, AppDatabase::class.java, NAME)

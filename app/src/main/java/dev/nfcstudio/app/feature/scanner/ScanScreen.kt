@@ -22,7 +22,10 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.nfcstudio.app.R
 import dev.nfcstudio.app.appContainer
+import dev.nfcstudio.app.core.nfc.NdefContent
 import dev.nfcstudio.app.core.nfc.NfcReaderEffect
+import dev.nfcstudio.app.domain.task.TaskValidator
+import dev.nfcstudio.app.feature.tasks.MatchingProfiles
 import dev.nfcstudio.app.core.nfc.NfcState
 import dev.nfcstudio.app.core.nfc.PlatformTag
 import dev.nfcstudio.app.core.nfc.rememberCurrentNfcState
@@ -38,8 +41,8 @@ import dev.nfcstudio.app.ui.components.displayText
  */
 @Composable
 fun ScanScreen(
+    onRunProfile: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    extraActions: @Composable (ScanViewModel.State) -> Unit = {},
 ) {
     val container = appContainer()
     val viewModel: ScanViewModel = viewModel(
@@ -47,6 +50,7 @@ fun ScanScreen(
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val nfcState by rememberCurrentNfcState()
+    val profiles by container.tasks.observeProfiles().collectAsStateWithLifecycle(initialValue = emptyList())
 
     NfcReaderEffect { tag -> viewModel.onTag(PlatformTag(tag)) }
 
@@ -84,7 +88,11 @@ fun ScanScreen(
                 ) {
                     OutlinedButton(onClick = viewModel::clear) { Text(stringResource(R.string.scan_clear)) }
                 }
-                extraActions(state)
+                val records = (snapshot.ndef?.content as? NdefContent.Records)?.records.orEmpty()
+                MatchingProfiles(
+                    names = profiles.mapNotNull { p -> p.profile?.takeIf { TaskValidator.matches(it, records) }?.let { p.id to p.name } },
+                    onRun = onRunProfile,
+                )
                 TagDetailsCard(snapshot = snapshot)
             }
 

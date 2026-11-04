@@ -28,8 +28,6 @@
     <!-- Placeholder screens -->
     <string name="not_implemented_title">Not implemented yet</string>
     <string name="placeholder_action_home">Back to Home</string>
-    <string name="tasks_placeholder_title">Task profiles arrive with M5</string>
-    <string name="tasks_placeholder_detail">Allowlisted actions, confirmation policy and a local execution log are milestone M5 work. Tag payloads are never auto-executed.</string>
 
     <!-- Common -->
     <string name="copy_value">Copy %1$s</string>
@@ -258,9 +256,9 @@
 
     <!-- Backup (M4) -->
     <string name="export_done">Export complete</string>
-    <string name="export_done_detail">Saved to the chosen file. Scans: %1$d, templates: %2$d.</string>
+    <string name="export_done_detail">Saved to the chosen file. Scans: %1$d, templates: %2$d, task profiles: %3$d.</string>
     <string name="import_done">Import complete</string>
-    <string name="import_done_detail">Added scans: %1$d, templates: %2$d. Skipped as invalid: %3$d. Existing data was not changed.</string>
+    <string name="import_done_detail">Added scans: %1$d, templates: %2$d, task profiles: %3$d. Skipped as invalid: %4$d. Existing data was not changed.</string>
     <string name="import_rejected">Import rejected</string>
     <string name="import_too_large">The file is larger than 5 MiB.</string>
     <string name="import_not_json">The file is not valid JSON.</string>
@@ -305,4 +303,103 @@
     <string name="settings_about">About</string>
     <string name="settings_version">Version %1$s (%2$d)</string>
     <string name="settings_about_detail">NFC Studio reads and writes NDEF tags with Android\'s NFC APIs. It does not emulate cards, clone payment cards or bypass access control. Behaviour varies by phone and tag; identifiers may be random. All data stays on this device unless you export it.</string>
+
+    <!-- Tasks (M5) -->
+    <string name="tasks_intro">Profiles are app-side lists of allowlisted actions. A tag cannot run them by itself, and anything that leaves the app asks first.</string>
+    <string name="tasks_new">New profile</string>
+    <string name="tasks_edit_title">Edit profile</string>
+    <string name="tasks_empty">No profiles yet</string>
+    <string name="tasks_empty_detail">Create one to open a link, show text, draft a message or open a settings screen in a fixed order.</string>
+    <string name="tasks_invalid">This profile could not be loaded and will not run.</string>
+    <plurals name="tasks_action_count">
+        <item quantity="one">%1$d action</item>
+        <item quantity="other">%1$d actions</item>
+    </plurals>
+    <string name="tasks_enabled_for">Enable %1$s</string>
+    <string name="tasks_run">Run</string>
+    <string name="tasks_run_named">Run %1$s</string>
+    <string name="tasks_edit">Edit %1$s</string>
+    <string name="tasks_delete_title">Delete profile?</string>
+    <string name="tasks_delete_detail">The profile is removed. Its log entries stay until you clear the log.</string>
+    <string name="tasks_log">Execution log</string>
+    <string name="tasks_log_clear">Clear log</string>
+    <string name="tasks_log_empty">No runs yet. The log stores action types and outcomes only, never their contents.</string>
+    <string name="tasks_suggested">Matching task profiles</string>
+    <string name="tasks_suggested_detail">These profiles match this tag. Nothing runs until you choose one and confirm each step.</string>
+    <string name="profile_enabled">Enabled</string>
+    <string name="profile_policy">Confirmation</string>
+    <string name="policy_external">Ask before actions that leave the app (minimum)</string>
+    <string name="policy_every">Ask before every action</string>
+    <string name="profile_trigger">Suggest after a scan (optional)</string>
+    <string name="profile_trigger_detail">When a scanned tag matches, Scan offers this profile. It is never started automatically.</string>
+    <string name="trigger_none">Never</string>
+    <string name="trigger_text">Text contains</string>
+    <string name="trigger_host">Link host</string>
+    <string name="trigger_text_value">Text to look for</string>
+    <string name="trigger_host_value">Host, e.g. example.com</string>
+    <string name="profile_actions">Actions</string>
+    <string name="profile_add_action">Add an action</string>
+    <string name="profile_problem_no_actions">Add at least one action.</string>
+    <string name="profile_problem_too_many">A profile can have at most 20 actions.</string>
+    <string name="profile_problem_invalid_action">One of the actions is invalid.</string>
+    <string name="profile_problem_trigger">Enter a valid trigger value (host like example.com).</string>
+    <string name="action_open_url">Open web link</string>
+    <string name="action_open_map">Open map</string>
+    <string name="action_display_text">Show text</string>
+    <string name="action_draft_email">Draft email</string>
+    <string name="action_draft_sms">Draft SMS</string>
+    <string name="action_show_contact">Show contact</string>
+    <string name="action_open_app">Open app</string>
+    <string name="action_open_settings">Open settings screen</string>
+    <string name="panel_nfc">NFC</string>
+    <string name="panel_wifi">Wi-Fi</string>
+    <string name="panel_bluetooth">Bluetooth</string>
+    <string name="panel_sound">Sound</string>
+    <string name="panel_display">Display</string>
+    <string name="panel_location">Location</string>
+    <string name="describe_open_url">Open %1$s in your browser</string>
+    <string name="describe_open_map">Search the map for \"%1$s\"</string>
+    <string name="describe_display_text">Show text: %1$s</string>
+    <string name="describe_draft_email">Draft an email to %1$s (you send it yourself)</string>
+    <string name="describe_draft_sms">Draft an SMS to %1$s (you send it yourself)</string>
+    <string name="describe_show_contact">Show contact %1$s</string>
+    <string name="describe_open_app">Open the app %1$s</string>
+    <string name="describe_open_settings">Open the %1$s settings screen</string>
+    <string name="field_url">https:// link</string>
+    <string name="field_map_query">Place or address</string>
+    <string name="field_text">Text</string>
+    <string name="field_email">Recipient email</string>
+    <string name="field_subject">Subject (optional)</string>
+    <string name="field_body">Message (optional)</string>
+    <string name="field_phone">Phone number</string>
+    <string name="field_name">Name</string>
+    <string name="field_phone_optional">Phone (optional)</string>
+    <string name="field_email_optional">Email (optional)</string>
+    <string name="field_package">Package name, e.g. com.example.app</string>
+    <string name="action_problem_url">Enter a valid http or https link.</string>
+    <string name="action_problem_text_empty">This field is required.</string>
+    <string name="action_problem_text_long">Text is too long or contains control characters.</string>
+    <string name="action_problem_email">Enter a valid email address.</string>
+    <string name="action_problem_phone">Enter a valid phone number.</string>
+    <string name="action_problem_name">Enter a name.</string>
+    <string name="action_problem_package">Enter a valid package name.</string>
+    <string name="run_step">Step %1$d of %2$d</string>
+    <string name="run_confirm">Run this step</string>
+    <string name="run_skip">Skip</string>
+    <string name="run_cancel">Stop</string>
+    <string name="run_continue">Continue</string>
+    <string name="run_retry">Retry</string>
+    <string name="run_failed">Step %1$d: not completed</string>
+    <string name="run_finished">Run finished</string>
+    <string name="run_save_contact">Save to contacts…</string>
+    <string name="run_unavailable">Profile unavailable</string>
+    <string name="run_unavailable_detail">It is disabled, was deleted, or no longer passes validation.</string>
+    <string name="outcome_done">done</string>
+    <string name="outcome_skipped">skipped</string>
+    <string name="outcome_failed">failed</string>
+    <string name="outcome_cancelled">stopped</string>
+    <string name="reason_no_app">No app on this device can handle it.</string>
+    <string name="reason_app_not_found">That app is not installed or cannot be opened.</string>
+    <string name="reason_blocked">Blocked by the safety rules.</string>
+    <string name="reason_error">Unexpected error.</string>
 </resources>
