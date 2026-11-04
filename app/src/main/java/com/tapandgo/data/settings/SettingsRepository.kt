@@ -17,7 +17,7 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 /** Non-sensitive preferences (spec § 8 AppSettings). Privacy-protective defaults. */
 data class AppSettings(
     val theme: ThemeMode = ThemeMode.SYSTEM,
-    val dynamicColor: Boolean = true,
+    val dynamicColor: Boolean = false,
     /** Save scans to history at all (summary + metadata). */
     val historyEnabled: Boolean = true,
     /** Also store the full NDEF message bytes. Off by default (spec 4.5). */
@@ -51,6 +51,21 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val RETENTION = intPreferencesKey("retention_days")
         val ADVANCED = booleanPreferencesKey("advanced_mode")
         val APDU_WRITE = booleanPreferencesKey("allow_state_changing_apdu")
+        val DASH_ORDER = stringPreferencesKey("dashboard_order")
+        val DASH_HIDDEN = stringPreferencesKey("dashboard_hidden")
+        val DASH_PINNED = stringPreferencesKey("dashboard_pinned")
+    }
+
+    val dashboard: Flow<com.tapandgo.feature.home.DashboardLayout> = store.data.map { p ->
+        com.tapandgo.feature.home.DashboardLayout.decode(p[Keys.DASH_ORDER], p[Keys.DASH_HIDDEN], p[Keys.DASH_PINNED])
+    }
+
+    suspend fun updateDashboard(transform: (com.tapandgo.feature.home.DashboardLayout) -> com.tapandgo.feature.home.DashboardLayout) {
+        store.edit { p ->
+            val next = transform(com.tapandgo.feature.home.DashboardLayout.decode(p[Keys.DASH_ORDER], p[Keys.DASH_HIDDEN], p[Keys.DASH_PINNED]))
+            val (o, h, pin) = next.encode()
+            p[Keys.DASH_ORDER] = o; p[Keys.DASH_HIDDEN] = h; p[Keys.DASH_PINNED] = pin
+        }
     }
 
     val settings: Flow<AppSettings> = store.data.map { p ->
@@ -86,7 +101,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
 
     private fun readFrom(p: Preferences): AppSettings = AppSettings(
         theme = p[Keys.THEME]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM,
-        dynamicColor = p[Keys.DYNAMIC] ?: true,
+        dynamicColor = p[Keys.DYNAMIC] ?: false,
         historyEnabled = p[Keys.HISTORY] ?: true,
         savePayload = p[Keys.PAYLOAD] ?: false,
         storeUid = p[Keys.UID] ?: false,

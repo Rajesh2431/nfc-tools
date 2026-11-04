@@ -35,6 +35,7 @@ class NavigationSmokeTest {
 
     @Test
     fun allTopLevelScreensRender() {
+        shows("Quick actions")
         tab("Read"); shows("Read")
         tab("Write"); shows("Add a record")
         tab("Other"); shows("Copy tag")

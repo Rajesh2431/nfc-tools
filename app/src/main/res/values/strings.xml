@@ -542,4 +542,33 @@
     <string name="profile_auto_run_detail">Shown text, contacts and Settings screens open without asking. Links, messages and apps still ask first.</string>
     <string name="profile_auto_run_unavailable">Needs a scan trigger and the minimum confirmation policy.</string>
     <string name="run_auto_started">Started automatically by a matching tag.</string>
+
+    <!-- Home dashboard -->
+    <string name="nav_home">Home</string>
+    <string name="nav_tools">Tools</string>
+    <string name="home_morning">Good morning</string>
+    <string name="home_afternoon">Good afternoon</string>
+    <string name="home_evening">Good evening</string>
+    <string name="home_subtitle">Tap a tag, or start from a quick action.</string>
+    <string name="home_customize">Customize</string>
+    <string name="home_card_status">NFC status</string>
+    <string name="home_card_quick">Quick actions</string>
+    <string name="home_card_recent">Recent tags</string>
+    <string name="home_card_runs">Recent automation runs</string>
+    <string name="home_card_profiles">Saved profiles</string>
+    <string name="home_card_favourites">Favorite tags</string>
+    <string name="home_card_device">This device</string>
+    <string name="home_pin">Pin %1$s</string>
+    <string name="home_unpin">Unpin %1$s</string>
+    <string name="home_hide_card">Hide %1$s</string>
+    <string name="home_show_card">Show %1$s</string>
+    <string name="home_run_task">Run task</string>
+    <string name="home_saved_tags">Saved tags</string>
+    <string name="home_first_use">No tags yet. Open Read, unlock the phone and hold a tag against the antenna.</string>
+    <string name="home_no_favourites">Star a tag in History to keep it here.</string>
+    <string name="home_device_model">Model</string>
+    <string name="home_device_android">Android</string>
+    <string name="home_device_nfc">NFC hardware declared</string>
+    <string name="home_device_hce">Card emulation (HCE) declared</string>
+    <string name="home_device_note">Declared features come from the system; the NFC status card shows whether an adapter is actually usable.</string>
 </resources>

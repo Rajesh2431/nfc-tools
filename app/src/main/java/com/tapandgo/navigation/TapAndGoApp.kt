@@ -84,7 +84,7 @@ fun TapAndGoApp(pendingTaskToken: String? = null, onTaskTokenConsumed: () -> Uni
 
     fun isSelected(d: TopLevelDestination) = route == d.route || route?.startsWith(d.route + "/") == true
     fun go(d: TopLevelDestination) {
-        if (d == TopLevelDestination.READ) {
+        if (d == TopLevelDestination.HOME) {
             // Start destination: restoreState would bring back another tab's stack.
             navController.popBackStack(navController.graph.findStartDestination().id, inclusive = false)
             return
@@ -154,7 +154,23 @@ fun TapAndGoApp(pendingTaskToken: String? = null, onTaskTokenConsumed: () -> Uni
 @Composable
 private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
     val idArg = navArgument("id") { type = NavType.LongType }
-    NavHost(navController = navController, startDestination = TopLevelDestination.READ.route, modifier = modifier) {
+    NavHost(navController = navController, startDestination = TopLevelDestination.HOME.route, modifier = modifier) {
+        composable(TopLevelDestination.HOME.route) {
+            fun tab(r: String) = navController.navigate(r) { launchSingleTop = true }
+            com.tapandgo.feature.home.HomeScreen(
+                com.tapandgo.feature.home.HomeActions(
+                    read = { tab(TopLevelDestination.READ.route) },
+                    write = { tab(TopLevelDestination.WRITE.route) },
+                    erase = { tab(TopLevelDestination.OTHER.route) },
+                    copy = { tab(TopLevelDestination.OTHER.route) },
+                    createTask = { navController.navigate("tasks/edit/0") },
+                    tasks = { tab(TopLevelDestination.TASKS.route) },
+                    runProfile = { id -> navController.navigate("tasks/run/$id?auto=false") },
+                    history = { tab(TopLevelDestination.HISTORY.route) },
+                    tools = { tab(TopLevelDestination.OTHER.route) },
+                ),
+            )
+        }
         composable(TopLevelDestination.READ.route) {
             ScanScreen(
                 onRunProfile = { id, auto -> navController.navigate("tasks/run/$id?auto=$auto") },

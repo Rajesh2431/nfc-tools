@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
             }
-            TapAndGoTheme(darkTheme = dark, dynamicColor = settings?.dynamicColor ?: true) {
+            TapAndGoTheme(darkTheme = dark, dynamicColor = settings?.dynamicColor ?: false) {
                 TapAndGoApp(pendingTaskToken = pendingToken.value, onTaskTokenConsumed = { pendingToken.value = null })
             }
         }

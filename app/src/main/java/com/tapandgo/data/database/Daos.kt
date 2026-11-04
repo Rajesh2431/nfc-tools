@@ -44,6 +44,9 @@ interface ScanDao {
     @Query("SELECT * FROM scan_entries ORDER BY createdAt ASC")
     suspend fun all(): List<ScanEntryEntity>
 
+    @Query("SELECT * FROM scan_entries WHERE favourite = 1 ORDER BY createdAt DESC LIMIT :limit")
+    fun observeFavourites(limit: Int): Flow<List<ScanEntryEntity>>
+
     @Query("SELECT * FROM scan_entries WHERE id = :id")
     suspend fun byId(id: Long): ScanEntryEntity?
 

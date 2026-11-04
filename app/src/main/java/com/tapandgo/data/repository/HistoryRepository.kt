@@ -40,6 +40,7 @@ class HistoryRepository(
     }
 
     fun observeRecent(limit: Int = 3) = dao.observeRecent(limit)
+    fun observeFavourites(limit: Int = 5) = dao.observeFavourites(limit)
 
     fun observeCount() = dao.observeCount()
 
