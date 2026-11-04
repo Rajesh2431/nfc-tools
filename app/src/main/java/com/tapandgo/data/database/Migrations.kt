@@ -44,3 +44,22 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_saved_tags_updatedAt` ON `saved_tags` (`updatedAt`)")
     }
 }
+
+/** v4 → v5: automation workflows and their execution history. SQL from schemas/5.json. */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `workflows` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                "`description` TEXT NOT NULL, `icon` TEXT NOT NULL, `category` TEXT NOT NULL, `workflowJson` TEXT NOT NULL, " +
+                "`createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        )
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `workflow_runs` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `workflowId` INTEGER NOT NULL, " +
+                "`workflowName` TEXT NOT NULL, `startTime` INTEGER NOT NULL, `endTime` INTEGER NOT NULL, `status` TEXT NOT NULL, " +
+                "`errorMessage` TEXT, `detailsJson` TEXT NOT NULL, FOREIGN KEY(`workflowId`) REFERENCES `workflows`(`id`) " +
+                "ON UPDATE NO ACTION ON DELETE CASCADE )",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workflow_runs_workflowId` ON `workflow_runs` (`workflowId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workflow_runs_startTime` ON `workflow_runs` (`startTime`)")
+    }
+}

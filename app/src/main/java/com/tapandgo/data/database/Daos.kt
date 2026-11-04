@@ -189,3 +189,36 @@ interface SavedTagDao {
     @Query("DELETE FROM saved_tags WHERE id = :id")
     suspend fun delete(id: Long)
 }
+
+@Dao
+interface WorkflowDao {
+    @Query("SELECT * FROM workflows ORDER BY name COLLATE NOCASE")
+    fun observeAll(): Flow<List<WorkflowEntity>>
+
+    @Query("SELECT * FROM workflows WHERE id = :id")
+    suspend fun byId(id: Long): WorkflowEntity?
+
+    @Query("SELECT * FROM workflows ORDER BY createdAt ASC")
+    suspend fun all(): List<WorkflowEntity>
+
+    @Insert
+    suspend fun insert(w: WorkflowEntity): Long
+
+    @Update
+    suspend fun update(w: WorkflowEntity)
+
+    @Query("DELETE FROM workflows WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Insert
+    suspend fun insertRun(r: WorkflowRunEntity): Long
+
+    @Query("SELECT * FROM workflow_runs ORDER BY startTime DESC, id DESC LIMIT :limit")
+    fun observeRuns(limit: Int): Flow<List<WorkflowRunEntity>>
+
+    @Query("SELECT * FROM workflow_runs WHERE workflowId = :id ORDER BY startTime DESC LIMIT :limit")
+    fun observeRunsFor(id: Long, limit: Int): Flow<List<WorkflowRunEntity>>
+
+    @Query("DELETE FROM workflow_runs")
+    suspend fun clearRuns()
+}

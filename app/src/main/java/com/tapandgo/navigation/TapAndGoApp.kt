@@ -53,11 +53,15 @@ private const val OPS_ROUTE = "tools/ops?op={op}&restore={restore}"
 private const val HISTORY_ROUTE = "tools/history"
 private const val ABOUT_ROUTE = "tools/about"
 private const val LIBRARY_ROUTE = "tools/library"
+private const val WORKFLOWS_ROUTE = "tasks/workflows"
+private const val WORKFLOW_EDIT_ROUTE = "tasks/workflows/{id}"
 private const val LIBRARY_DETAIL_ROUTE = "tools/library/{id}"
 
 private fun titleFor(route: String?): Int = when {
     route == null -> R.string.app_name
     route.startsWith("read/apdu") -> R.string.apdu_title
+    route == WORKFLOWS_ROUTE -> R.string.wf_title
+    route == WORKFLOW_EDIT_ROUTE -> R.string.wf_edit_title
     route.startsWith("tasks/edit") -> R.string.tasks_edit_title
     route.startsWith("tasks/run") -> R.string.run_title
     route == SETTINGS_ROUTE -> R.string.nav_settings
@@ -187,6 +191,8 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             )
         }
         composable(TopLevelDestination.WRITE.route) { WriteScreen() }
+        composable(WORKFLOWS_ROUTE) { com.tapandgo.feature.automation.WorkflowsScreen(onEdit = { id -> navController.navigate("tasks/workflows/$id") }) }
+        composable(WORKFLOW_EDIT_ROUTE, arguments = listOf(idArg)) { com.tapandgo.feature.automation.WorkflowEditorScreen(onDone = { navController.popBackStack() }) }
         composable(TopLevelDestination.TOOLS.route) {
             com.tapandgo.feature.tools.ToolsScreen(
                 onTagOperations = { navController.navigate("tools/ops") },
@@ -216,6 +222,7 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
         composable(ABOUT_ROUTE) { com.tapandgo.feature.tools.AboutScreen() }
         composable(TopLevelDestination.TASKS.route) {
             TasksScreen(
+                onWorkflows = { navController.navigate(WORKFLOWS_ROUTE) },
                 onEdit = { id -> navController.navigate("tasks/edit/$id") },
                 onRun = { id -> navController.navigate("tasks/run/$id?auto=false") },
             )

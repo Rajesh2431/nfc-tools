@@ -51,6 +51,7 @@ object AppModule {
     @Provides fun templateDao(db: AppDatabase): TemplateDao = db.templateDao()
     @Provides fun taskDao(db: AppDatabase): TaskDao = db.taskDao()
     @Provides fun savedTagDao(db: AppDatabase): com.tapandgo.data.database.SavedTagDao = db.savedTagDao()
+    @Provides fun workflowDao(db: AppDatabase): com.tapandgo.data.database.WorkflowDao = db.workflowDao()
 
     @Provides @Singleton fun settings(@ApplicationContext c: Context) = SettingsRepository(c)
     @Provides @Singleton fun history(dao: ScanDao, s: SettingsRepository) = HistoryRepository(dao, s)

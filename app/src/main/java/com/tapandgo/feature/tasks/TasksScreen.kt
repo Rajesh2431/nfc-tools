@@ -45,7 +45,7 @@ import java.util.Date
 
 /** Profile list, enable switches, run/edit/delete and the local execution log. */
 @Composable
-fun TasksScreen(onEdit: (Long) -> Unit, onRun: (Long) -> Unit, modifier: Modifier = Modifier) {
+fun TasksScreen(onWorkflows: () -> Unit, onEdit: (Long) -> Unit, onRun: (Long) -> Unit, modifier: Modifier = Modifier) {
     val vm: TasksViewModel = hiltViewModel()
     val profiles by vm.profiles.collectAsStateWithLifecycle()
     val log by vm.log.collectAsStateWithLifecycle()
@@ -58,6 +58,11 @@ fun TasksScreen(onEdit: (Long) -> Unit, onRun: (Long) -> Unit, modifier: Modifie
     ) {
         item {
             Text(stringResource(R.string.tasks_intro), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        item {
+            MessageCard(title = stringResource(R.string.wf_title), body = stringResource(R.string.wf_card_detail)) {
+                Button(onClick = onWorkflows) { Text(stringResource(R.string.wf_open)) }
+            }
         }
         item {
             Button(onClick = { onEdit(0) }) {

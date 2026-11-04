@@ -20,11 +20,15 @@ Resume from the first IN_PROGRESS / NOT_STARTED row of the current phase.
 | 3 | Raw NDEF editor, hex editor | NOT_STARTED | |
 | 4 | Task profiles, allowlisted actions, task tags, opt-in auto-run | TESTED | ADR 0001 |
 | 4 | Workflow engine core: blocks (action/if/else-if/else/repeat/while/delay/set/break/continue/stop), ${VAR} interpolation + masking, and/or/not + comparison operators, step/loop/timeout limits, retries, continue/stop on error, allowlisted action registry | TESTED | automation/engine/*; WorkflowEngineTest (9). Not yet wired to UI, storage or Android actions |
-| 4 | Built-in variables provider (battery, device, Wi-Fi/BT state, location, tag) | NOT_STARTED | |
-| 4 | Visual workflow builder UI, workflow storage (TaskEntity/ActionEntity/ConditionEntity) | NOT_STARTED | |
+| 4 | Device actions (flashlight, volume, ringer, brightness, rotation, timeout, alarm, timer, TTS, notification, URL, app, settings panels, share; Wi-Fi/BT → Unsupported on 10+/13+) | IMPLEMENTED | automation/actions/AndroidActions.kt; ActionParamsTest; hardware/device run pending |
+| 4 | Built-in variables (date/time, battery, device, Wi-Fi/BT/network, storage) | IMPLEMENTED | BuiltinVariables.kt; location/SSID not offered (permission) |
+| 4 | Workflow storage (schema v5: workflows + workflow_runs with FK cascade) and execution history | IMPLEMENTED | tree stored as validated JSON instead of separate Action/Condition tables (deliberate: atomic edits, versionable import); MIGRATION_4_5 needs instrumented run |
+| 4 | Visual workflow builder (nested tree, add/edit/reorder/enable/duplicate/delete, condition editor all/any/not) and manual run with result log | IMPLEMENTED | WorkflowEditTest (5); UI test pending |
+| 4 | NFC-tag trigger for workflows, scheduled/shortcut/QS triggers | NOT_STARTED | task tags currently trigger profiles only |
 | 4 | Device actions (flashlight, volume, ringer, brightness, alarm, TTS…) | NOT_STARTED | Wi-Fi/BT toggles need root on Android 10+/13+ |
 | 5 | Premium entitlement abstraction | NOT_STARTED | no fake purchases |
 | 5 | HCE NDEF Type 4 emulation | NOT_STARTED | |
 | 6 | Root manager, RootExecutionService (allowlist, timeout) | NOT_STARTED | |
 | 7 | QS tile, shortcuts, Tasker/intent API, webhooks | NOT_STARTED | |
 | 8 | Hardening, hardware tests, release signing | IN_PROGRESS | see docs/acceptance-v1.md |
+| 8 | GitHub Actions CI (build, unit tests, lint, unsigned release, artifacts) | IMPLEMENTED | .github/workflows/android.yml |

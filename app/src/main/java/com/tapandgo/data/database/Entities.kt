@@ -103,3 +103,33 @@ data class SavedTagEntity(
     val createdAt: Long,
     val updatedAt: Long,
 )
+
+/** Automation workflow (schema v5). The block tree is validated JSON; never code. */
+@Entity(tableName = "workflows")
+data class WorkflowEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val description: String = "",
+    val icon: String = "BOLT",
+    val category: String = "",
+    val workflowJson: String,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+/** One execution (schema v5). Details are masked step logs; no parameter values. */
+@Entity(
+    tableName = "workflow_runs",
+    indices = [Index("workflowId"), Index("startTime")],
+    foreignKeys = [androidx.room.ForeignKey(entity = WorkflowEntity::class, parentColumns = ["id"], childColumns = ["workflowId"], onDelete = androidx.room.ForeignKey.CASCADE)],
+)
+data class WorkflowRunEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val workflowId: Long,
+    val workflowName: String,
+    val startTime: Long,
+    val endTime: Long,
+    val status: String,
+    val errorMessage: String?,
+    val detailsJson: String,
+)
