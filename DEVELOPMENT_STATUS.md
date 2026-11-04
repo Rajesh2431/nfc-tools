@@ -19,7 +19,9 @@ Resume from the first IN_PROGRESS / NOT_STARTED row of the current phase.
 | 3 | CSV/TXT export (library), tag comparison | TESTED | CSV formula-injection guard tested |
 | 3 | Raw NDEF editor, hex editor | NOT_STARTED | |
 | 4 | Task profiles, allowlisted actions, task tags, opt-in auto-run | TESTED | ADR 0001 |
-| 4 | Workflow engine (conditions, loops, variables ${VAR}) | NOT_STARTED | |
+| 4 | Workflow engine core: blocks (action/if/else-if/else/repeat/while/delay/set/break/continue/stop), ${VAR} interpolation + masking, and/or/not + comparison operators, step/loop/timeout limits, retries, continue/stop on error, allowlisted action registry | TESTED | automation/engine/*; WorkflowEngineTest (9). Not yet wired to UI, storage or Android actions |
+| 4 | Built-in variables provider (battery, device, Wi-Fi/BT state, location, tag) | NOT_STARTED | |
+| 4 | Visual workflow builder UI, workflow storage (TaskEntity/ActionEntity/ConditionEntity) | NOT_STARTED | |
 | 4 | Device actions (flashlight, volume, ringer, brightness, alarm, TTS…) | NOT_STARTED | Wi-Fi/BT toggles need root on Android 10+/13+ |
 | 5 | Premium entitlement abstraction | NOT_STARTED | no fake purchases |
 | 5 | HCE NDEF Type 4 emulation | NOT_STARTED | |
