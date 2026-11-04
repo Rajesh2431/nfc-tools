@@ -394,7 +394,6 @@
 
     <!-- v1.1 shell -->
     <string name="nav_read">Read</string>
-    <string name="nav_other">Other</string>
     <string name="navigate_back">Back</string>
     <string name="run_title">Run profile</string>
     <string name="collapse">Collapse</string>
@@ -571,4 +570,23 @@
     <string name="home_device_nfc">NFC hardware declared</string>
     <string name="home_device_hce">Card emulation (HCE) declared</string>
     <string name="home_device_note">Declared features come from the system; the NFC status card shows whether an adapter is actually usable.</string>
+
+    <!-- Tools hub and About -->
+    <string name="tools_group_tags">Tags</string>
+    <string name="tools_group_developer">Developer</string>
+    <string name="tools_group_app">App</string>
+    <string name="tools_tag_ops">Tag operations</string>
+    <string name="tools_tag_ops_detail">Copy, erase, lock, format, password, memory dump</string>
+    <string name="tools_history_detail">Saved scans, search, favourites, export</string>
+    <string name="tools_developer">APDU console</string>
+    <string name="tools_developer_detail">ISO-DEP commands for the last scanned IsoDep tag (Advanced mode)</string>
+    <string name="tools_settings_detail">Theme, privacy, retention, backup</string>
+    <string name="tools_about_detail">Version, capabilities and limitations</string>
+    <string name="about_title">About</string>
+    <string name="about_what">What Tap &amp; Go does</string>
+    <string name="about_what_detail">Reads, writes and manages NFC tags with Android\'s NFC APIs, and runs user-defined task profiles when you choose.</string>
+    <string name="about_limits">Limitations</string>
+    <string name="about_limits_detail">Behaviour depends on the phone and the tag. Apps cannot toggle Wi-Fi or Bluetooth on recent Android versions without root. Tap &amp; Go does not clone payment, transit or access cards and copies NDEF content only, never a tag\'s identity.</string>
+    <string name="about_privacy">Privacy</string>
+    <string name="about_privacy_detail">Everything stays on this device. Nothing is uploaded; exports happen only when you pick a file.</string>
 </resources>

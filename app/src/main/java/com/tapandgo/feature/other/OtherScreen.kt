@@ -105,7 +105,7 @@ private fun Op.detail(): Int = when (this) {
 private val DESTRUCTIVE = setOf(Op.ERASE, Op.LOCK, Op.FORMAT, Op.SET_PASSWORD)
 
 @Composable
-fun OtherScreen(modifier: Modifier = Modifier) {
+fun OtherScreen(initialOp: String? = null, modifier: Modifier = Modifier) {
     val vm: OtherViewModel = hiltViewModel()
     val phase by vm.phase.collectAsStateWithLifecycle()
     val prepareError by vm.prepareError.collectAsStateWithLifecycle()
@@ -113,6 +113,11 @@ fun OtherScreen(modifier: Modifier = Modifier) {
     val ready = nfcState == NfcState.READY
 
     NfcReaderEffect { tag -> vm.onTag(PlatformTag(tag)) }
+
+    // Deep entry from Home quick actions (e.g. Erase, Copy): start once.
+    androidx.compose.runtime.LaunchedEffect(initialOp) {
+        Op.entries.firstOrNull { it.name == initialOp }?.let(vm::start)
+    }
 
     Column(
         modifier

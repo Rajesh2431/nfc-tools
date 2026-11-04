@@ -35,15 +35,20 @@ class NavigationSmokeTest {
 
     @Test
     fun allTopLevelScreensRender() {
-        shows("Quick actions")
+        shows("Customize")
         tab("Read"); shows("Read")
         tab("Write"); shows("Add a record")
-        tab("Other"); shows("Copy tag")
         tab("Tasks"); shows("New profile")
+        tab("Tools"); shows("Tag operations")
+        tab("Tag operations"); shows("Copy tag")
+        rule.onNodeWithContentDescription("Back").performClick()
         tab("History"); shows("Search content or technology")
+        rule.onNodeWithContentDescription("Back").performClick()
+        tab("About"); shows("Behaviour depends on the phone")
+        rule.onNodeWithContentDescription("Back").performClick()
         rule.onNodeWithContentDescription("Settings").performClick(); shows("Save scans to history")
         rule.onNodeWithContentDescription("Back").performClick()
-        tab("Read"); shows("Read")
+        tab("Home"); shows("Customize")
     }
 
     @Test

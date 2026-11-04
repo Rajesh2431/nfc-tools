@@ -58,6 +58,13 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
             }
+            // System bar icons follow the app theme (it can differ from the system setting).
+            androidx.compose.runtime.SideEffect {
+                androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).apply {
+                    isAppearanceLightStatusBars = !dark
+                    isAppearanceLightNavigationBars = !dark
+                }
+            }
             TapAndGoTheme(darkTheme = dark, dynamicColor = settings?.dynamicColor ?: false) {
                 TapAndGoApp(pendingTaskToken = pendingToken.value, onTaskTokenConsumed = { pendingToken.value = null })
             }

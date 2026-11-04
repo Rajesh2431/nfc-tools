@@ -8,9 +8,9 @@ Resume from the first IN_PROGRESS / NOT_STARTED row of the current phase.
 |---|---|---|---|
 | 1 | Rebrand (name, package com.tapandgo, logo, brand palette) | TESTED | 138 unit / 10 instrumented pass after rename |
 | 1 | Hilt DI (2.60.1, verified on AGP 9.4.1) | TESTED | all view models @HiltViewModel |
-| 1 | Home dashboard (customizable cards: reorder/hide/pin) | IMPLEMENTED | needs DashboardLayout unit test + UI test run |
-| 1 | Navigation Home/Read/Write/Tasks/Tools | IN_PROGRESS | Home added; Tools hub not built (Other/History tabs still shown) |
-| 1 | Gradle modularization | NOT_STARTED | single :app module; packages already layered |
+| 1 | Home dashboard (customizable cards: reorder/hide/pin) | TESTED | DashboardLayoutTest (4); NavigationSmokeTest on emulator |
+| 1 | Navigation Home/Read/Write/Tasks/Tools + Tools hub, About | TESTED | tag ops/history/APDU/settings/about under Tools; status-bar contrast fixed |
+| 1 | Gradle modularization | NOT_STARTED | deferred: single :app keeps KSP/Room/Hilt simple while features land; packages are layered (core/data/domain/feature) so extraction is mechanical. Revisit in phase 8. |
 | 2 | Reader, NDEF parser, chip identification, history | TESTED | from NFC Studio; hardware pending |
 | 2 | Writer (text/URI/phone/SMS/email/vCard/geo/Wi-Fi/BT/AAR/MIME) | TESTED | hardware pending |
 | 2 | Tag library (names, folders, photos, notes, compare) | NOT_STARTED | history + favourites exist |
