@@ -75,13 +75,6 @@ fun HistoryScreen(modifier: Modifier = Modifier) {
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item {
-            Text(
-                stringResource(R.string.nav_history),
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        }
         message?.let { m -> item { BackupMessage(m, vm::dismissMessage) } }
         item {
             OutlinedTextField(

@@ -112,6 +112,9 @@ interface TaskDao {
     @Query("SELECT * FROM task_profiles WHERE id = :id")
     suspend fun profile(id: Long): TaskProfileEntity?
 
+    @Query("SELECT * FROM task_profiles WHERE triggerJson LIKE '%' || :token || '%' ESCAPE '\\'")
+    suspend fun profilesMentioning(token: String): List<TaskProfileEntity>
+
     @Insert
     suspend fun insertProfile(profile: TaskProfileEntity): Long
 

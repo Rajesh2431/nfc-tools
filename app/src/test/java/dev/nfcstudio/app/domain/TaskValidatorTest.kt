@@ -65,6 +65,17 @@ class TaskValidatorTest {
     }
 
     @Test
+    fun `task tag trigger matches only its exact token`() {
+        val token = "123e4567-e89b-12d3-a456-426614174000"
+        val p = TaskProfile(name = "n", actions = listOf(TaskAction.DisplayText("x")), trigger = TaskTrigger.TaskTag(token))
+        val tag = NdefParser.decodeAll(listOf(dev.nfcstudio.app.core.ndef.RichRecords.taskTag(token)!!.toRawRecord()))
+        val other = NdefParser.decodeAll(listOf(dev.nfcstudio.app.core.ndef.RichRecords.taskTag("00000000-0000-0000-0000-000000000000")!!.toRawRecord()))
+        assertTrue(TaskValidator.matches(p, tag))
+        assertFalse(TaskValidator.matches(p, other))
+        assertEquals(ProfileProblem.TRIGGER_INVALID, TaskValidator.validate(p.copy(trigger = TaskTrigger.TaskTag("x"))))
+    }
+
+    @Test
     fun `action json is strict data`() {
         val actions = listOf(TaskAction.OpenUrl("https://a.example"), TaskAction.OpenSettings(SettingsPanel.NFC))
         assertEquals(actions, TaskJson.decodeActions(TaskJson.encodeActions(actions)))

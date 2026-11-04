@@ -1,19 +1,33 @@
 package dev.nfcstudio.app.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.DataUsage
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -23,7 +37,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import dev.nfcstudio.app.R
@@ -32,108 +48,110 @@ import dev.nfcstudio.app.core.ndef.DecodedRecord
 import dev.nfcstudio.app.core.ndef.RecordKind
 import dev.nfcstudio.app.core.nfc.NdefContent
 import dev.nfcstudio.app.core.nfc.TagSnapshot
-import dev.nfcstudio.app.core.nfc.TechDetail
 
 /**
- * A real discovered tag: UID, technologies, NDEF facts and decoded records.
- * Unknown values render as unknown; malformed records show their note; URIs
- * open only through [OpenLinkDialog].
+ * A real discovered tag as icon rows (spec 4.2). Values Android does not
+ * expose show as unknown; nothing is guessed.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TagDetailsCard(snapshot: TagSnapshot, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(stringResource(R.string.tag_details), style = MaterialTheme.typography.titleMedium)
-
-            DetailRow(
-                label = stringResource(R.string.tag_uid),
-                value = snapshot.uidHex?.groupHexPairs() ?: stringResource(R.string.value_not_exposed),
-                copyable = snapshot.uidHex != null,
+    val unknown = stringResource(R.string.value_unknown)
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SectionCard(stringResource(R.string.tag_details)) {
+            val chip = snapshot.chip
+            InfoRow(
+                Icons.Filled.Category,
+                stringResource(R.string.tag_type),
+                listOfNotNull(chip?.vendor, chip?.name).joinToString(" ").ifBlank { stringResource(R.string.tag_type_unknown) },
             )
-            Text(
-                stringResource(R.string.tag_uid_note),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            InfoRow(Icons.Filled.Layers, stringResource(R.string.tag_technologies), snapshot.technologies.joinToString(", "))
+            InfoRow(
+                Icons.Filled.Fingerprint,
+                stringResource(R.string.tag_uid),
+                snapshot.uidHex?.groupHexPairs()?.replace(' ', ':') ?: stringResource(R.string.value_not_exposed),
+                monospace = snapshot.uidHex != null,
+                trailing = snapshot.uidHex?.let { uid -> { CopyButton(uid.groupHexPairs().replace(' ', ':'), stringResource(R.string.tag_uid)) } },
             )
-
-            Text(stringResource(R.string.tag_technologies), style = MaterialTheme.typography.labelMedium)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                snapshot.technologies.forEach { TechChip(it) }
+            val nfcA = snapshot.techDetails.firstOrNull { it.technology.startsWith("NfcA") }?.properties?.toMap()
+            nfcA?.get("ATQA")?.let { InfoRow(Icons.Filled.Tag, "ATQA", "0x$it", monospace = true) }
+            nfcA?.get("SAK")?.let { InfoRow(Icons.Filled.Tag, "SAK", "0x$it", monospace = true) }
+            if (chip?.totalBytes != null) {
+                InfoRow(
+                    Icons.Filled.Memory,
+                    stringResource(R.string.tag_memory),
+                    if (chip.unitCount != null && chip.unitSize != null) {
+                        stringResource(R.string.tag_memory_value, chip.totalBytes, chip.unitCount, chip.unitSize)
+                    } else {
+                        stringResource(R.string.value_bytes, chip.totalBytes)
+                    },
+                )
             }
+            val ndef = snapshot.ndef
+            if (ndef == null) {
+                InfoRow(
+                    Icons.Filled.Description,
+                    stringResource(R.string.tag_data_format),
+                    stringResource(if (snapshot.formatable) R.string.ndef_formatable_short else R.string.ndef_none_short),
+                )
+            } else {
+                InfoRow(Icons.Filled.Description, stringResource(R.string.tag_data_format), ndefTypeName(ndef.ndefType) ?: unknown)
+                val used = (ndef.content as? NdefContent.Records)?.sizeBytes ?: 0
+                InfoRow(
+                    Icons.Filled.DataUsage,
+                    stringResource(R.string.tag_size),
+                    ndef.maxCapacityBytes?.let { stringResource(R.string.tag_size_value, used, it) } ?: unknown,
+                )
+                InfoRow(Icons.Filled.Edit, stringResource(R.string.tag_writable), yesNoUnknown(ndef.isWritable))
+                InfoRow(Icons.Filled.Lock, stringResource(R.string.tag_can_lock), yesNoUnknown(ndef.canMakeReadOnly))
+            }
+            Text(stringResource(R.string.tag_uid_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
 
-            HorizontalDivider()
-            NdefSection(snapshot)
-
-            if (snapshot.techDetails.isNotEmpty()) {
-                HorizontalDivider()
-                TechDetailsSection(snapshot.techDetails)
+        val ndef = snapshot.ndef
+        if (ndef != null) {
+            SectionCard(
+                (ndef.content as? NdefContent.Records)?.let { pluralStringResource(R.plurals.tag_records, it.records.size, it.records.size) }
+                    ?: stringResource(R.string.tag_records_title),
+            ) {
+                if (ndef.fromCache) Text(stringResource(R.string.tag_from_cache), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                when (val content = ndef.content) {
+                    NdefContent.Empty -> Muted(stringResource(R.string.ndef_empty))
+                    NdefContent.Malformed -> Text(stringResource(R.string.ndef_malformed), color = MaterialTheme.colorScheme.error)
+                    NdefContent.Unreadable -> Text(stringResource(R.string.ndef_unreadable), color = MaterialTheme.colorScheme.error)
+                    is NdefContent.Records -> {
+                        content.records.forEachIndexed { i, r ->
+                            if (i > 0) HorizontalDivider()
+                            RecordRow(index = i + 1, record = r)
+                        }
+                        HorizontalDivider()
+                        RawBlock(hex = content.rawMessageHex, label = stringResource(R.string.raw_message))
+                    }
+                }
             }
         }
+
+        if (snapshot.techDetails.isNotEmpty()) TechDetailsSection(snapshot)
     }
 }
 
 @Composable
-private fun NdefSection(snapshot: TagSnapshot) {
-    val ndef = snapshot.ndef
-    if (ndef == null) {
-        Muted(stringResource(R.string.ndef_none))
-        if (snapshot.formatable) Muted(stringResource(R.string.ndef_formatable_note))
-        return
-    }
-    ndef.ndefType?.let { DetailRow(stringResource(R.string.tag_ndef_type), it) }
-    DetailRow(
-        stringResource(R.string.tag_capacity),
-        ndef.maxCapacityBytes?.let { stringResource(R.string.value_bytes, it) } ?: stringResource(R.string.value_unknown),
-    )
-    DetailRow(stringResource(R.string.tag_writable), yesNoUnknown(ndef.isWritable))
-    DetailRow(stringResource(R.string.tag_can_lock), yesNoUnknown(ndef.canMakeReadOnly))
-    if (ndef.fromCache) {
-        Text(
-            stringResource(R.string.tag_from_cache),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.error,
-        )
-    }
-
-    when (val content = ndef.content) {
-        NdefContent.Empty -> Muted(stringResource(R.string.ndef_empty))
-        NdefContent.Malformed -> Text(stringResource(R.string.ndef_malformed), color = MaterialTheme.colorScheme.error)
-        NdefContent.Unreadable -> Text(stringResource(R.string.ndef_unreadable), color = MaterialTheme.colorScheme.error)
-        is NdefContent.Records -> {
-            DetailRow(stringResource(R.string.tag_message_size), stringResource(R.string.value_bytes, content.sizeBytes))
-            Text(
-                pluralStringResource(R.plurals.tag_records, content.records.size),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            content.records.forEachIndexed { index, record -> RecordRow(index = index + 1, record = record) }
-            RawBlock(hex = content.rawMessageHex, label = stringResource(R.string.raw_message))
-        }
-    }
-}
-
-@Composable
-private fun TechDetailsSection(details: List<TechDetail>) {
+private fun TechDetailsSection(snapshot: TagSnapshot) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    TextButton(onClick = { expanded = !expanded }) {
-        Text(stringResource(if (expanded) R.string.tech_details_hide else R.string.tech_details_show))
+    SectionCard(stringResource(R.string.tech_details_title)) {
+        TextButton(onClick = { expanded = !expanded }) {
+            Text(stringResource(if (expanded) R.string.tech_details_hide else R.string.tech_details_show))
+        }
+        AnimatedVisibility(expanded) {
+            Column {
+                snapshot.techDetails.forEach { detail ->
+                    Text(detail.technology, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
+                    detail.properties.forEach { (label, value) -> DetailRow(label, value, monospace = true) }
+                }
+                Muted(stringResource(R.string.tech_details_note))
+            }
+        }
     }
-    if (!expanded) return
-    details.forEach { detail ->
-        Text(detail.technology, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-        detail.properties.forEach { (label, value) -> DetailRow(label, value, monospace = true) }
-    }
-    Muted(stringResource(R.string.tech_details_note))
 }
-
-@Composable
-private fun pluralStringResource(id: Int, count: Int): String =
-    androidx.compose.ui.res.pluralStringResource(id, count, count)
 
 @Composable
 private fun yesNoUnknown(value: Boolean?): String = stringResource(
@@ -145,17 +163,6 @@ private fun yesNoUnknown(value: Boolean?): String = stringResource(
 )
 
 @Composable
-fun TechChip(name: String) {
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-    ) {
-        Text(name, modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp), style = MaterialTheme.typography.labelLarge)
-    }
-}
-
-@Composable
 private fun Muted(text: String) {
     Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
@@ -163,15 +170,9 @@ private fun Muted(text: String) {
 @Composable
 fun DetailRow(label: String, value: String, copyable: Boolean = false, monospace: Boolean = false) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f).padding(vertical = 2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            SelectionContainer {
-                Text(
-                    value,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontFamily = if (monospace) FontFamily.Monospace else null,
-                )
-            }
+            SelectionContainer { Text(value, style = MaterialTheme.typography.bodyLarge, fontFamily = if (monospace) FontFamily.Monospace else null) }
         }
         if (copyable) CopyButton(value = value, label = label)
     }
@@ -179,7 +180,7 @@ fun DetailRow(label: String, value: String, copyable: Boolean = false, monospace
 
 /** Selectable, copyable hex + printable-ASCII view (spec § 9). */
 @Composable
-private fun RawBlock(hex: String, label: String, ascii: String? = null, truncated: Boolean = false) {
+fun RawBlock(hex: String, label: String, ascii: String? = null, truncated: Boolean = false) {
     var show by rememberSaveable { mutableStateOf(false) }
     Row(verticalAlignment = Alignment.CenterVertically) {
         TextButton(onClick = { show = !show }) {
@@ -189,71 +190,60 @@ private fun RawBlock(hex: String, label: String, ascii: String? = null, truncate
     }
     if (!show) return
     SelectionContainer {
-        Text(
-            hex.chunked(32).joinToString("\n") { it.groupHexPairs() },
-            style = MaterialTheme.typography.bodySmall,
-            fontFamily = FontFamily.Monospace,
-        )
+        Text(hex.chunked(32).joinToString("\n") { it.groupHexPairs() }, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
     }
     ascii?.let {
         Text(stringResource(R.string.raw_ascii), style = MaterialTheme.typography.labelMedium)
-        SelectionContainer {
-            Text(it.chunked(16).joinToString("\n"), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
-        }
+        SelectionContainer { Text(it.chunked(16).joinToString("\n"), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace) }
     }
     if (truncated) Muted(stringResource(R.string.raw_truncated))
 }
 
-/** One decoded record: kind, decoded content, raw bytes, confirmed link opening. */
+/** One decoded record: icon, kind, value, structured details, raw bytes, safe link opening. */
 @Composable
 fun RecordRow(index: Int, record: DecodedRecord) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
     var confirmOpen by rememberSaveable { mutableStateOf(false) }
     var openFailed by rememberSaveable { mutableStateOf(false) }
 
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+                .clickable(role = Role.Button) { expanded = !expanded }
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = "#$index " + stringResource(recordKindLabel(record.kind)),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-
-            when (record.kind) {
-                RecordKind.TEXT -> {
-                    ValueWithCopy(record.text.orEmpty(), stringResource(R.string.record_text))
-                    record.language?.let { Muted(stringResource(R.string.record_language, it)) }
-                }
-
-                RecordKind.URI, RecordKind.SMART_POSTER -> {
-                    record.text?.let { Text(it, style = MaterialTheme.typography.titleSmall) }
-                    ValueWithCopy(record.uri.orEmpty(), stringResource(R.string.record_uri))
-                    Button(onClick = { confirmOpen = true }) { Text(stringResource(R.string.open_uri)) }
-                }
-
-                RecordKind.MIME -> Text(
-                    stringResource(R.string.record_mime_type, record.mimeType.orEmpty()),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-
-                RecordKind.EMPTY, RecordKind.UNKNOWN -> record.typeName?.let {
-                    Muted(stringResource(R.string.record_type, it))
-                }
-            }
-            record.note?.let {
+            IconBadge(recordIcon(record), container = MaterialTheme.colorScheme.secondaryContainer, content = MaterialTheme.colorScheme.onSecondaryContainer)
+            Column(Modifier.padding(start = 16.dp).weight(1f)) {
                 Text(
-                    it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (record.kind == RecordKind.UNKNOWN) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                    "#$index · " + stringResource(recordKindLabel(record.kind)) + (record.mimeType?.takeIf { record.kind == RecordKind.MIME }?.let { " · $it" } ?: ""),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                val primary = when (record.kind) {
+                    RecordKind.TEXT -> record.text
+                    RecordKind.URI, RecordKind.SMART_POSTER -> record.uri
+                    RecordKind.MIME -> record.asciiPreview?.take(80)
+                    else -> record.details.firstOrNull { !it.secret }?.value ?: record.typeName
+                }
+                Text(primary.orEmpty().ifEmpty { "—" }, style = MaterialTheme.typography.bodyLarge, maxLines = if (expanded) 20 else 2)
             }
-            Muted(stringResource(R.string.record_meta, record.tnf, record.payloadSize))
-            record.rawHex?.let {
-                RawBlock(hex = it, label = stringResource(R.string.raw_payload), ascii = record.asciiPreview, truncated = record.rawHexTruncated)
+            Icon(if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = stringResource(if (expanded) R.string.collapse else R.string.expand))
+        }
+        AnimatedVisibility(expanded) {
+            Column(Modifier.padding(start = 56.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                record.text?.takeIf { record.kind == RecordKind.SMART_POSTER }?.let { DetailRow(stringResource(R.string.detail_title), it) }
+                record.language?.let { DetailRow(stringResource(R.string.writer_language_label), it) }
+                record.uri?.let { DetailRow(stringResource(R.string.record_uri), it, copyable = true) }
+                record.text?.takeIf { record.kind == RecordKind.TEXT }?.let { CopyButton(it, stringResource(R.string.record_text)) }
+                record.details.forEach { d -> SecretAwareDetail(stringResource(detailLabel(d.label)), d.value, d.secret) }
+                record.note?.let {
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = if (record.kind == RecordKind.UNKNOWN) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Muted(stringResource(R.string.record_meta, record.tnf, record.payloadSize))
+                if (record.uri != null) FilledTonalButton(onClick = { confirmOpen = true }) { Text(stringResource(R.string.open_uri)) }
+                record.rawHex?.let { RawBlock(hex = it, label = stringResource(R.string.raw_payload), ascii = record.asciiPreview, truncated = record.rawHexTruncated) }
             }
         }
     }
@@ -271,18 +261,18 @@ fun RecordRow(index: Int, record: DecodedRecord) {
 }
 
 @Composable
-private fun ValueWithCopy(value: String, label: String) {
+private fun SecretAwareDetail(label: String, value: String, secret: Boolean) {
+    var reveal by rememberSaveable { mutableStateOf(false) }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        SelectionContainer(modifier = Modifier.weight(1f)) { Text(value, style = MaterialTheme.typography.bodyLarge) }
-        CopyButton(value = value, label = label)
+        Column(Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            SelectionContainer { Text(if (secret && !reveal) "••••••••" else value, style = MaterialTheme.typography.bodyLarge) }
+        }
+        if (secret) {
+            IconButton(onClick = { reveal = !reveal }) {
+                Icon(if (reveal) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, contentDescription = stringResource(if (reveal) R.string.hide_secret else R.string.show_secret))
+            }
+        }
+        if (!secret || reveal) CopyButton(value, label)
     }
-}
-
-fun recordKindLabel(kind: RecordKind): Int = when (kind) {
-    RecordKind.TEXT -> R.string.record_text
-    RecordKind.URI -> R.string.record_uri
-    RecordKind.SMART_POSTER -> R.string.record_smart_poster
-    RecordKind.MIME -> R.string.record_mime
-    RecordKind.EMPTY -> R.string.record_empty
-    RecordKind.UNKNOWN -> R.string.record_unknown
 }

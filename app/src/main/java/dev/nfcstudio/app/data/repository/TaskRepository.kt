@@ -35,6 +35,11 @@ class TaskRepository(private val dao: TaskDao, private val now: () -> Long = Sys
         }
     }
 
+    /** Profile whose trigger is exactly this task-tag token (token validated by caller). */
+    suspend fun byTaskToken(token: String): TaskProfile? =
+        dao.profilesMentioning(dev.nfcstudio.app.data.database.escapeLike(token)).mapNotNull(::toModel)
+            .firstOrNull { (it.trigger as? dev.nfcstudio.app.domain.task.TaskTrigger.TaskTag)?.token == token }
+
     suspend fun setEnabled(id: Long, enabled: Boolean) = dao.setEnabled(id, enabled)
     suspend fun delete(id: Long) = dao.deleteProfile(id)
 
@@ -74,6 +79,7 @@ class TaskRepository(private val dao: TaskDao, private val now: () -> Long = Sys
             triggerJson = TaskJson.encodeTrigger(p.trigger),
             createdAt = p.createdAt,
             updatedAt = p.updatedAt,
+            autoRun = p.autoRun,
         )
 
         /** Decodes and re-validates; returns null for anything that does not pass. */
@@ -81,7 +87,7 @@ class TaskRepository(private val dao: TaskDao, private val now: () -> Long = Sys
             val actions = TaskJson.decodeActions(row.actionsJson) ?: return null
             val policy = runCatching { ConfirmationPolicy.valueOf(row.policy) }.getOrNull() ?: return null
             val trigger = TaskJson.decodeTrigger(row.triggerJson).getOrElse { return null }
-            val profile = TaskProfile(row.id, row.name, row.enabled, actions, policy, trigger, row.createdAt, row.updatedAt)
+            val profile = TaskProfile(row.id, row.name, row.enabled, actions, policy, trigger, row.autoRun, row.createdAt, row.updatedAt)
             return profile.takeIf { TaskValidator.validate(it) == null }
         }
 

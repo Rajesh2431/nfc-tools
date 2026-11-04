@@ -65,11 +65,6 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            stringResource(R.string.nav_settings),
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
         message?.let { BackupMessage(it, vm::dismissMessage) }
         val s = settings ?: return@Column
 

@@ -3,8 +3,6 @@
     <string name="app_name">NFC Studio</string>
 
     <!-- Bottom navigation -->
-    <string name="nav_home">Home</string>
-    <string name="nav_scan">Scan</string>
     <string name="nav_write">Write</string>
     <string name="nav_tasks">Tasks</string>
     <string name="nav_history">History</string>
@@ -20,10 +18,6 @@
     <string name="nfc_state_no_hardware_detail">Android reports no usable NFC adapter on this device, so scanning and writing are unavailable. History, templates, tasks and settings still work.</string>
 
     <!-- Home -->
-    <string name="home_title">NFC Studio</string>
-    <string name="home_quick_scan">Scan</string>
-    <string name="home_quick_scan_detail">Read and decode a nearby tag.</string>
-    <string name="home_quick_write">Write</string>
 
     <!-- Placeholder screens -->
     <string name="not_implemented_title">Not implemented yet</string>
@@ -43,7 +37,6 @@
     <string name="scan_working">Reading tag…</string>
     <string name="scan_failed">Could not read the tag</string>
     <string name="scan_again">Scan again</string>
-    <string name="scan_done">Tag read</string>
     <string name="scan_done_detail">Hold another tag to replace this result.</string>
     <string name="scan_clear">Clear result</string>
     <string name="tag_details">Tag details</string>
@@ -51,8 +44,6 @@
     <string name="tag_uid_note">Identifiers can be absent, randomised on every scan, or shared between tags. Do not use them for identity or access control.</string>
     <string name="tag_technologies">Technologies exposed by Android</string>
     <string name="tag_ndef_type">NDEF tag type</string>
-    <string name="tag_capacity">Max NDEF message size</string>
-    <string name="tag_message_size">Current message size</string>
     <string name="tag_writable">Writable</string>
     <string name="tag_can_lock">Can be made read-only</string>
     <string name="tag_from_cache">Live read failed; showing the content Android cached when the tag was discovered.</string>
@@ -60,8 +51,6 @@
         <item quantity="one">%1$d record</item>
         <item quantity="other">%1$d records</item>
     </plurals>
-    <string name="ndef_none">This tag is not NDEF-formatted (or Android exposes no Ndef technology for it).</string>
-    <string name="ndef_formatable_note">The tag exposes NdefFormatable; it can be formatted from the Write screen after confirmation.</string>
     <string name="ndef_empty">The NDEF area is empty.</string>
     <string name="ndef_malformed">The tag holds data that is not valid NDEF. It is shown as unreadable rather than guessed.</string>
     <string name="ndef_unreadable">The content could not be read. Hold the tag still and scan again.</string>
@@ -71,9 +60,6 @@
     <string name="record_mime">MIME</string>
     <string name="record_empty">Empty</string>
     <string name="record_unknown">Unknown</string>
-    <string name="record_language">Language: %1$s</string>
-    <string name="record_mime_type">MIME type: %1$s</string>
-    <string name="record_type">Type: %1$s</string>
     <string name="record_meta">TNF %1$d · payload %2$d B</string>
     <string name="raw_payload">payload bytes</string>
     <string name="raw_message">message bytes</string>
@@ -113,13 +99,7 @@
     <string name="error_tech_unavailable">The tag does not expose %1$s.</string>
 
     <!-- Write (M3) -->
-    <string name="writer_compose">Compose records</string>
-    <string name="writer_record_text">Text</string>
-    <string name="writer_record_uri">URI</string>
-    <string name="writer_record_mime">MIME</string>
-    <string name="writer_text_label">Text content</string>
     <string name="writer_language_label">Language code (e.g. en, de-AT)</string>
-    <string name="writer_uri_label">URI</string>
     <string name="writer_mime_label">MIME type (e.g. text/plain)</string>
     <string name="writer_mime_payload_label">Payload (UTF-8 text)</string>
     <string name="writer_add">Add record</string>
@@ -168,34 +148,18 @@
     <string name="uri_invalid">Enter a valid http(s), mailto, tel, sms or geo URI without spaces.</string>
     <string name="mime_invalid">Use a lowercase MIME type such as text/plain or application/json.</string>
     <string name="payload_too_long">Payload is longer than 8 KiB.</string>
-    <string name="tag_ops_title">Other tag operations</string>
-    <string name="tag_ops_detail">Both ask for confirmation after a tag is detected and show what it currently holds.</string>
-    <string name="erase_start">Clear a tag…</string>
-    <string name="erase_waiting">Hold the tag to clear</string>
     <string name="erase_title">Clear this tag?</string>
     <string name="erase_detail">This tag holds %1$s. Clearing writes an empty NDEF record. It does not securely erase every memory location on the chip.</string>
     <string name="erase_confirm">Clear tag</string>
-    <string name="erase_success_title">Tag cleared</string>
-    <string name="lock_start">Make a tag read-only…</string>
     <string name="lock_intent_title">Permanently lock a tag?</string>
     <string name="lock_intent_detail">Making a tag read-only is irreversible on most tags: no app, including this one, can change its content afterwards. After you continue, hold the tag; you will be asked once more.</string>
     <string name="lock_intent_confirm">Continue</string>
-    <string name="lock_waiting">Hold the tag to lock</string>
     <string name="lock_title">Lock this tag forever?</string>
     <string name="lock_detail">This tag holds %1$s. After locking, it can never be rewritten or cleared.</string>
     <string name="lock_confirm">Lock permanently</string>
-    <string name="lock_success_title">Tag locked</string>
     <string name="lock_success_detail">The tag reported success and is now read-only.</string>
 
     <!-- Home (M4) -->
-    <plurals name="home_quick_write_detail">
-        <item quantity="one">Compose a message or start from %1$d saved template.</item>
-        <item quantity="other">Compose a message or start from %1$d saved templates.</item>
-    </plurals>
-    <string name="home_quick_tasks_detail">Run named profiles of allowlisted actions, with confirmation.</string>
-    <string name="home_recent">Recent scans</string>
-    <string name="home_first_use_title">No scans yet</string>
-    <string name="home_first_use_detail">To scan: unlock the phone, open Scan, and hold the tag flat against the antenna (usually near the camera on the back). Keep it still for a second. Tags you scan appear here.</string>
 
     <!-- History (M4) -->
     <string name="history_search">Search content or technology</string>
@@ -427,4 +391,155 @@
     <string name="apdu_problem_length">Lc/Le do not match the data length.</string>
     <string name="apdu_problem_extended">This tag does not support extended-length APDUs.</string>
     <string name="apdu_problem_cla">CLA FF is reserved.</string>
+
+    <!-- v1.1 shell -->
+    <string name="nav_read">Read</string>
+    <string name="nav_other">Other</string>
+    <string name="navigate_back">Back</string>
+    <string name="run_title">Run profile</string>
+    <string name="collapse">Collapse</string>
+    <string name="expand">Expand</string>
+    <string name="show_secret">Show value</string>
+    <string name="hide_secret">Hide value</string>
+
+    <!-- Read: tag info rows -->
+    <string name="tag_type">Tag type</string>
+    <string name="tag_type_unknown">Not identified</string>
+    <string name="tag_memory">Memory information</string>
+    <string name="tag_memory_value">%1$d B (pages × size: %2$d × %3$d B)</string>
+    <string name="tag_data_format">Data format</string>
+    <string name="ndef_formatable_short">Not NDEF; can be formatted (Other › Format)</string>
+    <string name="ndef_none_short">No NDEF support exposed by Android</string>
+    <string name="tag_size">Size</string>
+    <string name="tag_size_value">%1$d / %2$d B</string>
+    <string name="tag_records_title">Records</string>
+    <string name="tech_details_title">Technology details</string>
+    <string name="record_contact">Contact</string>
+    <string name="record_wifi">Wi-Fi network</string>
+    <string name="record_bluetooth">Bluetooth device</string>
+    <string name="record_app">App launch</string>
+    <string name="record_task">Task tag</string>
+    <string name="record_external">External type</string>
+    <string name="detail_name">Name</string>
+    <string name="detail_phone">Phone</string>
+    <string name="detail_email">Email</string>
+    <string name="detail_organization">Organization</string>
+    <string name="detail_address">Address</string>
+    <string name="detail_url">Website</string>
+    <string name="detail_title">Title</string>
+    <string name="detail_ssid">Network name (SSID)</string>
+    <string name="detail_auth">Authentication</string>
+    <string name="detail_encryption">Encryption</string>
+    <string name="detail_network_key">Password</string>
+    <string name="detail_mac">Device address</string>
+    <string name="detail_device_name">Device name</string>
+    <string name="detail_package">App package</string>
+    <string name="detail_token">Task token</string>
+
+    <!-- Write: record types -->
+    <string name="writer_empty">No records yet. Add one to build the message.</string>
+    <string name="writer_add_record">Add a record</string>
+    <string name="rt_text">Text</string>
+    <string name="rt_text_detail">Plain text with a language code</string>
+    <string name="rt_url">URL / URI</string>
+    <string name="rt_url_detail">Web link (http, https)</string>
+    <string name="rt_phone">Phone number</string>
+    <string name="rt_phone_detail">Opens the dialer with this number</string>
+    <string name="rt_sms">SMS</string>
+    <string name="rt_sms_detail">Pre-filled message; the reader sends it</string>
+    <string name="rt_email">Email</string>
+    <string name="rt_email_detail">Pre-filled email draft</string>
+    <string name="rt_contact">Contact</string>
+    <string name="rt_contact_detail">Business card (vCard 3.0)</string>
+    <string name="rt_location">Location</string>
+    <string name="rt_location_detail">Latitude and longitude</string>
+    <string name="rt_address">Address</string>
+    <string name="rt_address_detail">Opens a map search for an address</string>
+    <string name="rt_wifi">Wi-Fi network</string>
+    <string name="rt_wifi_detail">Network name and password (WSC)</string>
+    <string name="rt_bluetooth">Bluetooth</string>
+    <string name="rt_bluetooth_detail">Pair with a device by address</string>
+    <string name="rt_app">App launch</string>
+    <string name="rt_app_detail">Opens an Android app (AAR)</string>
+    <string name="rt_mime">Custom data</string>
+    <string name="rt_mime_detail">MIME type with UTF-8 payload</string>
+    <string name="f_text">Text</string>
+    <string name="f_url">URL</string>
+    <string name="f_phone">Phone number</string>
+    <string name="f_body">Message</string>
+    <string name="f_email">Email address</string>
+    <string name="f_subject">Subject</string>
+    <string name="f_name">Name</string>
+    <string name="f_organization">Organization</string>
+    <string name="f_address">Address</string>
+    <string name="f_latitude">Latitude (−90 to 90)</string>
+    <string name="f_longitude">Longitude (−180 to 180)</string>
+    <string name="f_ssid">Network name (SSID)</string>
+    <string name="f_wifi_key">Password (8–63 characters)</string>
+    <string name="f_mac">Device address (AA:BB:CC:DD:EE:FF)</string>
+    <string name="f_package">Package name (com.example.app)</string>
+    <string name="wifi_wpa2">WPA2</string>
+    <string name="wifi_wpa_wpa2">WPA/WPA2</string>
+    <string name="wifi_open">Open</string>
+    <string name="wifi_note">Anyone who reads this tag can see the password. Android asks before joining the network.</string>
+    <string name="app_note">Android opens this app, or its Play Store page if it is not installed. Other records on the tag are passed to it.</string>
+    <string name="form_invalid">Some fields are missing or invalid. Check required fields and formats.</string>
+
+    <!-- Other -->
+    <string name="other_title">Tag operations</string>
+    <string name="op_copy">Copy tag</string>
+    <string name="op_copy_detail">Read a tag, then write its NDEF content to another tag</string>
+    <string name="op_erase">Erase tag</string>
+    <string name="op_erase_detail">Replace the content with an empty record</string>
+    <string name="op_lock">Lock tag</string>
+    <string name="op_lock_detail">Make the tag read-only — permanent</string>
+    <string name="op_format">Format memory</string>
+    <string name="op_format_detail">Format a blank, non-NDEF tag as NDEF</string>
+    <string name="op_set_password">Set password</string>
+    <string name="op_set_password_detail">Protect an NTAG213/215/216 against writing</string>
+    <string name="op_remove_password">Remove password</string>
+    <string name="op_remove_password_detail">Disable a password set by NFC Studio</string>
+    <string name="op_read_memory">Read memory</string>
+    <string name="op_read_memory_detail">Raw page/block dump where the chip allows it</string>
+    <string name="op_hold_tag">%1$s: hold the tag</string>
+    <string name="copy_hold_source">%1$s: hold the source tag</string>
+    <string name="copy_hold_target">%1$s: now hold the target tag</string>
+    <string name="copy_target_detail">Copied into memory: %1$d B. Remove the source, then hold the tag to write.</string>
+    <string name="copy_nothing">The source tag has no NDEF records to copy.</string>
+    <string name="copy_same_tag">That is the source tag. Hold a different tag.</string>
+    <string name="content_unknown">unknown content</string>
+    <string name="format_only_detail">This tag is not NDEF-formatted. Formatting changes how it stores data and may not be reversible.</string>
+    <string name="format_already">This tag is already NDEF-formatted. Use Erase to clear it.</string>
+    <string name="format_done">Formatted as NDEF. Scan the tag to check it.</string>
+    <string name="op_done_title">%1$s: done</string>
+    <string name="op_done_verified">Read back in the same session and verified.</string>
+    <string name="password_set_explain">Only NXP NTAG213, NTAG215 and NTAG216 are supported. The password is converted to the tag\'s 4-byte key; other apps cannot remove it with the same text.</string>
+    <string name="password_remove_explain">Enter the password that was set with NFC Studio.</string>
+    <string name="password_label">Password (minimum length: %1$d)</string>
+    <string name="password_repeat">Repeat password</string>
+    <string name="password_protect_reads">Also protect reading</string>
+    <string name="password_protect_reads_detail">Phones without the password then cannot read the content either.</string>
+    <string name="password_understood">I understand: if I forget this password, the tag can never be rewritten.</string>
+    <string name="password_mismatch">The passwords do not match.</string>
+    <string name="password_length">Allowed length: %1$d–%2$d.</string>
+    <string name="password_confirm_title">Password-protect this tag?</string>
+    <string name="password_confirm_detail">Writing will require the password from now on. NFC Studio cannot recover a forgotten password, and no app can reset it.</string>
+    <string name="password_set_done">Password set and verified by authenticating with it.</string>
+    <string name="password_remove_done">Password protection removed.</string>
+    <string name="memory_title">Memory</string>
+    <string name="memory_unsupported">Raw memory reading is supported for MIFARE Ultralight/NTAG and ISO 15693 tags only. MIFARE Classic needs sector keys and is not read.</string>
+    <string name="memory_stopped">Stopped at a protected or unreadable page.</string>
+    <string name="memory_partial">The tag stopped responding; the dump is partial.</string>
+    <string name="error_wrong_password">The tag rejected the password.</string>
+    <string name="error_already_protected">This tag already has a password. Remove it first.</string>
+    <string name="error_chip_unsupported">This operation needs an NXP NTAG213, NTAG215 or NTAG216; this chip was not identified as one.</string>
+
+    <!-- Tasks: auto-run and task tags -->
+    <string name="trigger_task_tag">Task tag</string>
+    <string name="task_tag_explain">The tag stores only a random code that points to this profile. The actions stay in the app, and other apps ignore the tag.</string>
+    <string name="task_tag_write">Save and write task tag…</string>
+    <string name="profile_auto_run">Run automatically when scanned</string>
+    <string name="profile_auto_run_detail">Shown text, contacts and Settings screens open without asking. Links, messages and apps still ask first.</string>
+    <string name="profile_auto_run_unavailable">Needs a scan trigger and the minimum confirmation policy.</string>
+    <string name="run_auto_started">Started automatically by a matching tag.</string>
 </resources>

@@ -1,6 +1,9 @@
 package dev.nfcstudio.app.domain.task
 
 import dev.nfcstudio.app.core.ndef.DecodedRecord
+import dev.nfcstudio.app.core.ndef.Detail
+import dev.nfcstudio.app.core.ndef.RecordKind
+import dev.nfcstudio.app.core.ndef.RichRecords
 import dev.nfcstudio.app.core.ndef.UriPolicy
 
 enum class ActionProblem {
@@ -55,6 +58,7 @@ object TaskValidator {
         null -> true
         is TaskTrigger.TextContains -> trigger.value.isNotBlank() && trigger.value.length <= 100
         is TaskTrigger.UriHost -> HOST.matches(trigger.host.lowercase()) && trigger.host.length <= 253
+        is TaskTrigger.TaskTag -> RichRecords.isValidToken(trigger.token)
     }
 
     fun validate(profile: TaskProfile): ProfileProblem? = when {
@@ -80,6 +84,10 @@ object TaskValidator {
                 val host = r.uri?.let(UriPolicy::hostOf) ?: return@any false
                 val want = t.host.lowercase()
                 host == want || host.endsWith(".$want")
+            }
+
+            is TaskTrigger.TaskTag -> records.any { r ->
+                r.kind == RecordKind.TASK && r.details.any { it.label == Detail.Label.TOKEN && it.value == t.token }
             }
         }
     }

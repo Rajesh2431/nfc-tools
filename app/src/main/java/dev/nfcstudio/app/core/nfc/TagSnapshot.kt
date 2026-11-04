@@ -15,6 +15,8 @@ data class TagSnapshot(
     val formatable: Boolean,
     /** Per-technology metadata for the advanced inspector. */
     val techDetails: List<TechDetail> = emptyList(),
+    /** Chip identification (Scan only); null when not attempted or unknown. */
+    val chip: ChipInfo? = null,
 ) {
     val supportsIsoDep: Boolean get() = "IsoDep" in technologies
 }

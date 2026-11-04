@@ -36,12 +36,12 @@ import dev.nfcstudio.app.ui.components.Tone
 
 /** Step-by-step run: every external action waits for an explicit Run tap. */
 @Composable
-fun TaskRunScreen(profileId: Long, onDone: () -> Unit, modifier: Modifier = Modifier) {
+fun TaskRunScreen(profileId: Long, autoStarted: Boolean, onDone: () -> Unit, modifier: Modifier = Modifier) {
     val container = appContainer()
     val context = LocalContext.current
     val vm: TaskRunViewModel = viewModel(
-        key = "run-$profileId",
-        factory = viewModelFactory { initializer { container.taskRunViewModel(profileId, context) } },
+        key = "run-$profileId-$autoStarted",
+        factory = viewModelFactory { initializer { container.taskRunViewModel(profileId, autoStarted, context) } },
     )
     val ui by vm.state.collectAsStateWithLifecycle()
 
@@ -62,6 +62,9 @@ fun TaskRunScreen(profileId: Long, onDone: () -> Unit, modifier: Modifier = Modi
 
             is TaskRunViewModel.UiState.Running -> {
                 Text(u.profile.name, style = MaterialTheme.typography.headlineMedium)
+                if (autoStarted && u.profile.autoRun) {
+                    Text(stringResource(R.string.run_auto_started), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 val total = u.profile.actions.size
                 when (val s = u.state) {
                     is TaskRunner.State.Confirm -> MessageCard(

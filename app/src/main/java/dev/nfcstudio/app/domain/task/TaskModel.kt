@@ -85,6 +85,11 @@ sealed class TaskTrigger {
     @Serializable
     @SerialName("uri_host")
     data class UriHost(val host: String) : TaskTrigger()
+
+    /** Matches a task tag written by this app; the tag stores only this random token. */
+    @Serializable
+    @SerialName("task_tag")
+    data class TaskTag(val token: String) : TaskTrigger()
 }
 
 data class TaskProfile(
@@ -94,10 +99,30 @@ data class TaskProfile(
     val actions: List<TaskAction>,
     val policy: ConfirmationPolicy = ConfirmationPolicy.EXTERNAL_ONLY,
     val trigger: TaskTrigger? = null,
+    /**
+     * Opt-in (ADR 0001): when a matching tag is scanned, start the profile
+     * without a tap. Only [canAutoRun] actions skip confirmation; everything
+     * else still asks.
+     */
+    val autoRun: Boolean = false,
     val createdAt: Long = 0,
     val updatedAt: Long = 0,
 )
 
-/** External effects always need confirmation; the policy can only add more. */
-fun TaskAction.requiresConfirmation(policy: ConfirmationPolicy): Boolean =
-    isExternal || policy == ConfirmationPolicy.EVERY_ACTION
+/**
+ * Actions allowed to run without confirmation in an auto-started run: they
+ * stay in the app or only open a system Settings screen (no data leaves the
+ * device, nothing is sent, no third-party app is launched).
+ */
+val TaskAction.canAutoRun: Boolean
+    get() = this is TaskAction.DisplayText || this is TaskAction.ShowContact || this is TaskAction.OpenSettings
+
+/**
+ * External effects need confirmation; the policy can only add more. In an
+ * auto-started run of an auto-run profile, [canAutoRun] actions are exempt.
+ */
+fun TaskAction.requiresConfirmation(policy: ConfirmationPolicy, autoStarted: Boolean = false): Boolean = when {
+    policy == ConfirmationPolicy.EVERY_ACTION -> true
+    autoStarted && canAutoRun -> false
+    else -> isExternal
+}

@@ -42,19 +42,15 @@ class WriteViewModel(
 
     enum class DraftKind { TEXT, URI, MIME }
 
-    /** What the armed tag session will do. */
-    enum class Operation { WRITE, ERASE, LOCK }
+    /** What the armed tag session will do. Erase/lock/format live in the Other screen. */
+    enum class Operation { WRITE }
 
     sealed interface Phase {
         data object Editing : Phase
 
-        /** Shown before arming a permanent lock; nothing is armed yet. */
-        data object ConfirmLockIntent : Phase
         data class AwaitingTag(val operation: Operation) : Phase
         data class ConfirmOverwrite(val existing: ContentSummary) : Phase
         data object ConfirmFormat : Phase
-        data class ConfirmErase(val existing: ContentSummary) : Phase
-        data class ConfirmLock(val existing: ContentSummary) : Phase
         data class Working(val operation: Operation) : Phase
         data class Success(val operation: Operation, val verification: Verification?, val bytes: Int) : Phase
         data class Failed(val error: NfcError) : Phase
@@ -114,6 +110,13 @@ class WriteViewModel(
         return true
     }
 
+    /** Appends a record built by the Write tab forms. @return false when invalid or the message is full. */
+    fun addRecord(spec: RecordSpec): Boolean {
+        if (spec == RecordSpec.Empty || RecordValidator.validate(spec) != null || _records.value.size >= MAX_RECORDS) return false
+        _records.value += spec
+        return true
+    }
+
     fun removeRecord(index: Int) {
         _records.value = _records.value.filterIndexed { i, _ -> i != index }
     }
@@ -138,20 +141,6 @@ class WriteViewModel(
         arm(Operation.WRITE)
     }
 
-    fun startErase() {
-        if (_phase.value != Phase.Editing) return
-        arm(Operation.ERASE)
-    }
-
-    /** Locking needs a first confirmation before the reader is even armed. */
-    fun requestLock() {
-        if (_phase.value == Phase.Editing) _phase.value = Phase.ConfirmLockIntent
-    }
-
-    fun confirmLockIntent() {
-        if (_phase.value == Phase.ConfirmLockIntent) arm(Operation.LOCK)
-    }
-
     private fun arm(operation: Operation) {
         pendingTag = null
         _phase.value = Phase.AwaitingTag(operation)
@@ -166,9 +155,6 @@ class WriteViewModel(
     fun declineConfirmation() {
         val operation = when (val p = _phase.value) {
             is Phase.ConfirmOverwrite, Phase.ConfirmFormat -> Operation.WRITE
-            is Phase.ConfirmErase -> Operation.ERASE
-            is Phase.ConfirmLock -> Operation.LOCK
-            Phase.ConfirmLockIntent -> return cancel()
             else -> return
         }
         arm(operation)
@@ -183,14 +169,6 @@ class WriteViewModel(
         when (_phase.value) {
             is Phase.ConfirmOverwrite -> execute(Operation.WRITE, tag) { gateway.write(it, _records.value) }
             Phase.ConfirmFormat -> execute(Operation.WRITE, tag) { gateway.formatAndWrite(it, _records.value) }
-            is Phase.ConfirmErase -> execute(Operation.ERASE, tag) { gateway.write(it, listOf(RecordSpec.Empty)) }
-            is Phase.ConfirmLock -> execute(Operation.LOCK, tag) { t ->
-                when (val r = gateway.makeReadOnly(t)) {
-                    is NfcResult.Ok -> NfcResult.Ok(null)
-                    is NfcResult.Err -> r
-                }
-            }
-
             else -> Unit
         }
     }
@@ -231,19 +209,6 @@ class WriteViewModel(
                 snapshot.formatable -> askFor(tag, Phase.ConfirmFormat)
                 else -> fail(NfcError.NoNdefSupport)
             }
-
-            Operation.ERASE -> when {
-                ndef == null -> fail(NfcError.NoNdefSupport)
-                ndef.isWritable == false -> fail(NfcError.ReadOnly)
-                else -> askFor(tag, Phase.ConfirmErase(ContentSummary.of(ndef.content)))
-            }
-
-            Operation.LOCK -> when {
-                ndef == null -> fail(NfcError.NoNdefSupport)
-                ndef.isWritable == false -> fail(NfcError.ReadOnly)
-                ndef.canMakeReadOnly == false -> fail(NfcError.LockUnsupported)
-                else -> askFor(tag, Phase.ConfirmLock(ContentSummary.of(ndef.content)))
-            }
         }
     }
 
@@ -278,15 +243,15 @@ class WriteViewModel(
         block: (DiscoveredTag) -> NfcResult<Verification?>,
     ) {
         _phase.value = Phase.Working(operation)
-        val bytes = when (operation) {
-            Operation.WRITE -> estimatedSizeNow()
-            Operation.ERASE -> NdefSizeEstimator.messageSize(listOf(RecordSpec.Empty))
-            Operation.LOCK -> 0
-        }
+        val bytes = estimatedSizeNow()
         _phase.value = when (val r = withContext(io) { block(tag) }) {
             is NfcResult.Ok -> Phase.Success(operation, r.value, bytes)
             is NfcResult.Err -> Phase.Failed(r.error)
         }
+    }
+
+    companion object {
+        const val MAX_RECORDS = 32
     }
 
     private fun estimatedSizeNow(): Int = NdefSizeEstimator.messageSize(_records.value)

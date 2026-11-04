@@ -20,4 +20,7 @@ fun NfcError.displayText(): String = when (this) {
     NfcError.LockUnsupported -> stringResource(R.string.error_lock_unsupported)
     NfcError.LockFailed -> stringResource(R.string.error_lock_failed)
     is NfcError.TechnologyUnavailable -> stringResource(R.string.error_tech_unavailable, technology)
+    NfcError.WrongPassword -> stringResource(R.string.error_wrong_password)
+    NfcError.AlreadyProtected -> stringResource(R.string.error_already_protected)
+    NfcError.ChipUnsupported -> stringResource(R.string.error_chip_unsupported)
 }

@@ -1,33 +1,44 @@
 package dev.nfcstudio.app.navigation
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavHostController
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import dev.nfcstudio.app.R
+import dev.nfcstudio.app.appContainer
 import dev.nfcstudio.app.feature.advanced.ApduConsoleScreen
 import dev.nfcstudio.app.feature.history.HistoryScreen
-import dev.nfcstudio.app.feature.home.HomeScreen
+import dev.nfcstudio.app.feature.other.OtherScreen
 import dev.nfcstudio.app.feature.scanner.ScanScreen
 import dev.nfcstudio.app.feature.settings.SettingsScreen
 import dev.nfcstudio.app.feature.tasks.ProfileEditorScreen
@@ -36,25 +47,46 @@ import dev.nfcstudio.app.feature.tasks.TasksScreen
 import dev.nfcstudio.app.feature.writer.WriteScreen
 
 private const val EDIT_ROUTE = "tasks/edit/{id}"
-private const val RUN_ROUTE = "tasks/run/{id}"
-private const val APDU_ROUTE = "scan/apdu"
+private const val RUN_ROUTE = "tasks/run/{id}?auto={auto}"
+private const val APDU_ROUTE = "read/apdu"
+private const val SETTINGS_ROUTE = "settings"
+
+private fun titleFor(route: String?): Int = when {
+    route == null -> R.string.app_name
+    route.startsWith("read/apdu") -> R.string.apdu_title
+    route.startsWith("tasks/edit") -> R.string.tasks_edit_title
+    route.startsWith("tasks/run") -> R.string.run_title
+    route == SETTINGS_ROUTE -> R.string.nav_settings
+    else -> TopLevelDestination.entries.firstOrNull { it.route == route }?.labelRes ?: R.string.app_name
+}
 
 /**
- * App scaffold: bottom navigation on phones, a navigation rail on wide
- * screens (>= 600 dp, spec P1 tablet layouts), plus the NavHost.
+ * App shell: top app bar (title, back, Settings), bottom navigation on phones
+ * and a navigation rail on wide screens (>= 600 dp).
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NfcStudioApp() {
+fun NfcStudioApp(pendingTaskToken: String? = null, onTaskTokenConsumed: () -> Unit = {}) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val route = backStackEntry?.destination?.route
     val wide = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() } >= 600.dp
+    val topLevel = TopLevelDestination.entries.any { it.route == route }
+    val container = appContainer()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
+    // A task tag scanned while the app was not on screen (NDEF_DISCOVERED intent).
+    LaunchedEffect(pendingTaskToken) {
+        val token = pendingTaskToken ?: return@LaunchedEffect
+        onTaskTokenConsumed()
+        val profile = container.tasks.byTaskToken(token)
+        if (profile != null) navController.navigate("tasks/run/${profile.id}?auto=${profile.autoRun}")
+    }
 
     fun isSelected(d: TopLevelDestination) = route == d.route || route?.startsWith(d.route + "/") == true
     fun go(d: TopLevelDestination) {
-        if (d == TopLevelDestination.HOME) {
-            // Home is the start destination: restoreState would bring back the
-            // last saved tab stack (e.g. Scan) instead of Home, so just pop to it.
+        if (d == TopLevelDestination.READ) {
+            // Start destination: restoreState would bring back another tab's stack.
             navController.popBackStack(navController.graph.findStartDestination().id, inclusive = false)
             return
         }
@@ -66,6 +98,27 @@ fun NfcStudioApp() {
     }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(titleFor(route))) },
+                navigationIcon = {
+                    if (!topLevel && route != null) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
+                        }
+                    }
+                },
+                actions = {
+                    if (route != SETTINGS_ROUTE) {
+                        IconButton(onClick = { navController.navigate(SETTINGS_ROUTE) { launchSingleTop = true } }) {
+                            Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.nav_settings))
+                        }
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+            )
+        },
         bottomBar = {
             if (!wide) {
                 NavigationBar {
@@ -101,37 +154,43 @@ fun NfcStudioApp() {
 
 @Composable
 private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
-    val idArg = listOf(navArgument("id") { type = NavType.LongType })
-    NavHost(navController = navController, startDestination = TopLevelDestination.HOME.route, modifier = modifier) {
-        composable(TopLevelDestination.HOME.route) {
-            HomeScreen(
-                onOpenScan = { navController.navigate(TopLevelDestination.SCAN.route) },
-                onOpenWrite = { navController.navigate(TopLevelDestination.WRITE.route) },
-                onOpenHistory = { navController.navigate(TopLevelDestination.HISTORY.route) },
-                onOpenTasks = { navController.navigate(TopLevelDestination.TASKS.route) },
-            )
-        }
-        composable(TopLevelDestination.SCAN.route) {
+    val idArg = navArgument("id") { type = NavType.LongType }
+    NavHost(navController = navController, startDestination = TopLevelDestination.READ.route, modifier = modifier) {
+        composable(TopLevelDestination.READ.route) {
             ScanScreen(
-                onRunProfile = { id -> navController.navigate("tasks/run/$id") },
+                onRunProfile = { id, auto -> navController.navigate("tasks/run/$id?auto=$auto") },
                 onOpenApdu = { navController.navigate(APDU_ROUTE) },
             )
         }
         composable(TopLevelDestination.WRITE.route) { WriteScreen() }
+        composable(TopLevelDestination.OTHER.route) { OtherScreen() }
         composable(TopLevelDestination.TASKS.route) {
             TasksScreen(
                 onEdit = { id -> navController.navigate("tasks/edit/$id") },
-                onRun = { id -> navController.navigate("tasks/run/$id") },
+                onRun = { id -> navController.navigate("tasks/run/$id?auto=false") },
             )
         }
-        composable(EDIT_ROUTE, arguments = idArg) { entry ->
-            ProfileEditorScreen(profileId = entry.arguments?.getLong("id") ?: 0L, onDone = { navController.popBackStack() })
+        composable(EDIT_ROUTE, arguments = listOf(idArg)) { entry ->
+            ProfileEditorScreen(
+                profileId = entry.arguments?.getLong("id") ?: 0L,
+                onDone = { navController.popBackStack() },
+                onWriteTag = {
+                    navController.navigate(TopLevelDestination.WRITE.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                    }
+                },
+            )
         }
-        composable(RUN_ROUTE, arguments = idArg) { entry ->
-            TaskRunScreen(profileId = entry.arguments?.getLong("id") ?: 0L, onDone = { navController.popBackStack() })
+        composable(RUN_ROUTE, arguments = listOf(idArg, navArgument("auto") { type = NavType.BoolType; defaultValue = false })) { entry ->
+            TaskRunScreen(
+                profileId = entry.arguments?.getLong("id") ?: 0L,
+                autoStarted = entry.arguments?.getBoolean("auto") ?: false,
+                onDone = { navController.popBackStack() },
+            )
         }
         composable(TopLevelDestination.HISTORY.route) { HistoryScreen() }
-        composable(TopLevelDestination.SETTINGS.route) { SettingsScreen() }
+        composable(SETTINGS_ROUTE) { SettingsScreen() }
         composable(APDU_ROUTE) { ApduConsoleScreen(onDone = { navController.popBackStack() }) }
     }
 }

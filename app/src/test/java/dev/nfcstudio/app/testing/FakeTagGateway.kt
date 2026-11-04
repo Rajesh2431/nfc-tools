@@ -2,6 +2,7 @@ package dev.nfcstudio.app.testing
 
 import dev.nfcstudio.app.core.ndef.RecordSpec
 import dev.nfcstudio.app.core.nfc.DiscoveredTag
+import dev.nfcstudio.app.core.nfc.MemoryDump
 import dev.nfcstudio.app.core.nfc.NfcResult
 import dev.nfcstudio.app.core.nfc.TagGateway
 import dev.nfcstudio.app.core.nfc.TagSnapshot
@@ -16,12 +17,40 @@ class FakeTagGateway(
     var writeResult: NfcResult<Verification> = NfcResult.Ok(Verification.VERIFIED),
     var formatResult: NfcResult<Verification> = NfcResult.Ok(Verification.NOT_POSSIBLE),
     var lockResult: NfcResult<Unit> = NfcResult.Ok(Unit),
+    var dumpResult: NfcResult<MemoryDump> = NfcResult.Ok(MemoryDump(4, listOf("04a1b2c3"))),
+    var passwordResult: NfcResult<Unit> = NfcResult.Ok(Unit),
 ) : TagGateway {
     val writes = mutableListOf<List<RecordSpec>>()
+    val rawWrites = mutableListOf<ByteArray>()
+    val passwords = mutableListOf<Pair<String, Boolean>>()
+    val removedPasswords = mutableListOf<String>()
+    var identifyRequested = false
+    /** Successive reads can return different tags (copy source → target). */
+    val readQueue = ArrayDeque<NfcResult<TagSnapshot>>()
     val formats = mutableListOf<List<RecordSpec>>()
     var locks = 0
 
-    override fun read(tag: DiscoveredTag) = readResult
+    override fun read(tag: DiscoveredTag, identifyChip: Boolean): NfcResult<TagSnapshot> {
+        identifyRequested = identifyRequested || identifyChip
+        return readQueue.removeFirstOrNull() ?: readResult
+    }
+
+    override fun writeMessage(tag: DiscoveredTag, message: ByteArray): NfcResult<Verification> {
+        rawWrites += message
+        return writeResult
+    }
+
+    override fun dumpMemory(tag: DiscoveredTag) = dumpResult
+
+    override fun setPassword(tag: DiscoveredTag, password: String, protectReads: Boolean): NfcResult<Unit> {
+        passwords += password to protectReads
+        return passwordResult
+    }
+
+    override fun removePassword(tag: DiscoveredTag, password: String): NfcResult<Unit> {
+        removedPasswords += password
+        return passwordResult
+    }
     override fun write(tag: DiscoveredTag, specs: List<RecordSpec>): NfcResult<Verification> {
         writes += specs
         return writeResult

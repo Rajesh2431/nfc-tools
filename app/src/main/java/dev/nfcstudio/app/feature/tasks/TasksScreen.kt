@@ -61,9 +61,6 @@ fun TasksScreen(onEdit: (Long) -> Unit, onRun: (Long) -> Unit, modifier: Modifie
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Text(stringResource(R.string.nav_tasks), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.onBackground)
-        }
-        item {
             Text(stringResource(R.string.tasks_intro), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         item {

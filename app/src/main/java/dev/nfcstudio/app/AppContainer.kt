@@ -23,7 +23,6 @@ import dev.nfcstudio.app.feature.tasks.TasksViewModel
 import dev.nfcstudio.app.data.repository.TemplateRepository
 import dev.nfcstudio.app.data.settings.SettingsRepository
 import dev.nfcstudio.app.feature.history.HistoryViewModel
-import dev.nfcstudio.app.feature.home.HomeViewModel
 import dev.nfcstudio.app.feature.scanner.ScanViewModel
 import dev.nfcstudio.app.feature.settings.SettingsViewModel
 import dev.nfcstudio.app.feature.writer.TemplatesViewModel
@@ -50,6 +49,9 @@ class AppContainer(context: Context) {
     val tasks by lazy { TaskRepository(database.taskDao()) }
     val tagStore = CurrentTagStore()
 
+    /** Records another screen wants the Write tab to load (e.g. a task tag). */
+    val pendingWrite = kotlinx.coroutines.flow.MutableStateFlow<List<dev.nfcstudio.app.core.ndef.RecordSpec>?>(null)
+
     /** Uses the Activity context so started activities join the app's task. */
     fun actionPerformer(context: Context) = IntentActionPerformer(context)
 
@@ -63,7 +65,7 @@ class AppContainer(context: Context) {
     fun templatesViewModel() = TemplatesViewModel(templates)
     fun historyViewModel() = HistoryViewModel(history, backup)
     fun settingsViewModel() = SettingsViewModel(settings, history, backup)
-    fun homeViewModel() = HomeViewModel(history, templates)
+    fun otherViewModel() = dev.nfcstudio.app.feature.other.OtherViewModel(tagGateway)
     fun tasksViewModel() = TasksViewModel(tasks)
     fun profileEditorViewModel(id: Long) = ProfileEditorViewModel(tasks, id)
     /** Opens an ISO-DEP channel only for an IsoDep tag that is still the current one. */
@@ -84,7 +86,7 @@ class AppContainer(context: Context) {
             }.isSuccess
         }
 
-    fun taskRunViewModel(id: Long, context: Context) = TaskRunViewModel(tasks, actionPerformer(context), id)
+    fun taskRunViewModel(id: Long, autoStarted: Boolean, context: Context) = TaskRunViewModel(tasks, actionPerformer(context), id, autoStarted)
 }
 
 @Composable

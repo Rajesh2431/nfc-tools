@@ -6,6 +6,8 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
@@ -33,23 +35,38 @@ class NavigationSmokeTest {
 
     @Test
     fun allTopLevelScreensRender() {
-        shows("NFC Studio")
-        tab("Scan"); shows("Reader mode is active")
-        tab("Write"); shows("Compose records")
+        tab("Read"); shows("Read")
+        tab("Write"); shows("Add a record")
+        tab("Other"); shows("Copy tag")
         tab("Tasks"); shows("New profile")
         tab("History"); shows("Search content or technology")
-        tab("Settings"); shows("Save scans to history")
-        tab("Home"); shows("Recent scans")
+        rule.onNodeWithContentDescription("Settings").performClick(); shows("Save scans to history")
+        rule.onNodeWithContentDescription("Back").performClick()
+        tab("Read"); shows("Read")
     }
 
     @Test
     fun invalidLanguageIsRejectedWithoutCrash() {
         tab("Write")
-        shows("Compose records")
+        rule.onAllNodesWithText("Add a record").onFirst().performClick()
+        rule.onAllNodesWithText("Plain text with a language code").onFirst().performClick()
         val fields = rule.onAllNodes(hasSetTextAction())
         fields[0].performTextInput("hello")
         fields[1].performTextReplacement("e n")
-        rule.onAllNodesWithText("Add record").onFirst().performClick()
-        shows("Use a language code")
+        rule.onAllNodesWithText("Add record").onLast().performClick()
+        shows("Some fields are missing or invalid")
+    }
+
+    @Test
+    fun wifiRecordIsBuiltAndListed() {
+        tab("Write")
+        rule.onAllNodesWithText("Add a record").onFirst().performClick()
+        rule.onAllNodesWithText("Network name and password (WSC)").onFirst().performClick()
+        val fields = rule.onAllNodes(hasSetTextAction())
+        fields[0].performTextInput("CafeNet")
+        fields[1].performTextInput("password123")
+        rule.onAllNodesWithText("Add record").onLast().performClick()
+        shows("CafeNet")
+        shows("Encoded size")
     }
 }

@@ -65,7 +65,19 @@ object NdefParser {
                     else -> base.copy(note = "well-known type not decoded")
                 }
 
-                TNF_MIME_MEDIA -> base.copy(kind = RecordKind.MIME, mimeType = printableType(record.type))
+                TNF_MIME_MEDIA -> {
+                    val mime = printableType(record.type)?.lowercase()
+                    when (mime) {
+                        "text/vcard", "text/x-vcard" ->
+                            base.copy(kind = RecordKind.CONTACT, mimeType = mime, details = RichRecords.decodeContact(record.payload))
+
+                        RichRecords.WIFI_MIME -> base.copy(kind = RecordKind.WIFI, mimeType = mime, details = RichRecords.decodeWifi(record.payload))
+                        RichRecords.BLUETOOTH_MIME ->
+                            base.copy(kind = RecordKind.BLUETOOTH, mimeType = mime, details = RichRecords.decodeBluetooth(record.payload))
+
+                        else -> base.copy(kind = RecordKind.MIME, mimeType = printableType(record.type))
+                    }
+                }
 
                 TNF_ABSOLUTE_URI -> base.copy(
                     kind = RecordKind.URI,
@@ -73,7 +85,19 @@ object NdefParser {
                     note = "absolute-URI record; payload kept as raw bytes",
                 )
 
-                TNF_EXTERNAL -> base.copy(note = "external type")
+                TNF_EXTERNAL -> {
+                    val type = printableType(record.type)?.lowercase()
+                    val text = record.payload.takeIf { it.size <= 200 }?.toString(Charsets.US_ASCII)
+                    when {
+                        type == RichRecords.AAR_TYPE && text != null && RichRecords.isValidPackage(text) ->
+                            base.copy(kind = RecordKind.APP, details = listOf(Detail(Detail.Label.PACKAGE, text)))
+
+                        type == RichRecords.TASK_TYPE && text != null && RichRecords.isValidToken(text) ->
+                            base.copy(kind = RecordKind.TASK, details = listOf(Detail(Detail.Label.TOKEN, text)))
+
+                        else -> base.copy(kind = RecordKind.EXTERNAL, note = "external type")
+                    }
+                }
                 TNF_UNKNOWN -> base.copy(note = "unknown type")
                 TNF_UNCHANGED -> base.copy(note = "chunk continuation outside a chunked record")
                 else -> base.copy(note = "reserved TNF ${record.tnf}")

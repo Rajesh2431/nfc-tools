@@ -22,3 +22,10 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_task_log_createdAt` ON `task_log` (`createdAt`)")
     }
 }
+
+/** v2 → v3: opt-in auto-run flag for task profiles; existing profiles stay manual. */
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `task_profiles` ADD COLUMN `autoRun` INTEGER NOT NULL DEFAULT 0")
+    }
+}

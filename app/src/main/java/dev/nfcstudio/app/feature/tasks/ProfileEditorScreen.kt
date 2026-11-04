@@ -49,7 +49,7 @@ import dev.nfcstudio.app.ui.components.MessageCard
 /** Profile editor: name, policy, optional scan trigger and ordered allowlisted actions. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ProfileEditorScreen(profileId: Long, onDone: () -> Unit, modifier: Modifier = Modifier) {
+fun ProfileEditorScreen(profileId: Long, onDone: () -> Unit, onWriteTag: () -> Unit, modifier: Modifier = Modifier) {
     val container = appContainer()
     val vm: ProfileEditorViewModel = viewModel(
         key = "editor-$profileId",
@@ -70,10 +70,6 @@ fun ProfileEditorScreen(profileId: Long, onDone: () -> Unit, modifier: Modifier 
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            stringResource(if (profileId == 0L) R.string.tasks_new else R.string.tasks_edit_title),
-            style = MaterialTheme.typography.headlineMedium,
-        )
         if (missing) {
             MessageCard(title = stringResource(R.string.tasks_invalid)) { OutlinedButton(onClick = onDone) { Text(stringResource(R.string.writer_done)) } }
             return@Column
@@ -115,7 +111,7 @@ fun ProfileEditorScreen(profileId: Long, onDone: () -> Unit, modifier: Modifier 
 
         Text(stringResource(R.string.profile_trigger), style = MaterialTheme.typography.titleSmall)
         Text(stringResource(R.string.profile_trigger_detail), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TriggerKind.entries.forEach { k ->
                 FilterChip(
                     selected = d.triggerKind == k,
@@ -127,6 +123,7 @@ fun ProfileEditorScreen(profileId: Long, onDone: () -> Unit, modifier: Modifier 
                                     TriggerKind.NONE -> R.string.trigger_none
                                     TriggerKind.TEXT -> R.string.trigger_text
                                     TriggerKind.HOST -> R.string.trigger_host
+                                    TriggerKind.TASK_TAG -> R.string.trigger_task_tag
                                 },
                             ),
                         )
@@ -134,7 +131,36 @@ fun ProfileEditorScreen(profileId: Long, onDone: () -> Unit, modifier: Modifier 
                 )
             }
         }
-        if (d.triggerKind != TriggerKind.NONE) {
+        if (d.triggerKind == TriggerKind.TASK_TAG) {
+            Text(stringResource(R.string.task_tag_explain), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedButton(
+                onClick = {
+                    vm.save {
+                        container.pendingWrite.value = listOfNotNull(dev.nfcstudio.app.core.ndef.RichRecords.taskTag(d.token))
+                        onWriteTag()
+                    }
+                },
+                enabled = d.actions.isNotEmpty() && d.name.isNotBlank(),
+            ) { Text(stringResource(R.string.task_tag_write)) }
+        }
+        val autoAllowed = d.triggerKind != TriggerKind.NONE && d.policy == ConfirmationPolicy.EXTERNAL_ONLY
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .toggleable(value = d.autoRun && autoAllowed, enabled = autoAllowed, role = Role.Switch) { v -> vm.update { it.copy(autoRun = v) } },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.profile_auto_run))
+                Text(
+                    stringResource(if (autoAllowed) R.string.profile_auto_run_detail else R.string.profile_auto_run_unavailable),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(checked = d.autoRun && autoAllowed, onCheckedChange = null, enabled = autoAllowed)
+        }
+        if (d.triggerKind == TriggerKind.TEXT || d.triggerKind == TriggerKind.HOST) {
             OutlinedTextField(
                 value = d.triggerValue,
                 onValueChange = { v -> vm.update { it.copy(triggerValue = v) } },
@@ -181,7 +207,7 @@ fun ProfileEditorScreen(profileId: Long, onDone: () -> Unit, modifier: Modifier 
 
         problem?.let { Text(stringResource(profileProblemText(it)), color = MaterialTheme.colorScheme.error) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = vm::save) { Text(stringResource(R.string.template_save_confirm)) }
+            Button(onClick = { vm.save() }) { Text(stringResource(R.string.template_save_confirm)) }
             OutlinedButton(onClick = onDone) { Text(stringResource(R.string.writer_cancel)) }
         }
     }

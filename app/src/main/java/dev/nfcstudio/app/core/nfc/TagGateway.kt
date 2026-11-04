@@ -32,8 +32,15 @@ enum class Verification {
  * and return typed results; they never throw.
  */
 interface TagGateway {
-    fun read(tag: DiscoveredTag): NfcResult<TagSnapshot>
+    /** @param identifyChip also sends read-only chip identification commands (Scan only). */
+    fun read(tag: DiscoveredTag, identifyChip: Boolean = false): NfcResult<TagSnapshot>
     fun write(tag: DiscoveredTag, specs: List<RecordSpec>): NfcResult<Verification>
+
+    /** Writes an already-encoded NDEF message (tag copy). Same checks and verification as [write]. */
+    fun writeMessage(tag: DiscoveredTag, message: ByteArray): NfcResult<Verification>
+    fun dumpMemory(tag: DiscoveredTag): NfcResult<MemoryDump>
+    fun setPassword(tag: DiscoveredTag, password: String, protectReads: Boolean): NfcResult<Unit>
+    fun removePassword(tag: DiscoveredTag, password: String): NfcResult<Unit>
     fun formatAndWrite(tag: DiscoveredTag, specs: List<RecordSpec>): NfcResult<Verification>
     fun makeReadOnly(tag: DiscoveredTag): NfcResult<Unit>
 }
@@ -43,16 +50,20 @@ object PlatformTagGateway : TagGateway {
 
     private fun DiscoveredTag.platform(): Tag = (this as PlatformTag).tag
 
-    override fun read(tag: DiscoveredTag): NfcResult<TagSnapshot> = nfcCatching {
+    override fun read(tag: DiscoveredTag, identifyChip: Boolean): NfcResult<TagSnapshot> = nfcCatching {
         val t = tag.platform()
         val ndef = Ndef.get(t)
+        val ndefSnapshot = ndef?.let(::readNdef)
+        // Identification runs last: a NAK can halt some chips until they re-enter the field.
+        val chip = if (identifyChip) runCatching { ChipOps.identify(t) }.getOrNull() else null
         NfcResult.Ok(
             TagSnapshot(
                 uidHex = t.id?.takeIf { it.isNotEmpty() }?.toHex(),
                 technologies = t.techList.map { it.substringAfterLast('.') },
-                ndef = ndef?.let(::readNdef),
+                ndef = ndefSnapshot,
                 formatable = NdefFormatable.get(t) != null,
                 techDetails = TagInspector.inspect(t),
+                chip = chip,
             ),
         )
     }
@@ -105,10 +116,13 @@ object PlatformTagGateway : TagGateway {
     private fun buildMessage(specs: List<RecordSpec>): NdefMessage =
         NdefMessage(NdefMessageCodec.encode(specs.map { it.toRawRecord() }))
 
-    override fun write(tag: DiscoveredTag, specs: List<RecordSpec>): NfcResult<Verification> = nfcCatching {
+    override fun write(tag: DiscoveredTag, specs: List<RecordSpec>): NfcResult<Verification> =
+        nfcCatching { writeMessage(tag, NdefMessageCodec.encode(specs.map { it.toRawRecord() })) }
+
+    override fun writeMessage(tag: DiscoveredTag, message: ByteArray): NfcResult<Verification> = nfcCatching {
         val ndef = Ndef.get(tag.platform()) ?: return NfcResult.Err(NfcError.NoNdefSupport)
-        val message = buildMessage(specs)
-        val expected = message.toByteArray()
+        val ndefMessage = NdefMessage(message)
+        val expected = ndefMessage.toByteArray()
         ndef.connect()
         try {
             if (!ndef.isWritable) return NfcResult.Err(NfcError.ReadOnly)
@@ -116,7 +130,7 @@ object PlatformTagGateway : TagGateway {
             if (capacity > 0 && expected.size > capacity) {
                 return NfcResult.Err(NfcError.TooLarge(expected.size, capacity))
             }
-            ndef.writeNdefMessage(message)
+            ndef.writeNdefMessage(ndefMessage)
             // Read back over RF in the same session; never the discovery cache.
             val readBack = try {
                 ndef.ndefMessage
@@ -153,6 +167,25 @@ object PlatformTagGateway : TagGateway {
             // read-back needs a fresh discovery. Report that truthfully.
             NfcResult.Ok(Verification.NOT_POSSIBLE)
         }
+
+    override fun dumpMemory(tag: DiscoveredTag): NfcResult<MemoryDump> = nfcCatching {
+        val t = tag.platform()
+        ChipOps.dump(t, runCatching { ChipOps.identify(t) }.getOrNull())
+    }
+
+    private fun ntagLayout(t: Tag): NtagLayout? = runCatching { ChipOps.identify(t) }.getOrNull()?.ntag
+
+    override fun setPassword(tag: DiscoveredTag, password: String, protectReads: Boolean): NfcResult<Unit> = nfcCatching {
+        val t = tag.platform()
+        val layout = ntagLayout(t) ?: return NfcResult.Err(NfcError.ChipUnsupported)
+        ChipOps.setPassword(t, layout, password, protectReads)
+    }
+
+    override fun removePassword(tag: DiscoveredTag, password: String): NfcResult<Unit> = nfcCatching {
+        val t = tag.platform()
+        val layout = ntagLayout(t) ?: return NfcResult.Err(NfcError.ChipUnsupported)
+        ChipOps.removePassword(t, layout, password)
+    }
 
     override fun makeReadOnly(tag: DiscoveredTag): NfcResult<Unit> = nfcCatching {
         val ndef = Ndef.get(tag.platform()) ?: return NfcResult.Err(NfcError.NoNdefSupport)

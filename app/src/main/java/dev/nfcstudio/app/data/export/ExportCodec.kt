@@ -67,6 +67,7 @@ data class ProfileDto(
     val trigger: TaskTrigger? = null,
     val createdAt: Long,
     val updatedAt: Long,
+    val autoRun: Boolean = false,
 )
 
 /** Validated content ready to insert. */
@@ -200,12 +201,12 @@ object ExportCodec {
         )
     }
 
-    private fun TaskProfile.toDto() = ProfileDto(name, enabled, actions, policy, trigger, createdAt, updatedAt)
+    private fun TaskProfile.toDto() = ProfileDto(name, enabled, actions, policy, trigger, createdAt, updatedAt, autoRun)
 
     private fun ProfileDto.toEntity(now: Long): TaskProfileEntity? {
         val created = createdAt.takeIf { it in 1..(now + ONE_DAY) } ?: now
         val profile = TaskProfile(
-            name = name.trim(), enabled = enabled, actions = actions, policy = policy, trigger = trigger,
+            name = name.trim(), enabled = enabled, actions = actions, policy = policy, trigger = trigger, autoRun = autoRun,
             createdAt = created, updatedAt = updatedAt.takeIf { it in created..(now + ONE_DAY) } ?: created,
         )
         if (TaskValidator.validate(profile) != null) return null

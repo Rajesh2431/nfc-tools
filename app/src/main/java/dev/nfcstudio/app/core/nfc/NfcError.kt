@@ -41,6 +41,15 @@ sealed interface NfcError {
     /** makeReadOnly() returned false. */
     data object LockFailed : NfcError
 
+    /** Password authentication was rejected by the tag. */
+    data object WrongPassword : NfcError
+
+    /** The tag is already password-protected; remove the password first. */
+    data object AlreadyProtected : NfcError
+
+    /** The chip could not be identified exactly enough for this operation. */
+    data object ChipUnsupported : NfcError
+
     /** The tag does not expose the technology needed for this operation. */
     data class TechnologyUnavailable(val technology: String) : NfcError
 }

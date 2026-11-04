@@ -21,6 +21,14 @@ sealed class RecordDto {
     @Serializable
     @SerialName("mime")
     data class Mime(val mimeType: String, val payload: String) : RecordDto()
+
+    @Serializable
+    @SerialName("mime_binary")
+    data class MimeBinary(val mimeType: String, val payloadHex: String) : RecordDto()
+
+    @Serializable
+    @SerialName("external")
+    data class External(val externalType: String, val payloadHex: String) : RecordDto()
 }
 
 object RecordJson {
@@ -37,6 +45,8 @@ object RecordJson {
         is RecordSpec.Text -> RecordDto.Text(spec.text, spec.language, spec.encodeAsUtf16)
         is RecordSpec.Uri -> RecordDto.Uri(spec.uri)
         is RecordSpec.Mime -> RecordDto.Mime(spec.mimeType, spec.payload)
+        is RecordSpec.MimeBinary -> RecordDto.MimeBinary(spec.mimeType, spec.payloadHex)
+        is RecordSpec.External -> RecordDto.External(spec.type, spec.payloadHex)
         RecordSpec.Empty -> null
     }
 
@@ -44,6 +54,8 @@ object RecordJson {
         is RecordDto.Text -> RecordSpec.Text(dto.text, dto.language, dto.utf16)
         is RecordDto.Uri -> RecordSpec.Uri(dto.uri)
         is RecordDto.Mime -> RecordSpec.Mime(dto.mimeType, dto.payload)
+        is RecordDto.MimeBinary -> RecordSpec.MimeBinary(dto.mimeType, dto.payloadHex.lowercase())
+        is RecordDto.External -> RecordSpec.External(dto.externalType, dto.payloadHex.lowercase())
     }
 
     fun encode(specs: List<RecordSpec>): String =

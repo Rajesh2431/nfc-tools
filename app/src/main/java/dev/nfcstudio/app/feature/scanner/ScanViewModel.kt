@@ -48,7 +48,7 @@ class ScanViewModel(
         _state.update { it.copy(working = true) }
         viewModelScope.launch {
             try {
-                val result = withContext(io) { gateway.read(tag) }
+                val result = withContext(io) { gateway.read(tag, identifyChip = true) }
                 _state.update { s ->
                     when (result) {
                         is NfcResult.Ok -> State(snapshot = result.value, scanCount = s.scanCount + 1)

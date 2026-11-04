@@ -23,6 +23,8 @@ class TaskRunner(
     val profile: TaskProfile,
     private val performer: ActionPerformer,
     private val onLog: (LogEntry) -> Unit,
+    /** True when started by scanning a matching tag of an auto-run profile. */
+    val autoStarted: Boolean = false,
 ) {
     sealed interface State {
         data class Confirm(val index: Int, val action: TaskAction) : State
@@ -46,7 +48,8 @@ class TaskRunner(
     private fun enter(index: Int): State {
         if (index >= profile.actions.size) return State.Finished(log.toList())
         val action = profile.actions[index]
-        return if (action.requiresConfirmation(profile.policy)) State.Confirm(index, action) else run(index, action)
+        val auto = autoStarted && profile.autoRun
+        return if (action.requiresConfirmation(profile.policy, auto)) State.Confirm(index, action) else run(index, action)
     }
 
     private fun run(index: Int, action: TaskAction): State {

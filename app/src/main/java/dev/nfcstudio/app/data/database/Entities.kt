@@ -1,5 +1,6 @@
 package dev.nfcstudio.app.data.database
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -54,6 +55,8 @@ data class TaskProfileEntity(
     val triggerJson: String?,
     val createdAt: Long,
     val updatedAt: Long,
+    /** Added in schema v3 (opt-in auto-run, ADR 0001). */
+    @ColumnInfo(defaultValue = "0") val autoRun: Boolean = false,
 )
 
 /** Local execution log. Stores action type and outcome only — never parameters. */

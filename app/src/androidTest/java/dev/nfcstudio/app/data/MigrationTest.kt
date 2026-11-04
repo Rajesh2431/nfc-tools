@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.nfcstudio.app.data.database.AppDatabase
 import dev.nfcstudio.app.data.database.MIGRATION_1_2
+import dev.nfcstudio.app.data.database.MIGRATION_2_3
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -48,8 +49,29 @@ class MigrationTest {
     }
 
     @Test
+    fun migrate2To3KeepsProfilesManual() = runTest {
+        helper.createDatabase(dbName, 2).apply {
+            execSQL(
+                "INSERT INTO task_profiles (name, enabled, actionsJson, policy, triggerJson, createdAt, updatedAt) " +
+                    "VALUES ('Door', 1, '[{\"type\":\"display_text\",\"text\":\"Hi\"}]', 'EXTERNAL_ONLY', NULL, 1, 1)",
+            )
+            close()
+        }
+        helper.runMigrationsAndValidate(dbName, 3, true, MIGRATION_2_3).close()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val db = Room.databaseBuilder(context, AppDatabase::class.java, dbName).addMigrations(*AppDatabase.MIGRATIONS).build()
+        try {
+            val row = db.taskDao().allProfiles().single()
+            assertEquals("Door", row.name)
+            assertEquals(false, row.autoRun) // existing profiles never become auto-run
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
     fun everyVersionHasAMigrationPath() {
         helper.createDatabase(dbName, 1).close()
-        helper.runMigrationsAndValidate(dbName, 2, true, *AppDatabase.MIGRATIONS).close()
+        helper.runMigrationsAndValidate(dbName, 3, true, *AppDatabase.MIGRATIONS).close()
     }
 }

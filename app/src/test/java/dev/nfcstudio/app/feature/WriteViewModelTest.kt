@@ -139,39 +139,23 @@ class WriteViewModelTest {
         assertEquals(Phase.Failed(NfcError.TagLost), lost.phase.value)
     }
 
+
+
+
     @Test
-    fun `erase always asks and writes a single empty record`() {
-        val gateway = FakeTagGateway(NfcResult.Ok(ndefTag(content = recordsContent(RecordSpec.Text("old")))))
-        val vm = vm(gateway)
-        vm.startErase()
-        vm.onTag(TestTag)
-        assertTrue(vm.phase.value is Phase.ConfirmErase)
-        vm.confirm()
-        assertEquals(listOf(listOf(RecordSpec.Empty)), gateway.writes)
+    fun `addRecord accepts built records and rejects invalid ones`() {
+        val vm = WriteViewModel(FakeTagGateway(NfcResult.Ok(ndefTag())), io = main.dispatcher)
+        assertTrue(vm.addRecord(RecordSpec.Uri("https://example.com")))
+        assertFalse(vm.addRecord(RecordSpec.Uri("javascript:x")))
+        assertFalse(vm.addRecord(RecordSpec.Empty))
+        assertEquals(1, vm.records.value.size)
     }
 
     @Test
-    fun `lock needs two confirmations`() {
+    fun `scanning tags never requests chip identification while writing`() {
         val gateway = FakeTagGateway(NfcResult.Ok(ndefTag()))
-        val vm = vm(gateway)
-        vm.requestLock()
-        assertEquals(Phase.ConfirmLockIntent, vm.phase.value)
-        vm.onTag(TestTag) // not armed yet
-        assertEquals(0, gateway.locks)
-        vm.confirmLockIntent()
-        vm.onTag(TestTag)
-        assertTrue(vm.phase.value is Phase.ConfirmLock)
-        assertEquals(0, gateway.locks)
-        vm.confirm()
-        assertEquals(1, gateway.locks)
-        assertEquals(Operation.LOCK, (vm.phase.value as Phase.Success).operation)
-    }
-
-    @Test
-    fun `lock is refused when the platform cannot lock`() {
-        val vm = vm(FakeTagGateway(NfcResult.Ok(ndefTag(canLock = false))))
-        vm.requestLock(); vm.confirmLockIntent(); vm.onTag(TestTag)
-        assertEquals(Phase.Failed(NfcError.LockUnsupported), vm.phase.value)
+        vm(gateway).apply { startWrite(); onTag(TestTag) }
+        assertFalse(gateway.identifyRequested)
     }
 
     @Test

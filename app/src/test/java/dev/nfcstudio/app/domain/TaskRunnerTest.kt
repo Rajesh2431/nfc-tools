@@ -21,8 +21,40 @@ class TaskRunnerTest {
     private var failWith: FailureReason? = null
     private val performer = ActionPerformer { performed += it; failWith }
 
-    private fun runner(vararg actions: TaskAction, policy: ConfirmationPolicy = ConfirmationPolicy.EXTERNAL_ONLY, enabled: Boolean = true) =
-        TaskRunner(TaskProfile(id = 1, name = "p", enabled = enabled, actions = actions.toList(), policy = policy), performer) { logged += it }
+    private fun runner(
+        vararg actions: TaskAction,
+        policy: ConfirmationPolicy = ConfirmationPolicy.EXTERNAL_ONLY,
+        enabled: Boolean = true,
+        autoRun: Boolean = false,
+        autoStarted: Boolean = false,
+    ) = TaskRunner(
+        TaskProfile(id = 1, name = "p", enabled = enabled, actions = actions.toList(), policy = policy, autoRun = autoRun),
+        performer,
+        { logged += it },
+        autoStarted,
+    )
+
+    @Test
+    fun `auto-started runs skip confirmation only for safe actions`() {
+        val settings = TaskAction.OpenSettings(SettingsPanel.WIFI)
+        val r = runner(settings, url, autoRun = true, autoStarted = true)
+        // Settings screen opened without asking; the URL still waits for confirmation.
+        assertEquals(listOf<TaskAction>(settings), performed)
+        assertEquals(State.Confirm(1, url), r.state)
+    }
+
+    @Test
+    fun `auto-start without the profile opt-in still confirms`() {
+        val r = runner(TaskAction.OpenSettings(SettingsPanel.WIFI), autoRun = false, autoStarted = true)
+        assertTrue(r.state is State.Confirm)
+        assertTrue(performed.isEmpty())
+    }
+
+    @Test
+    fun `every-action policy beats auto-run`() {
+        val r = runner(TaskAction.OpenSettings(SettingsPanel.WIFI), policy = ConfirmationPolicy.EVERY_ACTION, autoRun = true, autoStarted = true)
+        assertTrue(r.state is State.Confirm)
+    }
 
     private val url = TaskAction.OpenUrl("https://example.com")
     private val text = TaskAction.DisplayText("hi")

@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
  */
 @Database(
     entities = [ScanEntryEntity::class, TemplateEntity::class, TaskProfileEntity::class, TaskLogEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -24,7 +24,7 @@ abstract class AppDatabase : RoomDatabase() {
         const val NAME = "nfc_studio.db"
 
         /** All migrations, in order. Shared with migration tests. */
-        val MIGRATIONS = arrayOf<androidx.room.migration.Migration>(MIGRATION_1_2)
+        val MIGRATIONS = arrayOf<androidx.room.migration.Migration>(MIGRATION_1_2, MIGRATION_2_3)
 
         fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context, AppDatabase::class.java, NAME)

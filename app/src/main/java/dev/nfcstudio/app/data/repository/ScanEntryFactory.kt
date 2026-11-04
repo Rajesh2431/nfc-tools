@@ -69,5 +69,8 @@ object ScanEntryFactory {
         NfcError.LockUnsupported -> "LOCK_UNSUPPORTED"
         NfcError.LockFailed -> "LOCK_FAILED"
         is NfcError.TechnologyUnavailable -> "TECH_UNAVAILABLE"
+        NfcError.WrongPassword -> "WRONG_PASSWORD"
+        NfcError.AlreadyProtected -> "ALREADY_PROTECTED"
+        NfcError.ChipUnsupported -> "CHIP_UNSUPPORTED"
     }
 }

@@ -56,7 +56,7 @@ data class ActionDraft(
     }
 }
 
-enum class TriggerKind { NONE, TEXT, HOST }
+enum class TriggerKind { NONE, TEXT, HOST, TASK_TAG }
 
 data class ProfileDraft(
     val id: Long = 0,
@@ -66,6 +66,9 @@ data class ProfileDraft(
     val triggerKind: TriggerKind = TriggerKind.NONE,
     val triggerValue: String = "",
     val actions: List<TaskAction> = emptyList(),
+    val autoRun: Boolean = false,
+    /** Random token for task tags; generated once per profile. */
+    val token: String = java.util.UUID.randomUUID().toString(),
 ) {
     fun toProfile() = TaskProfile(
         id = id,
@@ -77,7 +80,9 @@ data class ProfileDraft(
             TriggerKind.NONE -> null
             TriggerKind.TEXT -> TaskTrigger.TextContains(triggerValue.trim())
             TriggerKind.HOST -> TaskTrigger.UriHost(triggerValue.trim().lowercase())
+            TriggerKind.TASK_TAG -> TaskTrigger.TaskTag(token)
         },
+        autoRun = autoRun && triggerKind != TriggerKind.NONE && policy == ConfirmationPolicy.EXTERNAL_ONLY,
     )
 }
 
@@ -103,16 +108,19 @@ class ProfileEditorViewModel(private val repository: TaskRepository, profileId: 
                     _missing.value = true
                 } else {
                     _draft.value = ProfileDraft(
-                        id = p.id, name = p.name, enabled = p.enabled, policy = p.policy, actions = p.actions,
+                        id = p.id, name = p.name, enabled = p.enabled, policy = p.policy, actions = p.actions, autoRun = p.autoRun,
+                        token = (p.trigger as? TaskTrigger.TaskTag)?.token ?: java.util.UUID.randomUUID().toString(),
                         triggerKind = when (p.trigger) {
                             null -> TriggerKind.NONE
                             is TaskTrigger.TextContains -> TriggerKind.TEXT
                             is TaskTrigger.UriHost -> TriggerKind.HOST
+                            is TaskTrigger.TaskTag -> TriggerKind.TASK_TAG
                         },
                         triggerValue = when (val t = p.trigger) {
                             null -> ""
                             is TaskTrigger.TextContains -> t.value
                             is TaskTrigger.UriHost -> t.host
+                            is TaskTrigger.TaskTag -> ""
                         },
                     )
                 }
@@ -154,7 +162,8 @@ class ProfileEditorViewModel(private val repository: TaskRepository, profileId: 
         d.copy(actions = list)
     }
 
-    fun save() {
+    /** Saves, then reports success via [saved]; [afterSave] runs once the row exists. */
+    fun save(afterSave: (() -> Unit)? = null) {
         val d = _draft.value ?: return
         val profile = d.toProfile()
         TaskValidator.validate(profile)?.let {
@@ -162,9 +171,12 @@ class ProfileEditorViewModel(private val repository: TaskRepository, profileId: 
             return
         }
         viewModelScope.launch {
-            val (problem, _) = repository.save(profile)
+            val (problem, id) = repository.save(profile)
             _problem.value = problem
-            if (problem == null) _saved.value = true
+            if (problem == null) {
+                _draft.update { it?.copy(id = id) }
+                if (afterSave != null) afterSave() else _saved.value = true
+            }
         }
     }
 }
@@ -173,6 +185,7 @@ class TaskRunViewModel(
     private val repository: TaskRepository,
     private val performer: ActionPerformer,
     profileId: Long,
+    private val autoStarted: Boolean = false,
 ) : ViewModel() {
     sealed interface UiState {
         data object Loading : UiState
@@ -191,7 +204,7 @@ class TaskRunViewModel(
                 _state.value = UiState.Unavailable
                 return@launch
             }
-            val r = TaskRunner(profile, performer) { entry -> viewModelScope.launch { repository.log(profile, entry) } }
+            val r = TaskRunner(profile, performer, { entry -> viewModelScope.launch { repository.log(profile, entry) } }, autoStarted)
             runner = r
             publish()
         }
