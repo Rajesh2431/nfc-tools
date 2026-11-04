@@ -1,6 +1,8 @@
-# NFC Studio
+# Tap & Go
 
-Android NFC reader, writer and tag toolkit. Kotlin, Jetpack Compose, Material 3,
+[![Android build](https://github.com/Rajesh2431/nfc-tools/actions/workflows/android.yml/badge.svg)](https://github.com/Rajesh2431/nfc-tools/actions/workflows/android.yml)
+
+Android NFC reader, writer, tag library and automation toolkit. Kotlin, Jetpack Compose, Material 3,
 offline-first. Specification: `docs/spec.md`; agent rules: `AGENTS.md`.
 
 ## Features
@@ -25,6 +27,11 @@ offline-first. Specification: `docs/spec.md`; agent rules: `AGENTS.md`.
 Evidence: `docs/acceptance-v1.md`.
 
 ## Build
+
+CI (`.github/workflows/android.yml`) runs on every push and pull request:
+debug build, unit tests, lint and an unsigned R8 release build, and uploads
+the APKs and reports as workflow artifacts. Instrumented tests need a device
+and are run locally (`connectedDebugAndroidTest`).
 
 ```bash
 ./gradlew assembleDebug                 # debug APK
