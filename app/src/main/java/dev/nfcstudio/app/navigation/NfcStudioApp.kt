@@ -51,10 +51,18 @@ fun NfcStudioApp() {
     val wide = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() } >= 600.dp
 
     fun isSelected(d: TopLevelDestination) = route == d.route || route?.startsWith(d.route + "/") == true
-    fun go(d: TopLevelDestination) = navController.navigate(d.route) {
-        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
+    fun go(d: TopLevelDestination) {
+        if (d == TopLevelDestination.HOME) {
+            // Home is the start destination: restoreState would bring back the
+            // last saved tab stack (e.g. Scan) instead of Home, so just pop to it.
+            navController.popBackStack(navController.graph.findStartDestination().id, inclusive = false)
+            return
+        }
+        navController.navigate(d.route) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     Scaffold(

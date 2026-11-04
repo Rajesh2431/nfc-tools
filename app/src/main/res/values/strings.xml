@@ -17,7 +17,7 @@
     <string name="nfc_state_disabled_detail">Enable NFC in system settings; the app cannot read or write tags while it is off.</string>
     <string name="nfc_state_disabled_action">Open NFC settings</string>
     <string name="nfc_state_no_hardware">No NFC hardware</string>
-    <string name="nfc_state_no_hardware_detail">This device has no NFC chip. Scanning and writing stay unavailable; other screens remain for reference.</string>
+    <string name="nfc_state_no_hardware_detail">Android reports no usable NFC adapter on this device, so scanning and writing are unavailable. History, templates, tasks and settings still work.</string>
 
     <!-- Home -->
     <string name="home_title">NFC Studio</string>
