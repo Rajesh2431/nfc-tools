@@ -1,35 +1,52 @@
 package dev.nfcstudio.app.core.nfc
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.nfc.NfcAdapter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
 /**
- * Observes the real NFC adapter state while the host is RESUMED and refreshes
- * it on every resume, so returning from system settings updates the UI.
- * No cached or simulated values are produced.
+ * Observes the real NFC adapter state: refreshed on every resume (returning
+ * from system settings) and on ACTION_ADAPTER_STATE_CHANGED (quick-settings
+ * toggle while the app is visible). No cached or simulated values.
  */
 @Composable
 fun rememberCurrentNfcState(): State<NfcState> {
-    val state = remember { mutableStateOf(NfcState.NOT_AVAILABLE) }
     val appContext = LocalContext.current.applicationContext
+    val state = remember { mutableStateOf(NfcAvailability.current(appContext)) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(appContext, lifecycleOwner) {
+        val refresh = { state.value = NfcAvailability.current(appContext) }
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                state.value = NfcAvailability.current(appContext)
-            }
+            if (event == Lifecycle.Event.ON_RESUME) refresh()
+        }
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) = refresh()
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        observer.onStateChanged(lifecycleOwner, Lifecycle.Event.ON_RESUME)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        // The system sends this protected broadcast; NOT_EXPORTED still receives it.
+        ContextCompat.registerReceiver(
+            appContext,
+            receiver,
+            IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            runCatching { appContext.unregisterReceiver(receiver) }
+        }
     }
     return state
 }

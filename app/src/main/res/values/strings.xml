@@ -12,7 +12,7 @@
 
     <!-- NFC status -->
     <string name="nfc_state_ready">NFC is ready</string>
-    <string name="nfc_state_ready_detail">NFC is on and this app can scan tags when the reader is built (M2).</string>
+    <string name="nfc_state_ready_detail">NFC is on. Open Scan to read a tag or Write to program one.</string>
     <string name="nfc_state_disabled">NFC is turned off</string>
     <string name="nfc_state_disabled_detail">Enable NFC in system settings; the app cannot read or write tags while it is off.</string>
     <string name="nfc_state_disabled_action">Open NFC settings</string>
@@ -30,15 +30,169 @@
 
     <!-- Placeholder screens -->
     <string name="not_implemented_title">Not implemented yet</string>
-    <string name="scan_placeholder_title">Scanner arrives with M2</string>
-    <string name="scan_placeholder_detail">Tag discovery, NDEF parsing and the tag detail screen are milestone M2 work. Until then no tag is read, and no simulated tag data is shown.</string>
-    <string name="write_placeholder_title">Writer arrives with M3</string>
-    <string name="write_placeholder_detail">The record builder, encoded-size preview, capacity checks and verified writing are milestone M3 work. Nothing is written to a tag yet.</string>
+    <string name="placeholder_action_home">Back to Home</string>
     <string name="tasks_placeholder_title">Task profiles arrive with M5</string>
     <string name="tasks_placeholder_detail">Allowlisted actions, confirmation policy and a local execution log are milestone M5 work. Tag payloads are never auto-executed.</string>
     <string name="history_placeholder_title">History arrives with M4</string>
     <string name="history_placeholder_detail">Local scan history, search, favourites and export are milestone M4 work. No scan data is stored yet.</string>
     <string name="settings_placeholder_title">Settings arrive with M4</string>
     <string name="settings_placeholder_detail">Theme, privacy and export preferences follow the persistence milestone (M4). The app currently follows the system theme.</string>
-    <string name="placeholder_action_home">Back to Home</string>
+
+    <!-- Common -->
+    <string name="copy_value">Copy %1$s</string>
+    <string name="value_yes">yes</string>
+    <string name="value_no">no</string>
+    <string name="value_unknown">unknown</string>
+    <string name="value_not_exposed">not exposed by Android</string>
+    <string name="value_bytes">%1$d B</string>
+
+    <!-- Scan (M2) -->
+    <string name="scan_waiting_title">Waiting for a tag</string>
+    <string name="scan_waiting_detail">Reader mode is active on this screen. Unlock the phone, hold the tag flat against the antenna (usually the back of the phone) and keep it still.</string>
+    <string name="scan_working">Reading tag…</string>
+    <string name="scan_failed">Could not read the tag</string>
+    <string name="scan_again">Scan again</string>
+    <string name="scan_done">Tag read</string>
+    <string name="scan_done_detail">Hold another tag to replace this result.</string>
+    <string name="scan_clear">Clear result</string>
+    <string name="tag_details">Tag details</string>
+    <string name="tag_uid">UID</string>
+    <string name="tag_uid_note">Identifiers can be absent, randomised on every scan, or shared between tags. Do not use them for identity or access control.</string>
+    <string name="tag_technologies">Technologies exposed by Android</string>
+    <string name="tag_ndef_type">NDEF tag type</string>
+    <string name="tag_capacity">Max NDEF message size</string>
+    <string name="tag_message_size">Current message size</string>
+    <string name="tag_writable">Writable</string>
+    <string name="tag_can_lock">Can be made read-only</string>
+    <string name="tag_from_cache">Live read failed; showing the content Android cached when the tag was discovered.</string>
+    <plurals name="tag_records">
+        <item quantity="one">%1$d record</item>
+        <item quantity="other">%1$d records</item>
+    </plurals>
+    <string name="ndef_none">This tag is not NDEF-formatted (or Android exposes no Ndef technology for it).</string>
+    <string name="ndef_formatable_note">The tag exposes NdefFormatable; it can be formatted from the Write screen after confirmation.</string>
+    <string name="ndef_empty">The NDEF area is empty.</string>
+    <string name="ndef_malformed">The tag holds data that is not valid NDEF. It is shown as unreadable rather than guessed.</string>
+    <string name="ndef_unreadable">The content could not be read. Hold the tag still and scan again.</string>
+    <string name="record_text">Text</string>
+    <string name="record_uri">URI</string>
+    <string name="record_smart_poster">Smart Poster</string>
+    <string name="record_mime">MIME</string>
+    <string name="record_empty">Empty</string>
+    <string name="record_unknown">Unknown</string>
+    <string name="record_language">Language: %1$s</string>
+    <string name="record_mime_type">MIME type: %1$s</string>
+    <string name="record_type">Type: %1$s</string>
+    <string name="record_meta">TNF %1$d · payload %2$d B</string>
+    <string name="raw_payload">payload bytes</string>
+    <string name="raw_message">message bytes</string>
+    <string name="raw_show_named">Show %1$s</string>
+    <string name="raw_hide_named">Hide %1$s</string>
+    <string name="raw_ascii">Printable ASCII (other bytes shown as .)</string>
+    <string name="raw_truncated">Preview truncated to the first 4096 bytes.</string>
+    <string name="tech_details_show">Show technology details</string>
+    <string name="tech_details_hide">Hide technology details</string>
+    <string name="tech_details_note">Values are reported by Android without extra radio traffic. A technology name does not mean protected data can be accessed.</string>
+
+    <!-- Opening links -->
+    <string name="open_uri">Open link</string>
+    <string name="open_uri_confirm_title">Open this link?</string>
+    <string name="open_uri_blocked_title">Link blocked</string>
+    <string name="open_uri_blocked_detail">This link uses a scheme or characters NFC Studio does not open (only http, https, mailto, tel, sms and geo). You can still copy it.</string>
+    <string name="open_uri_host">Destination host</string>
+    <string name="open_uri_scheme">Opens with: %1$s</string>
+    <string name="open_uri_full">Full link</string>
+    <string name="open_uri_warn_userinfo">Warning: the link contains text before “@”. The real destination is the host shown above.</string>
+    <string name="open_uri_warn_idn">Warning: the host contains non-Latin characters that can imitate another site.</string>
+    <string name="open_uri_warn_http">Note: plain http is not encrypted.</string>
+    <string name="open_uri_failed">No app could open this link.</string>
+
+    <!-- Error states -->
+    <string name="error_tag_lost">The tag was moved or removed too soon. Hold it steady until the operation finishes.</string>
+    <string name="error_tag_stale">The tag session expired. Lift the tag and hold it again.</string>
+    <string name="error_io">Communication with the tag failed.</string>
+    <string name="error_no_ndef">This tag does not support NDEF.</string>
+    <string name="error_read_only">The tag is read-only.</string>
+    <string name="error_too_large">The message needs %1$d B but this tag holds at most %2$d B.</string>
+    <string name="error_format_failed">Formatting the tag failed.</string>
+    <string name="error_verify">The read-back did not match what was sent. The tag content may be incomplete; scan it to check.</string>
+    <string name="error_invalid_message">Android rejected the message as invalid NDEF.</string>
+    <string name="error_lock_unsupported">This tag or phone cannot make the tag read-only.</string>
+    <string name="error_lock_failed">The tag refused to become read-only. Its content is unchanged.</string>
+    <string name="error_tech_unavailable">The tag does not expose %1$s.</string>
+
+    <!-- Write (M3) -->
+    <string name="writer_compose">Compose records</string>
+    <string name="writer_record_text">Text</string>
+    <string name="writer_record_uri">URI</string>
+    <string name="writer_record_mime">MIME</string>
+    <string name="writer_text_label">Text content</string>
+    <string name="writer_language_label">Language code (e.g. en, de-AT)</string>
+    <string name="writer_uri_label">URI</string>
+    <string name="writer_mime_label">MIME type (e.g. text/plain)</string>
+    <string name="writer_mime_payload_label">Payload (UTF-8 text)</string>
+    <string name="writer_add">Add record</string>
+    <plurals name="writer_records">
+        <item quantity="one">Message (%1$d record)</item>
+        <item quantity="other">Message (%1$d records)</item>
+    </plurals>
+    <string name="writer_move_up">Move record up</string>
+    <string name="writer_move_down">Move record down</string>
+    <string name="writer_remove">Remove record</string>
+    <plurals name="writer_estimated_size">
+        <item quantity="one">Encoded size: %1$d byte</item>
+        <item quantity="other">Encoded size: %1$d bytes</item>
+    </plurals>
+    <string name="writer_write">Write to tag</string>
+    <string name="writer_waiting">Hold a tag to write</string>
+    <plurals name="writer_waiting_detail">
+        <item quantity="one">Ready to write %1$d record (%2$d bytes). Keep the tag still until it finishes.</item>
+        <item quantity="other">Ready to write %1$d records (%2$d bytes). Keep the tag still until it finishes.</item>
+    </plurals>
+    <string name="op_waiting_detail">Hold the tag against the antenna. You will be asked to confirm before anything changes.</string>
+    <string name="writer_cancel">Cancel</string>
+    <string name="writer_writing">Working…</string>
+    <string name="writer_writing_detail">Do not move the tag until this finishes.</string>
+    <string name="writer_success_title">Message written</string>
+    <string name="writer_success_verified">Read back and verified: content matches (%1$d B).</string>
+    <string name="writer_success_unverified">The write completed, but the tag could not be read back in the same session (it was removed, or it was just formatted). Scan it to check.</string>
+    <string name="writer_done">Done</string>
+    <string name="writer_failed_title">Operation failed</string>
+    <string name="overwrite_title">Overwrite existing data?</string>
+    <string name="overwrite_detail">This tag holds %1$s. Writing replaces it and the previous content cannot be recovered from this app.</string>
+    <string name="overwrite_confirm">Overwrite</string>
+    <string name="format_title">Format this tag as NDEF?</string>
+    <string name="format_detail">This tag is not NDEF-formatted. Formatting changes how the tag stores data, may not be reversible, and cannot be undone from this app.</string>
+    <string name="format_confirm">Format and write</string>
+    <string name="content_empty">no NDEF content</string>
+    <string name="content_malformed">data that is not valid NDEF</string>
+    <string name="content_unreadable">content that could not be read</string>
+    <plurals name="content_records">
+        <item quantity="one">%1$d record, starting with "%2$s"</item>
+        <item quantity="other">%1$d records, starting with "%2$s"</item>
+    </plurals>
+    <string name="text_empty">Enter some text first.</string>
+    <string name="text_too_long">Text is longer than 8 KiB, which no common tag can hold.</string>
+    <string name="language_invalid">Use a language code such as en, de or pt-BR.</string>
+    <string name="uri_invalid">Enter a valid http(s), mailto, tel, sms or geo URI without spaces.</string>
+    <string name="mime_invalid">Use a lowercase MIME type such as text/plain or application/json.</string>
+    <string name="payload_too_long">Payload is longer than 8 KiB.</string>
+    <string name="tag_ops_title">Other tag operations</string>
+    <string name="tag_ops_detail">Both ask for confirmation after a tag is detected and show what it currently holds.</string>
+    <string name="erase_start">Clear a tag…</string>
+    <string name="erase_waiting">Hold the tag to clear</string>
+    <string name="erase_title">Clear this tag?</string>
+    <string name="erase_detail">This tag holds %1$s. Clearing writes an empty NDEF record. It does not securely erase every memory location on the chip.</string>
+    <string name="erase_confirm">Clear tag</string>
+    <string name="erase_success_title">Tag cleared</string>
+    <string name="lock_start">Make a tag read-only…</string>
+    <string name="lock_intent_title">Permanently lock a tag?</string>
+    <string name="lock_intent_detail">Making a tag read-only is irreversible on most tags: no app, including this one, can change its content afterwards. After you continue, hold the tag; you will be asked once more.</string>
+    <string name="lock_intent_confirm">Continue</string>
+    <string name="lock_waiting">Hold the tag to lock</string>
+    <string name="lock_title">Lock this tag forever?</string>
+    <string name="lock_detail">This tag holds %1$s. After locking, it can never be rewritten or cleared.</string>
+    <string name="lock_confirm">Lock permanently</string>
+    <string name="lock_success_title">Tag locked</string>
+    <string name="lock_success_detail">The tag reported success and is now read-only.</string>
 </resources>
