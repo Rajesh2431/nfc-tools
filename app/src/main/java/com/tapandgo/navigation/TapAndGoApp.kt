@@ -20,6 +20,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
@@ -109,6 +110,17 @@ fun TapAndGoApp(
         val intent = pendingDeepLink ?: return@LaunchedEffect
         onDeepLinkConsumed()
         navController.handleDeepLink(intent)
+    }
+
+    // A tag was tapped on a screen that does not read tags: show it in Read
+    // (inside the app) instead of letting Android pass it to another app.
+    val unhandledTag by com.tapandgo.core.nfc.NfcTagRouter.unhandled.collectAsStateWithLifecycle()
+    LaunchedEffect(unhandledTag) {
+        if (unhandledTag == 0L || com.tapandgo.core.nfc.NfcTagRouter.hasHandler()) return@LaunchedEffect
+        navController.navigate(TopLevelDestination.READ.route) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+        }
     }
 
     // A task tag, shortcut, tile or other app delivered a trigger token.

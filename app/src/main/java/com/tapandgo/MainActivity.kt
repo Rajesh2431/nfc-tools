@@ -5,6 +5,8 @@ import android.nfc.NdefMessage
 import android.nfc.NdefRecord
 import android.nfc.NfcAdapter
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.IntentCompat
 import com.tapandgo.core.ndef.RichRecords
@@ -56,9 +58,80 @@ class MainActivity : ComponentActivity() {
     private fun taskTokenFrom(intent: Intent?): String? {
         if (intent?.action != NfcAdapter.ACTION_NDEF_DISCOVERED) return null
         val messages = IntentCompat.getParcelableArrayExtra(intent, NfcAdapter.EXTRA_NDEF_MESSAGES, NdefMessage::class.java) ?: return null
-        return messages.filterIsInstance<NdefMessage>().flatMap { it.records.toList() }
+        return taskTokenIn(messages.filterIsInstance<NdefMessage>())
+    }
+
+    private fun taskTokenIn(messages: List<NdefMessage>): String? =
+        messages.flatMap { it.records.toList() }
             .firstOrNull { it.tnf == NdefRecord.TNF_EXTERNAL_TYPE && it.type.toString(Charsets.US_ASCII) == RichRecords.TASK_TYPE }
             ?.payload?.toString(Charsets.US_ASCII)?.takeIf(RichRecords::isValidToken)
+
+    // ---- App-wide reader mode -------------------------------------------------
+    // While this activity is resumed, reader mode is on for every screen, so
+    // Android never dispatches a tag to another app or the system tag viewer.
+    // The current screen gets the tag through NfcTagRouter; with no screen
+    // listening, a task tag runs its profile/workflow and any other tag opens Read.
+
+    private val adapter: NfcAdapter? by lazy { NfcAdapter.getDefaultAdapter(this) }
+    private var resumed = false
+
+    private val onTag = NfcAdapter.ReaderCallback { tag ->
+        if (com.tapandgo.core.nfc.NfcTagRouter.dispatch(tag)) return@ReaderCallback
+        // Cached NDEF from discovery: no I/O, so nothing is held open here.
+        val token = runCatching { android.nfc.tech.Ndef.get(tag)?.cachedNdefMessage }.getOrNull()?.let { taskTokenIn(listOf(it)) }
+        runOnUiThread {
+            if (token != null) {
+                pendingLaunch.value = com.tapandgo.automation.LaunchRequest(token, com.tapandgo.automation.RunSource.NFC_TAG)
+            } else {
+                com.tapandgo.core.nfc.NfcTagRouter.park(tag)
+            }
+        }
+    }
+
+    private fun enableReader() {
+        val a = adapter ?: return
+        if (!resumed || !a.isEnabled) return
+        if (com.tapandgo.core.nfc.NfcTagRouter.paused.value) { runCatching { a.disableReaderMode(this) }; return }
+        val extras = Bundle().apply { putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 250) }
+        runCatching { a.enableReaderMode(this, onTag, com.tapandgo.core.nfc.READER_FLAGS, extras) }
+    }
+
+    /** NFC switched on from Quick Settings while the app is open: arm reader mode immediately. */
+    private val nfcState = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context, intent: Intent) {
+            if (intent.getIntExtra(NfcAdapter.EXTRA_ADAPTER_STATE, 0) == NfcAdapter.STATE_ON) enableReader()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        resumed = true
+        androidx.core.content.ContextCompat.registerReceiver(
+            this, nfcState, android.content.IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED),
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        enableReader()
+    }
+
+    private var pauseWatch: kotlinx.coroutines.Job? = null
+
+    override fun onStart() {
+        super.onStart()
+        pauseWatch = lifecycleScope.let { scope ->
+            scope.launch { com.tapandgo.core.nfc.NfcTagRouter.paused.collect { enableReader() } }
+        }
+    }
+
+    override fun onStop() {
+        pauseWatch?.cancel()
+        super.onStop()
+    }
+
+    override fun onPause() {
+        resumed = false
+        runCatching { unregisterReceiver(nfcState) }
+        runCatching { adapter?.disableReaderMode(this) }
+        super.onPause()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

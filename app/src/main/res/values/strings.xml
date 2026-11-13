@@ -950,4 +950,5 @@
     <string name="shortcut_write">Write tag</string>
     <string name="shortcut_workflows">Workflows</string>
     <string name="shortcut_library">Tag library</string>
+    <string name="emu_reader_note">Tap &amp; Go stops reading tags while this screen is open so the phone can act as a tag. Other screens read tags again.</string>
 </resources>

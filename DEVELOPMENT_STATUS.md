@@ -2,7 +2,7 @@
 
 Statuses: NOT_STARTED · IN_PROGRESS · IMPLEMENTED · TESTED · HARDWARE_VERIFIED · BLOCKED.
 No feature is HARDWARE_VERIFIED yet: no physical NFC test has been recorded.
-Unit tests: 192 passing (2026-11-13). Instrumented tests need an emulator/device run.
+Unit tests: 196 passing (2026-11-13). Instrumented tests need an emulator/device run.
 Resume from the first IN_PROGRESS / NOT_STARTED row of the current phase.
 
 | Phase | Feature | Status | Notes / tests |
@@ -40,4 +40,5 @@ Resume from the first IN_PROGRESS / NOT_STARTED row of the current phase.
 | 8 | Docs: architecture, permissions, integration API, Premium, hardware testing guide, release/signing in README, threat model + privacy updated | IMPLEMENTED | docs/ |
 | 8 | UI smoke test for Premium/Root/NDEF Lab/Emulation/Workflows | IMPLEMENTED | NewToolsSmokeTest written, NOT run (emulator stopped for host memory) |
 | 8 | Hardening, hardware tests, release signing | BLOCKED | needs physical NFC device + tags (docs/hardware-testing.md), a rooted phone, an emulator run for instrumented tests, and your keystore.properties. assembleDebug, 192 unit tests, lintDebug (0 errors) and unsigned R8 assembleRelease pass locally |
+| 8 | App-wide reader mode: owned by MainActivity while resumed, so tags tapped inside the app are never dispatched to other apps/system viewer; screens register via NfcTagRouter (owner-scoped, fixes transition race that disabled reader mode); unhandled tags open Read, task tags run in-app; paused on the Emulation screen (reader mode blocks HCE) | TESTED | TagRouterTest (4); needs device confirmation |
 | 8 | GitHub Actions CI (build, unit tests, lint, unsigned release, artifacts) | IMPLEMENTED | .github/workflows/android.yml |

@@ -116,6 +116,8 @@ fun EmulationScreen(modifier: Modifier = Modifier) {
     val message by vm.message.collectAsStateWithLifecycle()
     val problem by vm.problem.collectAsStateWithLifecycle()
     var kind by rememberSaveable { mutableStateOf(0) }
+    // Reader mode disables card emulation; keep it off while this screen is open.
+    com.tapandgo.core.nfc.PauseNfcReader()
     var value by rememberSaveable { mutableStateOf("") }
 
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -125,7 +127,7 @@ fun EmulationScreen(modifier: Modifier = Modifier) {
         }
         MessageCard(
             stringResource(if (enabled) R.string.emu_on else R.string.emu_off),
-            body = stringResource(if (enabled) R.string.emu_on_detail else R.string.emu_off_detail),
+            body = stringResource(if (enabled) R.string.emu_on_detail else R.string.emu_off_detail) + "\n" + stringResource(R.string.emu_reader_note),
             tone = if (enabled) Tone.SUCCESS else Tone.NEUTRAL,
         ) {
             Row(Modifier.fillMaxWidth().toggleable(enabled, enabled = message != null, role = Role.Switch, onValueChange = vm::setEnabled), verticalAlignment = Alignment.CenterVertically) {
