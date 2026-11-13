@@ -1058,4 +1058,22 @@
     <string name="tpl_needs_connection">Uses the smart-home connection “%1$s” (create it in Tools › Smart home or change the blocks).</string>
     <string name="export_done_more">Workflows: %1$d, smart-home connections: %2$d (tokens, passwords and triggers are not included).</string>
     <string name="import_done_more">Workflows: %1$d (up to the free limit, without triggers), smart-home connections: %2$d (enter their tokens/passwords again; names already in use were skipped).</string>
+
+    <!-- Settings extras / lock -->
+    <string name="settings_nfc">NFC and start</string>
+    <string name="settings_vibrate">Vibrate when a tag is detected</string>
+    <string name="settings_sound">Scan sound</string>
+    <string name="settings_sound_detail">Android\'s NFC beep while Tap &amp; Go is open.</string>
+    <string name="settings_landing">Open the app on</string>
+    <string name="settings_security">Security</string>
+    <string name="settings_lock">App lock</string>
+    <string name="settings_lock_detail">Ask for fingerprint, face or your screen-lock PIN when returning to Tap &amp; Go.</string>
+    <string name="settings_lock_no_screen_lock">Set a screen lock (PIN, pattern or password) in Android settings first.</string>
+    <string name="settings_storage">Storage</string>
+    <string name="settings_storage_detail">Database: %1$s · Tag photos: %2$s · Cache: %3$s</string>
+    <string name="settings_clear_cache">Clear cache</string>
+    <string name="applock_title">Tap &amp; Go is locked</string>
+    <string name="applock_detail">Unlock with your fingerprint, face or screen lock.</string>
+    <string name="applock_unlock">Unlock</string>
+    <string name="applock_failed">Not unlocked. Try again.</string>
 </resources>

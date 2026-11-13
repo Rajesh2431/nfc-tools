@@ -39,6 +39,7 @@ import com.tapandgo.feature.writer.Confirm
 import com.tapandgo.ui.components.BackupMessage
 
 /** Theme, privacy, advanced tools, backup and about (spec feature/settings). */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier) {
     val vm: SettingsViewModel = hiltViewModel()
@@ -144,6 +145,40 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                     s.allowStateChangingApdu,
                 ) { v -> if (v) confirmApdu = true else vm.update { it.copy(allowStateChangingApdu = false) } }
             }
+        }
+
+        Section(stringResource(R.string.settings_nfc)) {
+            Toggle(stringResource(R.string.settings_vibrate), null, s.scanVibration) { v -> vm.update { it.copy(scanVibration = v) } }
+            Toggle(stringResource(R.string.settings_sound), stringResource(R.string.settings_sound_detail), s.scanSound) { v -> vm.update { it.copy(scanSound = v) } }
+            Text(stringResource(R.string.settings_landing), style = MaterialTheme.typography.bodyLarge)
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                AppSettings.LANDING_CHOICES.forEach { page ->
+                    androidx.compose.material3.FilterChip(
+                        selected = s.landingPage == page, onClick = { vm.update { it.copy(landingPage = page) } },
+                        label = { Text(stringResource(com.tapandgo.navigation.TopLevelDestination.valueOf(page).labelRes)) },
+                    )
+                }
+            }
+        }
+
+        Section(stringResource(R.string.settings_security)) {
+            val secure = vm.deviceSecure
+            Toggle(stringResource(R.string.settings_lock), stringResource(if (secure) R.string.settings_lock_detail else R.string.settings_lock_no_screen_lock), s.appLock && secure) { v ->
+                if (secure) vm.update { it.copy(appLock = v) }
+            }
+        }
+
+        Section(stringResource(R.string.settings_storage)) {
+            val storage by vm.storage.collectAsStateWithLifecycle()
+            androidx.compose.runtime.LaunchedEffect(Unit) { vm.refreshStorage() }
+            val ctx = androidx.compose.ui.platform.LocalContext.current
+            storage?.let { st ->
+                Muted(stringResource(R.string.settings_storage_detail,
+                    android.text.format.Formatter.formatShortFileSize(ctx, st.database),
+                    android.text.format.Formatter.formatShortFileSize(ctx, st.photos),
+                    android.text.format.Formatter.formatShortFileSize(ctx, st.cache)))
+            }
+            androidx.compose.material3.OutlinedButton(onClick = vm::clearCache) { Text(stringResource(R.string.settings_clear_cache)) }
         }
 
         Section(stringResource(R.string.wf_title)) {

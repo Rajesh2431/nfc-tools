@@ -3,6 +3,8 @@
 | Permission | Why | When used |
 |---|---|---|
 | `NFC` | Read/write tags, reader mode | Read, Write, Other |
+| `VIBRATE` | Vibration when a tag is detected (Settings) | Normal permission |
+| `USE_BIOMETRIC` | App lock with fingerprint/face (Settings › Security) | Normal permission |
 | `INTERNET` | Webhook action and smart-home connections you configure | When a workflow or the Smart home screen contacts your system |
 | `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION` | Wi-Fi name and area triggers | Requested in Workflow › Triggers › Wi-Fi & location |
 | `ACCESS_BACKGROUND_LOCATION` | Those triggers while the app is closed | Requested separately (“Allow all the time”) |

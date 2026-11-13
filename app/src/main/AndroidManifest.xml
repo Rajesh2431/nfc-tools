@@ -13,6 +13,9 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.NFC" />
+    <!-- Scan vibration (Settings) and App lock (normal permissions, no prompt). -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
     <!-- Automation actions (normal or user-granted; each action checks before use). -->
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />

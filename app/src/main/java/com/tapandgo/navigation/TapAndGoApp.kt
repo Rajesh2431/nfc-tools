@@ -97,6 +97,8 @@ private fun titleFor(route: String?): Int = when {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TapAndGoApp(
+    landing: String? = null,
+    onLandingConsumed: () -> Unit = {},
     pendingLaunch: com.tapandgo.automation.LaunchRequest? = null,
     onLaunchConsumed: () -> Unit = {},
     pendingDeepLink: android.content.Intent? = null,
@@ -115,6 +117,17 @@ fun TapAndGoApp(
         val intent = pendingDeepLink ?: return@LaunchedEffect
         onDeepLinkConsumed()
         navController.handleDeepLink(intent)
+    }
+
+    // Settings › Open the app on: applied once for a plain launcher start.
+    LaunchedEffect(landing) {
+        val page = landing ?: return@LaunchedEffect
+        onLandingConsumed()
+        val dest = runCatching { TopLevelDestination.valueOf(page) }.getOrNull() ?: return@LaunchedEffect
+        if (dest != TopLevelDestination.HOME) navController.navigate(dest.route) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+        }
     }
 
     // A tag was tapped on a screen that does not read tags: show it in Read

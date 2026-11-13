@@ -5,6 +5,7 @@ import android.nfc.NdefMessage
 import android.nfc.NdefRecord
 import android.nfc.NfcAdapter
 import android.os.Bundle
+import com.tapandgo.R
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
@@ -75,7 +76,60 @@ class MainActivity : ComponentActivity() {
     private val adapter: NfcAdapter? by lazy { NfcAdapter.getDefaultAdapter(this) }
     private var resumed = false
 
+    /** Latest settings for code that runs outside Compose (reader callback, lifecycle). */
+    @Volatile private var current = com.tapandgo.data.settings.AppSettings()
+    private var settingsLoaded = false
+
+    // ---- App lock ---------------------------------------------------------------
+    private val locked = mutableStateOf(false)
+    private val landing = mutableStateOf<String?>(null)
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(KEY_LOCKED, locked.value)
+    }
+    private val lockFailed = mutableStateOf(false)
+    private var stoppedAt = 0L
+
+    /** Short grace period so file pickers, the camera and the lock prompt itself do not re-lock. */
+    private val lockGraceMs = 30_000L
+
+    private val confirmCredential = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { r ->
+        if (r.resultCode == RESULT_OK) unlocked() else lockFailed.value = true
+    }
+
+    private fun unlocked() { locked.value = false; lockFailed.value = false; stoppedAt = 0L }
+
+    private fun authenticate() {
+        val keyguard = getSystemService(android.app.KeyguardManager::class.java)
+        if (!keyguard.isDeviceSecure) { unlocked(); return } // screen lock removed: nothing to check against
+        if (android.os.Build.VERSION.SDK_INT >= 29) {
+            val builder = android.hardware.biometrics.BiometricPrompt.Builder(this).setTitle(getString(R.string.applock_title))
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                builder.setAllowedAuthenticators(android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_WEAK or android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL)
+            } else {
+                @Suppress("DEPRECATION") builder.setDeviceCredentialAllowed(true)
+            }
+            builder.build().authenticate(android.os.CancellationSignal(), mainExecutor, object : android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: android.hardware.biometrics.BiometricPrompt.AuthenticationResult) = unlocked()
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) { lockFailed.value = true }
+            })
+        } else {
+            @Suppress("DEPRECATION")
+            val i = keyguard.createConfirmDeviceCredentialIntent(getString(R.string.applock_title), getString(R.string.applock_detail))
+            if (i == null) unlocked() else confirmCredential.launch(i)
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        startPauseWatch()
+        if (current.appLock && stoppedAt > 0 && android.os.SystemClock.elapsedRealtime() - stoppedAt > lockGraceMs) locked.value = true
+    }
+
     private val onTag = NfcAdapter.ReaderCallback { tag ->
+        if (locked.value) return@ReaderCallback // nothing is read or run while locked
+        if (current.scanVibration) vibrate()
         if (com.tapandgo.core.nfc.NfcTagRouter.dispatch(tag)) return@ReaderCallback
         // Cached NDEF from discovery: no I/O, so nothing is held open here.
         val token = runCatching { android.nfc.tech.Ndef.get(tag)?.cachedNdefMessage }.getOrNull()?.let { taskTokenIn(listOf(it)) }
@@ -93,7 +147,8 @@ class MainActivity : ComponentActivity() {
         if (!resumed || !a.isEnabled) return
         if (com.tapandgo.core.nfc.NfcTagRouter.paused.value) { runCatching { a.disableReaderMode(this) }; return }
         val extras = Bundle().apply { putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 250) }
-        runCatching { a.enableReaderMode(this, onTag, com.tapandgo.core.nfc.READER_FLAGS, extras) }
+        val flags = com.tapandgo.core.nfc.READER_FLAGS or (if (current.scanSound) 0 else NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS)
+        runCatching { a.enableReaderMode(this, onTag, flags, extras) }
     }
 
     /** NFC switched on from Quick Settings while the app is open: arm reader mode immediately. */
@@ -115,14 +170,20 @@ class MainActivity : ComponentActivity() {
 
     private var pauseWatch: kotlinx.coroutines.Job? = null
 
-    override fun onStart() {
-        super.onStart()
+    private fun vibrate() {
+        val v = if (android.os.Build.VERSION.SDK_INT >= 31) getSystemService(android.os.VibratorManager::class.java)?.defaultVibrator
+        else @Suppress("DEPRECATION") getSystemService(android.os.Vibrator::class.java)
+        runCatching { v?.vibrate(android.os.VibrationEffect.createOneShot(40, android.os.VibrationEffect.DEFAULT_AMPLITUDE)) }
+    }
+
+    private fun startPauseWatch() {
         pauseWatch = lifecycleScope.let { scope ->
             scope.launch { com.tapandgo.core.nfc.NfcTagRouter.paused.collect { enableReader() } }
         }
     }
 
     override fun onStop() {
+        if (!isChangingConfigurations) stoppedAt = android.os.SystemClock.elapsedRealtime()
         pauseWatch?.cancel()
         super.onStop()
     }
@@ -139,6 +200,21 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val settingsFlow = settingsRepository.settings
         if (savedInstanceState == null) pendingLaunch.value = launchFrom(intent)
+        locked.value = savedInstanceState?.getBoolean(KEY_LOCKED) ?: false
+        // Open on the chosen tab only for a plain launcher start (not tags, shortcuts or links).
+        val useLanding = savedInstanceState == null && intent?.action == Intent.ACTION_MAIN && intent?.data == null
+        lifecycleScope.launch {
+            settingsFlow.collect { s ->
+                val soundChanged = s.scanSound != current.scanSound
+                current = s
+                if (!settingsLoaded) {
+                    settingsLoaded = true
+                    if (s.appLock && savedInstanceState == null) locked.value = true
+                    landing.value = if (useLanding) s.landingPage else null
+                }
+                if (soundChanged) enableReader()
+            }
+        }
         setContent {
             val settings by settingsFlow.collectAsStateWithLifecycle(initialValue = null)
             val dark = when (settings?.theme ?: ThemeMode.SYSTEM) {
@@ -154,7 +230,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
             TapAndGoTheme(darkTheme = dark, dynamicColor = settings?.dynamicColor ?: false) {
+                if (locked.value) {
+                    com.tapandgo.ui.components.LockScreen(failed = lockFailed.value, onUnlock = ::authenticate)
+                    androidx.compose.runtime.LaunchedEffect(Unit) { authenticate() }
+                    return@TapAndGoTheme
+                }
                 TapAndGoApp(
+                    landing = landing.value,
+                    onLandingConsumed = { landing.value = null },
                     pendingLaunch = pendingLaunch.value,
                     onLaunchConsumed = { pendingLaunch.value = null },
                     pendingDeepLink = pendingDeepLink.value,
@@ -162,5 +245,9 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    private companion object {
+        const val KEY_LOCKED = "locked"
     }
 }

@@ -36,9 +36,18 @@ data class AppSettings(
     val tileWorkflowId: Long = 0,
     /** Workflows may use root radio actions (needs real root). Off by default. */
     val rootWorkflowActions: Boolean = false,
+    /** Short vibration when a tag is detected. */
+    val scanVibration: Boolean = true,
+    /** Android's own NFC beep in reader mode. */
+    val scanSound: Boolean = true,
+    /** Tab shown when the app opens: HOME, READ, WRITE, TASKS or TOOLS. */
+    val landingPage: String = "HOME",
+    /** Require fingerprint/face/device PIN after the app was in the background. */
+    val appLock: Boolean = false,
 ) {
     companion object {
         val RETENTION_CHOICES = listOf(0, 30, 90, 365)
+        val LANDING_CHOICES = listOf("HOME", "READ", "WRITE", "TASKS", "TOOLS")
     }
 }
 
@@ -61,6 +70,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val TILE = androidx.datastore.preferences.core.longPreferencesKey("tile_workflow_id")
         val ROOT_WF = booleanPreferencesKey("root_workflow_actions")
         val WIDGET = stringPreferencesKey("widget_workflow_ids")
+        val VIBRATE = booleanPreferencesKey("scan_vibration")
+        val SOUND = booleanPreferencesKey("scan_sound")
+        val LANDING = stringPreferencesKey("landing_page")
+        val LOCK = booleanPreferencesKey("app_lock")
         val DEV_PREMIUM = booleanPreferencesKey("dev_premium_testing_only")
         val DASH_ORDER = stringPreferencesKey("dashboard_order")
         val DASH_HIDDEN = stringPreferencesKey("dashboard_hidden")
@@ -111,6 +124,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             allowExternalTriggers = p[Keys.EXTERNAL] ?: defaults.allowExternalTriggers,
             tileWorkflowId = p[Keys.TILE] ?: defaults.tileWorkflowId,
             rootWorkflowActions = p[Keys.ROOT_WF] ?: defaults.rootWorkflowActions,
+            scanVibration = p[Keys.VIBRATE] ?: defaults.scanVibration,
+            scanSound = p[Keys.SOUND] ?: defaults.scanSound,
+            landingPage = p[Keys.LANDING]?.takeIf { it in AppSettings.LANDING_CHOICES } ?: defaults.landingPage,
+            appLock = p[Keys.LOCK] ?: defaults.appLock,
         )
     }
 
@@ -131,6 +148,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             p[Keys.EXTERNAL] = next.allowExternalTriggers
             p[Keys.TILE] = next.tileWorkflowId
             p[Keys.ROOT_WF] = next.rootWorkflowActions
+            p[Keys.VIBRATE] = next.scanVibration
+            p[Keys.SOUND] = next.scanSound
+            p[Keys.LANDING] = next.landingPage.takeIf { it in AppSettings.LANDING_CHOICES } ?: "HOME"
+            p[Keys.LOCK] = next.appLock
         }
     }
 
@@ -146,5 +167,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         allowExternalTriggers = p[Keys.EXTERNAL] ?: false,
         tileWorkflowId = p[Keys.TILE] ?: 0,
         rootWorkflowActions = p[Keys.ROOT_WF] ?: false,
+        scanVibration = p[Keys.VIBRATE] ?: true,
+        scanSound = p[Keys.SOUND] ?: true,
+        landingPage = p[Keys.LANDING]?.takeIf { it in AppSettings.LANDING_CHOICES } ?: "HOME",
+        appLock = p[Keys.LOCK] ?: false,
     )
 }
