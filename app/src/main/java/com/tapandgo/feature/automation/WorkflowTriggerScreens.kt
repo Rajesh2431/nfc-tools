@@ -108,6 +108,8 @@ fun WorkflowTriggersScreen(onWriteTag: () -> Unit, onOpenPremium: () -> Unit, mo
     val missing by vm.missing.collectAsStateWithLifecycle()
     val externalEnabled by vm.externalEnabled.collectAsStateWithLifecycle()
     val tileId by vm.tileWorkflowId.collectAsStateWithLifecycle()
+    val onWidget by vm.onWidget.collectAsStateWithLifecycle()
+    val widgetFull by vm.widgetFull.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val res = androidx.compose.ui.platform.LocalResources.current
     var notice by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -134,6 +136,8 @@ fun WorkflowTriggersScreen(onWriteTag: () -> Unit, onOpenPremium: () -> Unit, mo
                 vm.withToken { token -> notice = if (LaunchIntents.requestPin(context, w.id, w.name, token)) R.string.trg_shortcut_requested else R.string.trg_shortcut_unsupported }
             }, enabled = canPin && w.workflow != null) { Text(stringResource(R.string.trg_add_shortcut)) }
             if (!canPin) Text(stringResource(R.string.trg_shortcut_unsupported), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            SwitchRow(stringResource(R.string.widget_show), stringResource(R.string.widget_show_detail), onWidget) { vm.setOnWidget(context, it) }
+            if (widgetFull) Text(stringResource(R.string.widget_full), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         } }
 
         SectionCard(stringResource(R.string.trg_tile_title)) { PremiumGate(PremiumFeature.SHORTCUTS_AND_TILE, onOpenPremium) {

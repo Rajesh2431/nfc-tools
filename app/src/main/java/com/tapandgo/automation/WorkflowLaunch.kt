@@ -29,7 +29,7 @@ object WorkflowLaunch {
         return when (componentClass) {
             INTERNAL_ALIAS -> {
                 val s = source?.let { runCatching { RunSource.valueOf(it) }.getOrNull() }
-                if (s == RunSource.SHORTCUT || s == RunSource.TILE) LaunchRequest(token, s) else null
+                if (s == RunSource.SHORTCUT || s == RunSource.TILE || s == RunSource.WIDGET) LaunchRequest(token, s) else null
             }
             EXTERNAL_ALIAS -> LaunchRequest(token, RunSource.EXTERNAL)
             else -> null
@@ -43,7 +43,8 @@ enum class LaunchDecision { RUN, CONFIRM, BLOCKED }
 object LaunchPolicy {
     fun decide(source: RunSource, triggers: WorkflowTriggers, externalEnabled: Boolean): LaunchDecision = when (source) {
         // The user tapped Run, a pinned shortcut or the tile: that tap is the confirmation.
-        RunSource.MANUAL, RunSource.SHORTCUT, RunSource.TILE, RunSource.SCHEDULE -> LaunchDecision.RUN
+        RunSource.MANUAL, RunSource.SHORTCUT, RunSource.TILE, RunSource.WIDGET, RunSource.DEVICE_CONTROL,
+        RunSource.SCHEDULE, RunSource.CONTEXT -> LaunchDecision.RUN
         RunSource.NFC_TAG -> if (triggers.autoRun) LaunchDecision.RUN else LaunchDecision.CONFIRM
         RunSource.EXTERNAL -> when {
             !externalEnabled || !triggers.allowExternal -> LaunchDecision.BLOCKED

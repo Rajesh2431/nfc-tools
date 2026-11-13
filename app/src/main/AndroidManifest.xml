@@ -146,6 +146,29 @@
                 android:resource="@xml/apduservice" />
         </service>
 
+        <receiver
+            android:name=".automation.WorkflowWidget"
+            android:exported="true"
+            android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/workflow_widget_info" />
+        </receiver>
+
+        <!-- Android 11+ Device Controls (power menu / Quick Settings device panel). -->
+        <service
+            android:name=".smarthome.TapAndGoControlsService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_CONTROLS">
+            <intent-filter>
+                <action android:name="android.service.controls.ControlsProviderService" />
+            </intent-filter>
+        </service>
+
         <service
             android:name=".automation.WorkflowTileService"
             android:exported="true"

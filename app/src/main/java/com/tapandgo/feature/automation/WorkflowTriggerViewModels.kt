@@ -51,7 +51,7 @@ class WorkflowLaunchViewModel @Inject constructor(
             val wf = if (RichRecords.isValidToken(token)) repo.byToken(token) else null
             if (wf?.workflow == null) { _state.value = LaunchState.NotFound; return@launch }
             val feature = when (source) {
-                RunSource.SHORTCUT, RunSource.TILE -> com.tapandgo.billing.PremiumFeature.SHORTCUTS_AND_TILE
+                RunSource.SHORTCUT, RunSource.TILE, RunSource.WIDGET -> com.tapandgo.billing.PremiumFeature.SHORTCUTS_AND_TILE
                 RunSource.EXTERNAL -> com.tapandgo.billing.PremiumFeature.EXTERNAL_TRIGGERS
                 else -> null
             }
@@ -92,6 +92,17 @@ class WorkflowTriggersViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     val tileWorkflowId: StateFlow<Long> = settingsRepo.settings.map { it.tileWorkflowId }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0L)
+    val onWidget: StateFlow<Boolean> = settingsRepo.widgetWorkflows.map { id in it }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    private val _widgetFull = MutableStateFlow(false)
+    val widgetFull: StateFlow<Boolean> = _widgetFull.asStateFlow()
+
+    fun setOnWidget(context: android.content.Context, shown: Boolean) = viewModelScope.launch {
+        if (shown) repo.ensureToken(id)
+        _widgetFull.value = !settingsRepo.setWidgetWorkflow(id, shown)
+        com.tapandgo.automation.WorkflowWidget.refresh(context)
+        reload()
+    }
 
     init { reload() }
 

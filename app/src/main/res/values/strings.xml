@@ -1018,4 +1018,14 @@
     <string name="p_channel">Channel / relay</string>
     <string name="note_smarthome">Uses a connection from Tools › Smart home. Values you put in fields are sent to that system.</string>
     <string name="note_ha_state">Store the state in a variable with “Store result in variable”, then use it in conditions.</string>
+
+    <!-- Widget / controls -->
+    <string name="widget_label">Tap &amp; Go workflows</string>
+    <string name="widget_description">Run your workflows and start a scan from the home screen.</string>
+    <string name="widget_empty">Choose workflows in Workflow › Triggers › “Show on widget”.</string>
+    <string name="widget_premium">Workflow buttons are part of Premium. Scan works for everyone.</string>
+    <string name="widget_show">Show on widget</string>
+    <string name="widget_show_detail">Adds a button for this workflow to the Tap &amp; Go home-screen widget (up to 4).</string>
+    <string name="widget_full">The widget already shows 4 workflows. Remove one first.</string>
+    <string name="sh_tap_toggle">Tap to toggle</string>
 </resources>

@@ -77,7 +77,7 @@ class WorkflowsViewModel @Inject constructor(
     }
 
     fun dismissResult() { _result.value = null }
-    fun delete(id: Long) = viewModelScope.launch { repo.delete(id) }
+    fun delete(id: Long) = viewModelScope.launch { repo.delete(id); com.tapandgo.automation.WorkflowWidget.refresh(context) }
     fun duplicate(id: Long, suffix: String) = viewModelScope.launch { repo.duplicate(id, suffix) }
     fun clearRuns() = viewModelScope.launch { repo.clearRuns() }
 }

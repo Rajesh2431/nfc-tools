@@ -60,6 +60,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val EXTERNAL = booleanPreferencesKey("allow_external_triggers")
         val TILE = androidx.datastore.preferences.core.longPreferencesKey("tile_workflow_id")
         val ROOT_WF = booleanPreferencesKey("root_workflow_actions")
+        val WIDGET = stringPreferencesKey("widget_workflow_ids")
         val DEV_PREMIUM = booleanPreferencesKey("dev_premium_testing_only")
         val DASH_ORDER = stringPreferencesKey("dashboard_order")
         val DASH_HIDDEN = stringPreferencesKey("dashboard_hidden")
@@ -76,6 +77,20 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             val (o, h, pin) = next.encode()
             p[Keys.DASH_ORDER] = o; p[Keys.DASH_HIDDEN] = h; p[Keys.DASH_PINNED] = pin
         }
+    }
+
+    /** Workflows shown on the home-screen widget, in order (max 4). */
+    val widgetWorkflows: Flow<List<Long>> = store.data.map { p -> p[Keys.WIDGET].orEmpty().split(',').mapNotNull { it.toLongOrNull() }.take(4) }
+
+    /** Adds or removes [id]; returns false when adding would exceed 4. */
+    suspend fun setWidgetWorkflow(id: Long, shown: Boolean): Boolean {
+        var ok = true
+        store.edit { p ->
+            val cur = p[Keys.WIDGET].orEmpty().split(',').mapNotNull { it.toLongOrNull() }
+            val next = if (shown) { if (id in cur) cur else if (cur.size >= 4) { ok = false; cur } else cur + id } else cur - id
+            p[Keys.WIDGET] = next.joinToString(",")
+        }
+        return ok
     }
 
     /** Testing-only Premium switch (debug builds); read through EntitlementRepository only. */

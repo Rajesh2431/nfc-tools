@@ -26,7 +26,7 @@ data class StoredWorkflow(
 )
 
 /** What started a run. Only SCHEDULE runs without a visible activity. */
-enum class RunSource { MANUAL, NFC_TAG, SHORTCUT, TILE, EXTERNAL, SCHEDULE }
+enum class RunSource { MANUAL, NFC_TAG, SHORTCUT, TILE, EXTERNAL, SCHEDULE, WIDGET, DEVICE_CONTROL, CONTEXT }
 
 /** Lets actions see who started the run (e.g. root actions refuse EXTERNAL). */
 class RunSourceElement(val source: RunSource) : kotlin.coroutines.AbstractCoroutineContextElement(Key) {
