@@ -60,6 +60,8 @@ private const val NDEF_LAB_ROUTE = "tools/ndef-lab"
 private const val PREMIUM_ROUTE = "tools/premium"
 private const val EMULATION_ROUTE = "tools/emulation"
 private const val ROOT_ROUTE = "tools/root"
+private const val SMART_ROUTE = "tools/smarthome"
+private const val SMART_DEVICES_ROUTE = "tools/smarthome/{id}"
 private const val WORKFLOW_TRIGGERS_ROUTE = "workflow-triggers/{id}"
 private const val WORKFLOW_LAUNCH_ROUTE = "workflow-launch?token={token}&source={source}"
 private const val LIBRARY_DETAIL_ROUTE = "tools/library/{id}"
@@ -74,6 +76,7 @@ private fun titleFor(route: String?): Int = when {
     route == PREMIUM_ROUTE -> R.string.prem_title
     route == EMULATION_ROUTE -> R.string.emu_title
     route == ROOT_ROUTE -> R.string.root_title
+    route == SMART_ROUTE || route == SMART_DEVICES_ROUTE -> R.string.sh_title
     route == WORKFLOW_LAUNCH_ROUTE -> R.string.run_title
     route.startsWith("tasks/edit") -> R.string.tasks_edit_title
     route.startsWith("tasks/run") -> R.string.run_title
@@ -259,6 +262,7 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                 onPremium = { navController.navigate(PREMIUM_ROUTE) },
                 onEmulation = { navController.navigate(EMULATION_ROUTE) },
                 onRoot = { navController.navigate(ROOT_ROUTE) },
+                onSmartHome = { navController.navigate(SMART_ROUTE) },
                 onSettings = { navController.navigate(SETTINGS_ROUTE) },
                 onAbout = { navController.navigate(ABOUT_ROUTE) },
             )
@@ -319,6 +323,10 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
         }
         composable(PREMIUM_ROUTE) { com.tapandgo.feature.premium.PremiumScreen() }
         composable(ROOT_ROUTE) { com.tapandgo.feature.root.RootManagerScreen() }
+        composable(SMART_ROUTE, deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "tapandgo://smarthome" })) {
+            com.tapandgo.feature.smarthome.SmartHomeScreen(onOpen = { id -> navController.navigate("tools/smarthome/$id") })
+        }
+        composable(SMART_DEVICES_ROUTE, arguments = listOf(idArg)) { com.tapandgo.feature.smarthome.SmartDevicesScreen() }
         composable(EMULATION_ROUTE) {
             com.tapandgo.feature.premium.PremiumGate(com.tapandgo.billing.PremiumFeature.NDEF_EMULATION, onOpenPremium = { navController.navigate(PREMIUM_ROUTE) }) {
                 com.tapandgo.feature.emulation.EmulationScreen()

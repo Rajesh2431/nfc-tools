@@ -47,6 +47,7 @@ class AndroidActions @Inject constructor(
     @ApplicationContext private val context: Context,
     private val root: com.tapandgo.root.RootExecutionService,
     private val settings: com.tapandgo.data.settings.SettingsRepository,
+    private val smart: com.tapandgo.smarthome.SmartHomeRepository,
 ) {
 
     private val audio get() = context.getSystemService(AudioManager::class.java)
@@ -88,6 +89,12 @@ class AndroidActions @Inject constructor(
                 "app.info" to ActionHandler(::appInfo),
                 "calendar.event" to ActionHandler(::calendarEvent),
                 "http.request" to ActionHandler(::httpRequest),
+                "ha.service" to ActionHandler(::haService),
+                "ha.state" to ActionHandler(::haState),
+                "mqtt.publish" to ActionHandler(::mqttPublish),
+                "hue.light" to ActionHandler(::hueLight),
+                "hue.scene" to ActionHandler(::hueScene),
+                "device.switch" to ActionHandler(::deviceSwitch),
                 "root.airplane" to ActionHandler { rootSwitch(it) { on -> com.tapandgo.root.RootCommand.Airplane(on) } },
                 "root.mobile_data" to ActionHandler { rootSwitch(it) { on -> com.tapandgo.root.RootCommand.MobileData(on) } },
                 "root.wifi" to ActionHandler { rootSwitch(it) { on -> com.tapandgo.root.RootCommand.Wifi(on) } },
@@ -417,6 +424,46 @@ class AndroidActions @Inject constructor(
             r.timedOut -> ActionResult.Failure("root command timed out")
             else -> ActionResult.Failure("root command failed (exit ${r.exitCode})")
         }
+    }
+
+    // ---- Smart home (connections are configured in Tools › Smart home) ----
+
+    private fun <T> com.tapandgo.smarthome.SmartResult<T>.toAction(out: (T) -> String? = { null }): ActionResult = when (this) {
+        is com.tapandgo.smarthome.SmartResult.Ok -> ActionResult.Success(out(value))
+        is com.tapandgo.smarthome.SmartResult.Err -> ActionResult.Failure(reason)
+    }
+
+    private fun conn(p: Map<String, String>) = p["connection"]?.trim().orEmpty()
+
+    private suspend fun haService(p: Map<String, String>): ActionResult {
+        if (conn(p).isEmpty()) return ActionResult.Failure("choose a connection")
+        return smart.haCall(conn(p), p["service"].orEmpty(), p["entity"]?.trim(), p["data"]).toAction()
+    }
+
+    private suspend fun haState(p: Map<String, String>): ActionResult =
+        smart.haState(conn(p), p["entity"]?.trim().orEmpty()).toAction { it }
+
+    private suspend fun mqttPublish(p: Map<String, String>): ActionResult {
+        val qos = p["qos"]?.trim()?.ifEmpty { "0" }?.toIntOrNull() ?: return ActionResult.Failure("QoS must be 0 or 1")
+        val retain = ActionParams.onOff(p["retain"]?.ifBlank { "off" }) ?: false
+        return smart.mqttPublish(conn(p), p["topic"]?.trim().orEmpty(), p["payload"].orEmpty(), qos, retain).toAction()
+    }
+
+    private suspend fun hueLight(p: Map<String, String>): ActionResult {
+        val state = p["state"]?.trim()?.lowercase().orEmpty()
+        val on = when (state) { "on" -> true; "off" -> false; "", "keep" -> null; else -> return ActionResult.Failure("state must be on, off or keep") }
+        val bri = p["brightness"]?.trim()?.takeIf { it.isNotEmpty() }?.let { ActionParams.percent(it) ?: return ActionResult.Failure("brightness must be 0–100") }
+        return smart.hueLight(conn(p), p["light"]?.trim().orEmpty(), on, bri).toAction()
+    }
+
+    private suspend fun hueScene(p: Map<String, String>): ActionResult =
+        smart.hueScene(conn(p), p["scene"]?.trim().orEmpty(), p["group"]?.trim()?.ifEmpty { "0" } ?: "0").toAction()
+
+    private suspend fun deviceSwitch(p: Map<String, String>): ActionResult {
+        val on = when (p["state"]?.trim()?.lowercase()) { "on" -> true; "off" -> false; "toggle" -> null; else -> return ActionResult.Failure("state must be on, off or toggle") }
+        val channel = p["channel"]?.trim()?.ifEmpty { "0" }?.toIntOrNull() ?: return ActionResult.Failure("channel must be 0–7")
+        val bri = p["brightness"]?.trim()?.takeIf { it.isNotEmpty() }?.let { ActionParams.percent(it) ?: return ActionResult.Failure("brightness must be 0–100") }
+        return smart.device(conn(p), on, channel, bri).toAction()
     }
 
     companion object {

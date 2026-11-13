@@ -143,3 +143,44 @@ data class WorkflowRunEntity(
     /** v6: what started the run (RunSource name). */
     @androidx.room.ColumnInfo(defaultValue = "MANUAL") val source: String = "MANUAL",
 )
+
+/**
+ * Smart-home connection (schema v7): Home Assistant, MQTT broker, Hue bridge
+ * or a local HTTP device. [secretEnc] is the token/password encrypted with an
+ * Android Keystore key (never plaintext); it is never exported.
+ */
+@Entity(tableName = "smart_connections", indices = [Index(value = ["name"], unique = true)])
+data class SmartConnectionEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val kind: String,
+    val name: String,
+    /** Host name or IP, or a full base URL for Home Assistant. */
+    val address: String,
+    val port: Int,
+    val useTls: Boolean,
+    val username: String = "",
+    val secretEnc: String? = null,
+    /** Kind-specific options (validated JSON), e.g. MQTT client id. */
+    val extraJson: String = "{}",
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+/** Wi-Fi / location trigger for a workflow (schema v7). Location values stay on the device. */
+@Entity(
+    tableName = "context_triggers",
+    indices = [Index("workflowId")],
+    foreignKeys = [androidx.room.ForeignKey(entity = WorkflowEntity::class, parentColumns = ["id"], childColumns = ["workflowId"], onDelete = androidx.room.ForeignKey.CASCADE)],
+)
+data class ContextTriggerEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val workflowId: Long,
+    /** WIFI_CONNECT, WIFI_DISCONNECT, AREA_ENTER, AREA_EXIT */
+    val type: String,
+    val ssid: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val radiusMeters: Int? = null,
+    val enabled: Boolean = true,
+    val createdAt: Long,
+)

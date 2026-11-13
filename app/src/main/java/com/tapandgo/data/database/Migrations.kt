@@ -75,3 +75,21 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
         db.execSQL("ALTER TABLE `workflow_runs` ADD COLUMN `source` TEXT NOT NULL DEFAULT 'MANUAL'")
     }
 }
+
+/** v6 → v7: smart-home connections and Wi-Fi/location triggers. SQL from schemas/7.json. */
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `smart_connections` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `kind` TEXT NOT NULL, " +
+                "`name` TEXT NOT NULL, `address` TEXT NOT NULL, `port` INTEGER NOT NULL, `useTls` INTEGER NOT NULL, `username` TEXT NOT NULL, " +
+                "`secretEnc` TEXT, `extraJson` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        )
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_smart_connections_name` ON `smart_connections` (`name`)")
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `context_triggers` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `workflowId` INTEGER NOT NULL, " +
+                "`type` TEXT NOT NULL, `ssid` TEXT, `latitude` REAL, `longitude` REAL, `radiusMeters` INTEGER, `enabled` INTEGER NOT NULL, " +
+                "`createdAt` INTEGER NOT NULL, FOREIGN KEY(`workflowId`) REFERENCES `workflows`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_context_triggers_workflowId` ON `context_triggers` (`workflowId`)")
+    }
+}

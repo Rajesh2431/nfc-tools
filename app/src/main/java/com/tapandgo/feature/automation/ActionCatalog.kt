@@ -19,6 +19,12 @@ import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Sensors
+import androidx.compose.material.icons.filled.Hub
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Power
 import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Map
@@ -74,6 +80,40 @@ object ActionCatalog {
             ParamSpec("content_type", R.string.p_content_type, listOf("json", "text")),
             ParamSpec("body", R.string.p_body, hint = "{\"battery\": \"\${BATTERY_LEVEL}\"}"),
         ), R.string.note_http),
+        ActionSpec("ha.service", R.string.act_ha_service, Icons.Filled.Home, listOf(
+            ParamSpec("connection", R.string.p_connection),
+            ParamSpec("service", R.string.p_service, hint = "light.turn_on"),
+            ParamSpec("entity", R.string.p_entity, hint = "light.living_room"),
+            ParamSpec("data", R.string.p_data, hint = "{\"brightness_pct\": 60}"),
+        ), R.string.note_smarthome),
+        ActionSpec("ha.state", R.string.act_ha_state, Icons.Filled.Sensors, listOf(
+            ParamSpec("connection", R.string.p_connection),
+            ParamSpec("entity", R.string.p_entity, hint = "sensor.outdoor_temperature"),
+        ), R.string.note_ha_state),
+        ActionSpec("mqtt.publish", R.string.act_mqtt, Icons.Filled.Hub, listOf(
+            ParamSpec("connection", R.string.p_connection),
+            ParamSpec("topic", R.string.p_topic, hint = "home/garage/door"),
+            ParamSpec("payload", R.string.p_payload, hint = "open"),
+            ParamSpec("qos", R.string.p_qos, listOf("0", "1")),
+            ParamSpec("retain", R.string.p_retain, listOf("off", "on")),
+        ), R.string.note_smarthome),
+        ActionSpec("hue.light", R.string.act_hue_light, Icons.Filled.Lightbulb, listOf(
+            ParamSpec("connection", R.string.p_connection),
+            ParamSpec("light", R.string.p_light, hint = "1"),
+            ParamSpec("state", R.string.p_state, listOf("on", "off", "keep")),
+            ParamSpec("brightness", R.string.p_percent, hint = "0–100"),
+        ), R.string.note_smarthome),
+        ActionSpec("hue.scene", R.string.act_hue_scene, Icons.Filled.Palette, listOf(
+            ParamSpec("connection", R.string.p_connection),
+            ParamSpec("scene", R.string.p_scene),
+            ParamSpec("group", R.string.p_group, hint = "0"),
+        ), R.string.note_smarthome),
+        ActionSpec("device.switch", R.string.act_device, Icons.Filled.Power, listOf(
+            ParamSpec("connection", R.string.p_connection),
+            ParamSpec("state", R.string.p_state, listOf("on", "off", "toggle")),
+            ParamSpec("channel", R.string.p_channel, hint = "0"),
+            ParamSpec("brightness", R.string.p_percent, hint = "WLED / Tasmota dimmer"),
+        ), R.string.note_smarthome),
         ActionSpec("root.airplane", R.string.act_root_airplane, Icons.Filled.AirplanemodeActive, listOf(ParamSpec("state", R.string.p_state, ONOFF)), R.string.note_root),
         ActionSpec("root.mobile_data", R.string.act_root_data, Icons.Filled.SignalCellularAlt, listOf(ParamSpec("state", R.string.p_state, ONOFF)), R.string.note_root),
         ActionSpec("root.wifi", R.string.act_root_wifi, Icons.Filled.Wifi, listOf(ParamSpec("state", R.string.p_state, ONOFF)), R.string.note_root),

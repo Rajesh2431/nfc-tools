@@ -10,6 +10,7 @@ import com.tapandgo.data.database.MIGRATION_2_3
 import com.tapandgo.data.database.MIGRATION_3_4
 import com.tapandgo.data.database.MIGRATION_4_5
 import com.tapandgo.data.database.MIGRATION_5_6
+import com.tapandgo.data.database.MIGRATION_6_7
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -121,6 +122,12 @@ class MigrationTest {
         } finally {
             db.close()
         }
+    }
+
+    @Test
+    fun migrate6To7AddsSmartHomeAndContextTables() = runTest {
+        helper.createDatabase(dbName, 6).close()
+        helper.runMigrationsAndValidate(dbName, 7, true, MIGRATION_6_7).close()
     }
 
     @Test

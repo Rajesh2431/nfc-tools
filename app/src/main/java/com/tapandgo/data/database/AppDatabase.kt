@@ -11,7 +11,7 @@ import androidx.room.RoomDatabase
  * Destructive fallback is never enabled (AGENTS rule 4).
  */
 @Database(
-    entities = [ScanEntryEntity::class, TemplateEntity::class, TaskProfileEntity::class, TaskLogEntity::class, SavedTagEntity::class, WorkflowEntity::class, WorkflowRunEntity::class],
+    entities = [ScanEntryEntity::class, TemplateEntity::class, TaskProfileEntity::class, TaskLogEntity::class, SavedTagEntity::class, WorkflowEntity::class, WorkflowRunEntity::class, SmartConnectionEntity::class, ContextTriggerEntity::class],
     version = AppDatabase.VERSION,
     exportSchema = true,
 )
@@ -21,13 +21,15 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun savedTagDao(): SavedTagDao
     abstract fun workflowDao(): WorkflowDao
+    abstract fun smartHomeDao(): SmartHomeDao
+    abstract fun contextTriggerDao(): ContextTriggerDao
 
     companion object {
         const val NAME = "tapandgo.db"
-        const val VERSION = 6
+        const val VERSION = 7
 
         /** All migrations, in order. Shared with migration tests. */
-        val MIGRATIONS = arrayOf<androidx.room.migration.Migration>(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+        val MIGRATIONS = arrayOf<androidx.room.migration.Migration>(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
 
         fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context, AppDatabase::class.java, NAME)

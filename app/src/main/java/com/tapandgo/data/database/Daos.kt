@@ -231,3 +231,45 @@ interface WorkflowDao {
     @Query("DELETE FROM workflow_runs")
     suspend fun clearRuns()
 }
+
+@Dao
+interface SmartHomeDao {
+    @Query("SELECT * FROM smart_connections ORDER BY name COLLATE NOCASE")
+    fun observeAll(): Flow<List<SmartConnectionEntity>>
+
+    @Query("SELECT * FROM smart_connections ORDER BY name COLLATE NOCASE")
+    suspend fun all(): List<SmartConnectionEntity>
+
+    @Query("SELECT * FROM smart_connections WHERE id = :id")
+    suspend fun byId(id: Long): SmartConnectionEntity?
+
+    @Query("SELECT * FROM smart_connections WHERE name = :name COLLATE NOCASE LIMIT 1")
+    suspend fun byName(name: String): SmartConnectionEntity?
+
+    @Insert
+    suspend fun insert(c: SmartConnectionEntity): Long
+
+    @Update
+    suspend fun update(c: SmartConnectionEntity)
+
+    @Query("DELETE FROM smart_connections WHERE id = :id")
+    suspend fun delete(id: Long)
+}
+
+@Dao
+interface ContextTriggerDao {
+    @Query("SELECT * FROM context_triggers WHERE workflowId = :workflowId ORDER BY id")
+    fun observeFor(workflowId: Long): Flow<List<ContextTriggerEntity>>
+
+    @Query("SELECT * FROM context_triggers WHERE enabled = 1")
+    suspend fun enabled(): List<ContextTriggerEntity>
+
+    @Query("SELECT * FROM context_triggers WHERE id = :id")
+    suspend fun byId(id: Long): ContextTriggerEntity?
+
+    @Insert
+    suspend fun insert(t: ContextTriggerEntity): Long
+
+    @Query("DELETE FROM context_triggers WHERE id = :id")
+    suspend fun delete(id: Long)
+}

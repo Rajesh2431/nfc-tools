@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.DataObject
 import androidx.compose.material.icons.filled.Contactless
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material.icons.filled.Tune
@@ -49,6 +50,7 @@ fun ToolsScreen(
     onPremium: () -> Unit,
     onEmulation: () -> Unit,
     onRoot: () -> Unit,
+    onSmartHome: () -> Unit,
     onSettings: () -> Unit,
     onAbout: () -> Unit,
     modifier: Modifier = Modifier,
@@ -63,6 +65,7 @@ fun ToolsScreen(
         ToolGroup(
             R.string.tools_group_tags,
             listOf(
+                ToolEntry(Icons.Filled.Home, R.string.sh_title, R.string.sh_tools_detail, onSmartHome),
                 ToolEntry(Icons.Filled.CollectionsBookmark, R.string.library_title, R.string.tools_library_detail, onLibrary),
                 ToolEntry(Icons.Filled.Tune, R.string.tools_tag_ops, R.string.tools_tag_ops_detail, onTagOperations),
                 ToolEntry(Icons.Filled.History, R.string.nav_history, R.string.tools_history_detail, onHistory),

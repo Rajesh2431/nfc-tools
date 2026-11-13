@@ -52,6 +52,9 @@ object AppModule {
     @Provides fun taskDao(db: AppDatabase): TaskDao = db.taskDao()
     @Provides fun savedTagDao(db: AppDatabase): com.tapandgo.data.database.SavedTagDao = db.savedTagDao()
     @Provides fun workflowDao(db: AppDatabase): com.tapandgo.data.database.WorkflowDao = db.workflowDao()
+    @Provides fun smartHomeDao(db: AppDatabase): com.tapandgo.data.database.SmartHomeDao = db.smartHomeDao()
+    @Provides fun contextTriggerDao(db: AppDatabase): com.tapandgo.data.database.ContextTriggerDao = db.contextTriggerDao()
+    @Provides @Singleton fun secretBox(): com.tapandgo.core.security.SecretBox = com.tapandgo.core.security.KeystoreSecretBox()
 
     @Provides @Singleton fun settings(@ApplicationContext c: Context) = SettingsRepository(c)
     @Provides @Singleton fun history(dao: ScanDao, s: SettingsRepository) = HistoryRepository(dao, s)

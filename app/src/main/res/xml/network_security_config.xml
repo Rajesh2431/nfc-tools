@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Local smart-home devices (Shelly, Tasmota, WLED, Hue, Home Assistant on the
+     LAN) only speak plain HTTP, so cleartext is permitted at the platform level.
+     The app itself refuses plain HTTP/MQTT to anything that is not a local
+     address (smarthome/LanPolicy.kt); webhooks are HTTPS-only. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
