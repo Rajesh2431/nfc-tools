@@ -27,9 +27,13 @@ class MainActivity : ComponentActivity() {
     /** Trigger token (tag, shortcut, tile, other app) that launched or resumed the app; validated, never executed. */
     private val pendingLaunch = mutableStateOf<com.tapandgo.automation.LaunchRequest?>(null)
 
+    /** tapandgo:// deep link received while running; the nav graph resolves it (screens only, no actions). */
+    private val pendingDeepLink = mutableStateOf<Intent?>(null)
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         launchFrom(intent)?.let { pendingLaunch.value = it }
+        if (intent.action == Intent.ACTION_VIEW && intent.data?.scheme == "tapandgo") pendingDeepLink.value = intent
     }
 
     private fun launchFrom(intent: Intent?): com.tapandgo.automation.LaunchRequest? {
@@ -77,7 +81,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
             TapAndGoTheme(darkTheme = dark, dynamicColor = settings?.dynamicColor ?: false) {
-                TapAndGoApp(pendingLaunch = pendingLaunch.value, onLaunchConsumed = { pendingLaunch.value = null })
+                TapAndGoApp(
+                    pendingLaunch = pendingLaunch.value,
+                    onLaunchConsumed = { pendingLaunch.value = null },
+                    pendingDeepLink = pendingDeepLink.value,
+                    onDeepLinkConsumed = { pendingDeepLink.value = null },
+                )
             }
         }
     }

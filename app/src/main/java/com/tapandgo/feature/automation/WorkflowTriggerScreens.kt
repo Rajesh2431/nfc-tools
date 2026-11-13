@@ -109,6 +109,7 @@ fun WorkflowTriggersScreen(onWriteTag: () -> Unit, onOpenPremium: () -> Unit, mo
     val externalEnabled by vm.externalEnabled.collectAsStateWithLifecycle()
     val tileId by vm.tileWorkflowId.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val res = androidx.compose.ui.platform.LocalResources.current
     var notice by rememberSaveable { mutableStateOf<Int?>(null) }
     var revealToken by rememberSaveable { mutableStateOf(false) }
 
@@ -144,7 +145,7 @@ fun WorkflowTriggersScreen(onWriteTag: () -> Unit, onOpenPremium: () -> Unit, mo
                         val sbm = context.getSystemService(StatusBarManager::class.java)
                         sbm.requestAddTileService(
                             ComponentName(context, WorkflowTileService::class.java),
-                            context.getString(R.string.tile_label),
+                            res.getString(R.string.tile_label),
                             PlatformIcon.createWithResource(context, R.drawable.ic_launcher_monochrome),
                             context.mainExecutor,
                         ) { }

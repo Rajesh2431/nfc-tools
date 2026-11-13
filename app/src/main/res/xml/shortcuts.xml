@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static launcher shortcuts (long-press the app icon). They open screens via deep links. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutId="scan"
+        android:shortcutShortLabel="@string/shortcut_scan">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="tapandgo://read"
+            android:targetClass="com.tapandgo.MainActivity"
+            android:targetPackage="com.tapandgo" />
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutId="write"
+        android:shortcutShortLabel="@string/shortcut_write">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="tapandgo://write"
+            android:targetClass="com.tapandgo.MainActivity"
+            android:targetPackage="com.tapandgo" />
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutId="workflows"
+        android:shortcutShortLabel="@string/shortcut_workflows">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="tapandgo://workflows"
+            android:targetClass="com.tapandgo.MainActivity"
+            android:targetPackage="com.tapandgo" />
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutId="library"
+        android:shortcutShortLabel="@string/shortcut_library">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="tapandgo://library"
+            android:targetClass="com.tapandgo.MainActivity"
+            android:targetPackage="com.tapandgo" />
+    </shortcut>
+</shortcuts>

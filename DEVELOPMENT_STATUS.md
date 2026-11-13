@@ -34,6 +34,10 @@ Resume from the first IN_PROGRESS / NOT_STARTED row of the current phase.
 | 6 | Root Manager UI: connectivity (airplane/data/Wi-Fi/BT/network reset), display (density, resolution, animation scale, brightness), power (reboot targets, power off, restart SystemUI) with confirmation, 7 profiles with per-step SDK checks, console with per-run consent, diagnostics, history | IMPLEMENTED | needs a rooted device for HARDWARE_VERIFIED |
 | 6 | Root workflow actions (airplane, mobile data, Wi-Fi, BT) | IMPLEMENTED | opt-in setting; refused for runs started by other apps |
 | 4 | More actions: dialer, SMS draft, email draft, map, app info, calendar event, HTTPS webhook | TESTED | params tested; intents only (no SMS sending, no CALL_PHONE); INTERNET permission only for webhook |
-| 7 | QS tile, shortcuts, Tasker/intent API, webhooks | NOT_STARTED | |
-| 8 | Hardening, hardware tests, release signing | IN_PROGRESS | see docs/acceptance-v1.md |
+| 7 | External intent API for Tasker/MacroDroid (exported `.ExternalLaunch`, token, global + per-workflow opt-in, confirm unless auto-run) | TESTED | docs/integration-api.md; WorkflowTriggerTest. adb/Tasker run pending |
+| 7 | Quick Settings tile, pinned workflow shortcuts, static launcher shortcuts, `tapandgo://` deep links, HTTPS webhook action | IMPLEMENTED | shortcuts.xml, NavHost deep links; device run pending |
+| 7 | Plugin architecture | IMPLEMENTED (in-app only) | allowlisted ActionRegistry; third-party code/action loading deliberately not supported (security), integration via intent API — see docs/integration-api.md |
+| 8 | Docs: architecture, permissions, integration API, Premium, hardware testing guide, release/signing in README, threat model + privacy updated | IMPLEMENTED | docs/ |
+| 8 | UI smoke test for Premium/Root/NDEF Lab/Emulation/Workflows | IMPLEMENTED | NewToolsSmokeTest written, NOT run (emulator stopped for host memory) |
+| 8 | Hardening, hardware tests, release signing | BLOCKED | needs physical NFC device + tags (docs/hardware-testing.md), a rooted phone, an emulator run for instrumented tests, and your keystore.properties. assembleDebug, 192 unit tests, lintDebug (0 errors) and unsigned R8 assembleRelease pass locally |
 | 8 | GitHub Actions CI (build, unit tests, lint, unsigned release, artifacts) | IMPLEMENTED | .github/workflows/android.yml |

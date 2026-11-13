@@ -36,6 +36,8 @@ class HomeViewModel @Inject constructor(
     tasks: TaskRepository,
     private val settings: SettingsRepository,
     @ApplicationContext context: Context,
+    root: com.tapandgo.root.RootExecutionService,
+    entitlements: com.tapandgo.billing.EntitlementRepository,
 ) : ViewModel() {
     private fun <T> kotlinx.coroutines.flow.Flow<T>.state(initial: T) = stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), initial)
 
@@ -44,6 +46,8 @@ class HomeViewModel @Inject constructor(
     val recentRuns: StateFlow<List<TaskLogEntity>> = tasks.observeLog(5).state(emptyList())
     val profiles: StateFlow<List<StoredProfile>> = tasks.observeProfiles().state(emptyList())
     val layout: StateFlow<DashboardLayout> = settings.dashboard.state(DashboardLayout())
+    val rootStatus: StateFlow<com.tapandgo.root.RootStatus> = root.status
+    val entitlement: StateFlow<com.tapandgo.billing.Entitlement?> = entitlements.entitlement.state(null)
 
     val device = DeviceFacts(
         model = "${Build.MANUFACTURER} ${Build.MODEL}",

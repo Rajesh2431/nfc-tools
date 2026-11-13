@@ -939,4 +939,15 @@
     <string name="note_sms">Opens your SMS app with a draft; Tap &amp; Go never sends messages.</string>
     <string name="note_http">Sends the request to the URL you enter. Values in the body (such as variables) leave the device.</string>
     <string name="note_root">Needs a rooted device, root granted to Tap &amp; Go and “Allow root actions in workflows” in Root Manager.</string>
+
+    <!-- Home indicators, shortcuts -->
+    <string name="home_root">Root</string>
+    <string name="home_root_indicators">Indicators found (not checked)</string>
+    <string name="home_root_none">Not detected</string>
+    <string name="home_premium_active">Active</string>
+    <string name="home_premium_dev">Testing switch (not a purchase)</string>
+    <string name="shortcut_scan">Scan tag</string>
+    <string name="shortcut_write">Write tag</string>
+    <string name="shortcut_workflows">Workflows</string>
+    <string name="shortcut_library">Tag library</string>
 </resources>

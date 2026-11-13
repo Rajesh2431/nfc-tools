@@ -7,24 +7,30 @@ offline-first. Specification: `docs/spec.md`; agent rules: `AGENTS.md`.
 
 ## Features
 
-| Tab | What it does |
+| Area | What it does |
 |---|---|
-| **Read** | Tag type and chip (NTAG213/215/216, Ultralight, ICODE…), technologies, serial number, ATQA/SAK, memory size, NDEF format, size, writable/lockable, decoded records (text, URI, Smart Poster, contact, Wi-Fi, Bluetooth, app launch, task tag, MIME), hex/ASCII views, safe link opening, diagnostics export, APDU console (Advanced mode). |
-| **Write** | Guided records: text, URL, phone, SMS, email, contact (vCard), location, address, Wi-Fi (WSC), Bluetooth (OOB), app launch (AAR), custom MIME. Exact size preview, capacity/read-only checks, overwrite/format confirmation, same-session read-back verification, templates. |
-| **Other** | Copy tag, erase, lock (two confirmations), format blank tags, set/remove NTAG password, raw memory dump. |
-| **Tasks** | App-side profiles of allowlisted actions; scan triggers, task tags (token only), opt-in auto-run for safe actions (ADR 0001), execution log. |
-| **History** | Search, filters, favourites, delete, export. Settings: theme, privacy, retention, advanced mode, backup/import. |
+| **Home** | Customizable dashboard (reorder/hide/pin): NFC status, quick actions, recent scans and runs, profiles, favourites, device info with root and Premium status. |
+| **Read** | Tag type and chip (NTAG213/215/216, Ultralight, ICODE…), technologies, UID when exposed, ATQA/SAK, memory, NDEF format/size/writable/lockable, decoded records (text, URI, Smart Poster, contact, Wi-Fi, Bluetooth, app launch, task tag, MIME, external), hex/ASCII, diagnostics export, save to library. |
+| **Write** | Text, URL, phone, SMS, email, vCard, location, address, Wi-Fi (WSC), Bluetooth (OOB), app launch (AAR), MIME, raw records from NDEF Lab. Exact size preview, capacity checks, confirmation, read-back verification, templates. |
+| **Tag operations** | Copy NDEF (not UID), erase, format, lock (two confirmations), NTAG password set/remove, memory dump. |
+| **Library** | Names, notes, icons, folders, labels, favourites, photos, search/filter/sort, duplicates, compare, restore to tag, CSV/TXT export, encrypted backup. |
+| **Tasks** | Profiles with task tags and opt-in auto-run (ADR 0001); visual **workflows** with if/else-if/else, and/or/not, loops, delays, variables, retries, 30 allowlisted actions, execution history, JSON import/export. |
+| **Triggers** | NFC tag, home-screen shortcut, Quick Settings tile, schedule (WorkManager), other apps via a token-protected intent (ADR 0002, `docs/integration-api.md`). |
+| **Developer** | APDU console, NDEF Lab (hex/TLV decoder, raw record builder, hexdump), HCE NDEF tag emulation. |
+| **Root Manager** | Optional: detection (Magisk/KernelSU/APatch), access check, allowlisted connectivity/display/power commands, profiles, console with consent, diagnostics, history. |
+| **Premium** | Entitlement seam; no billing configured in this build, debug-only testing switch (`docs/premium.md`). |
 
 ## Status
 
-| Milestone | State |
-|---|---|
-| M1 Foundation | Done |
-| M2 Reader · M3 Writer · M4 Persistence · M5 Tasks · M6 Advanced · M7 Hardening | Implemented and tested on JVM + emulator |
-| Hardware validation | **Pending** — see `docs/test-plan.md` |
-| M8 Release | Release build OK; signing needs your `keystore.properties` |
+See `DEVELOPMENT_STATUS.md` for per-feature status. All features build and
+pass JVM tests; **no feature is hardware-verified yet**
+(`docs/hardware-testing.md`). Release signing needs your `keystore.properties`.
 
-Evidence: `docs/acceptance-v1.md`.
+## Documentation
+
+`docs/architecture.md` · `docs/permissions.md` · `docs/integration-api.md` ·
+`docs/premium.md` · `docs/hardware-testing.md` · `docs/privacy.md` ·
+`docs/threat-model.md` · `docs/adr/`
 
 ## Build
 
@@ -35,10 +41,21 @@ and are run locally (`connectedDebugAndroidTest`).
 
 ```bash
 ./gradlew assembleDebug                 # debug APK
-./gradlew testDebugUnitTest             # 138 JVM tests
+./gradlew testDebugUnitTest             # JVM unit tests
 ./gradlew lintDebug
 ./gradlew connectedDebugAndroidTest     # device/emulator tests
 ./gradlew assembleRelease               # signed if keystore.properties exists
 ```
 
 Requires JDK 17 and Android SDK platform 37.
+
+## Release
+
+1. Create a keystore: `keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 4096 -validity 10000 -alias tapandgo`
+2. Add an untracked `keystore.properties` in the project root:
+   `storeFile=release.jks`, `storePassword=…`, `keyAlias=tapandgo`, `keyPassword=…`
+3. `./gradlew assembleRelease` → `app/build/outputs/apk/release/app-release.apk`
+   (R8-minified, resources shrunk). Without the file the APK is unsigned.
+4. Install: `adb install -r app/build/outputs/apk/release/app-release.apk`
+
+Release builds have no development Premium switch.

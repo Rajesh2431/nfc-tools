@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Nfc
+import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PushPin
@@ -106,7 +108,7 @@ fun HomeScreen(actions: HomeActions, modifier: Modifier = Modifier) {
                     DashboardCard.RECENT_RUNS -> RecentRuns(vm)
                     DashboardCard.PROFILES -> Profiles(vm, actions)
                     DashboardCard.FAVORITES -> Favourites(vm, actions)
-                    DashboardCard.DEVICE_INFO -> DeviceInfo(vm.device)
+                    DashboardCard.DEVICE_INFO -> DeviceInfo(vm.device, vm)
                 }
             }
         }
@@ -278,7 +280,9 @@ private fun Favourites(vm: HomeViewModel, a: HomeActions) {
 }
 
 @Composable
-private fun DeviceInfo(d: DeviceFacts) {
+private fun DeviceInfo(d: DeviceFacts, vm: HomeViewModel) {
+    val root by vm.rootStatus.collectAsStateWithLifecycle()
+    val ent by vm.entitlement.collectAsStateWithLifecycle()
     val yes = stringResource(R.string.value_yes)
     val no = stringResource(R.string.value_no)
     SectionCard(stringResource(R.string.home_card_device)) {
@@ -286,6 +290,28 @@ private fun DeviceInfo(d: DeviceFacts) {
         InfoRow(Icons.Filled.PhoneAndroid, stringResource(R.string.home_device_android), "${d.android} (API ${d.sdk})")
         InfoRow(Icons.Filled.Nfc, stringResource(R.string.home_device_nfc), if (d.nfcFeature) yes else no)
         InfoRow(Icons.Filled.Nfc, stringResource(R.string.home_device_hce), if (d.hceFeature) yes else no)
+        InfoRow(
+            Icons.Filled.AdminPanelSettings, stringResource(R.string.home_root),
+            stringResource(
+                when {
+                    root.access == com.tapandgo.root.RootAccess.GRANTED -> R.string.root_granted
+                    root.access == com.tapandgo.root.RootAccess.DENIED -> R.string.root_denied
+                    root.access == com.tapandgo.root.RootAccess.NOT_ROOTED -> R.string.root_unavailable
+                    root.indicators.any -> R.string.home_root_indicators
+                    else -> R.string.home_root_none
+                },
+            ),
+        )
+        InfoRow(
+            Icons.Filled.WorkspacePremium, stringResource(R.string.prem_title),
+            stringResource(
+                when (ent?.source) {
+                    com.tapandgo.billing.EntitlementSource.PLAY_BILLING -> R.string.home_premium_active
+                    com.tapandgo.billing.EntitlementSource.DEVELOPMENT -> R.string.home_premium_dev
+                    else -> R.string.prem_free
+                },
+            ),
+        )
         Text(stringResource(R.string.home_device_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(400.dp))
     }
 }

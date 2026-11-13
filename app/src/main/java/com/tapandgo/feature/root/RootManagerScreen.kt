@@ -33,7 +33,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
@@ -133,7 +132,7 @@ fun RootManagerScreen(modifier: Modifier = Modifier) {
     val rootWorkflows by vm.rootWorkflows.collectAsStateWithLifecycle()
     var confirm by remember { mutableStateOf<Pair<String, () -> Unit>?>(null) }
     val granted = status.access == RootAccess.GRANTED
-    val ctx = LocalContext.current
+    val ctx = androidx.compose.ui.platform.LocalResources.current
 
     fun guarded(cmd: RootCommand) {
         if (cmd.destructive) confirm = ctx.getString(R.string.root_confirm_cmd, cmd.label) to { vm.run(cmd) } else vm.run(cmd)

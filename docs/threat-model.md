@@ -12,3 +12,10 @@
 | Privacy leaks (history, logs, backups, diagnostics) | Payload/UID storage off by default; logs carry no payloads; cloud backup and device transfer excluded; diagnostics exclude payload and UID | `ScanEntryFactoryTest`, `DiagnosticsTest`, `data_extraction_rules.xml` |
 | Untrusted import files | 5 MiB cap, strict schema (unknown keys rejected), version check, per-item validation, insert-only | `ExportCodecTest` |
 | Wi-Fi password on a tag | Shown masked until revealed; warning that anyone reading the tag sees it | UI |
+| Other apps triggering workflows | Exported alias needs global switch + per-workflow opt-in + secret token; source derived from resolved component (cannot claim SHORTCUT); root actions refused for EXTERNAL runs (ADR 0002) | `WorkflowTriggerTest` |
+| Imported workflows running unexpectedly | Imports never carry tokens, auto-run, schedule or external access; strict JSON, allowlisted action ids, size/depth limits | `WorkflowTriggerTest`, `WorkflowEditTest` |
+| Background runs claiming success | Scheduled runs mark screen-opening actions Unsupported | `AndroidActions.start` |
+| Root shell injection / silent root | Allowlisted scripts from constants and range-checked numbers; console only from UI with per-run confirmation; su requested only on user action; 15 s timeout; output redacted; history without output | `RootExecutionTest` |
+| HCE emulating sensitive cards | Only the NDEF AID registered, read-only Type 4 file, writes refused, component disabled until enabled | `Type4EmulatorTest`, `apduservice.xml` |
+| Fake Premium | Single entitlement source; no billing → no purchase; dev switch debug-only and labelled | `Type4EmulatorTest` (resolver) |
+| Webhook data exfiltration | https only, no redirects, no credentials in URL, 16 KB body, user-entered URL, warning in action note | `RootExecutionTest` (params) |

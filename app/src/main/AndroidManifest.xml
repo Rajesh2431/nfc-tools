@@ -81,6 +81,22 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- In-app deep links (open a screen only; never run anything). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tapandgo" />
+                <data android:host="read" />
+                <data android:host="write" />
+                <data android:host="tasks" />
+                <data android:host="workflows" />
+                <data android:host="library" />
+                <data android:host="tools" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
             <!-- Task tags written by this app (external type tapandgo.app:task).
                  The tag holds only a random token; actions stay in the app. -->
             <intent-filter>

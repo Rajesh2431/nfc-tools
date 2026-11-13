@@ -90,7 +90,12 @@ private fun titleFor(route: String?): Int = when {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TapAndGoApp(pendingLaunch: com.tapandgo.automation.LaunchRequest? = null, onLaunchConsumed: () -> Unit = {}) {
+fun TapAndGoApp(
+    pendingLaunch: com.tapandgo.automation.LaunchRequest? = null,
+    onLaunchConsumed: () -> Unit = {},
+    pendingDeepLink: android.content.Intent? = null,
+    onDeepLinkConsumed: () -> Unit = {},
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val route = backStackEntry?.destination?.route
@@ -98,6 +103,13 @@ fun TapAndGoApp(pendingLaunch: com.tapandgo.automation.LaunchRequest? = null, on
     val topLevel = TopLevelDestination.entries.any { it.route == route }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val appViewModel: AppViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
+
+    // tapandgo:// link delivered to the already-running activity (singleTop).
+    LaunchedEffect(pendingDeepLink) {
+        val intent = pendingDeepLink ?: return@LaunchedEffect
+        onDeepLinkConsumed()
+        navController.handleDeepLink(intent)
+    }
 
     // A task tag, shortcut, tile or other app delivered a trigger token.
     LaunchedEffect(pendingLaunch) {
@@ -195,14 +207,14 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                 ),
             )
         }
-        composable(TopLevelDestination.READ.route) {
+        composable(TopLevelDestination.READ.route, deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "tapandgo://read" })) {
             ScanScreen(
                 onRunProfile = { id, auto -> navController.navigate("tasks/run/$id?auto=$auto") },
                 onOpenApdu = { navController.navigate(APDU_ROUTE) },
             )
         }
-        composable(TopLevelDestination.WRITE.route) { WriteScreen() }
-        composable(WORKFLOWS_ROUTE) {
+        composable(TopLevelDestination.WRITE.route, deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "tapandgo://write" })) { WriteScreen() }
+        composable(WORKFLOWS_ROUTE, deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "tapandgo://workflows" })) {
             com.tapandgo.feature.automation.WorkflowsScreen(
                 onEdit = { id -> navController.navigate("tasks/workflows/$id") },
                 onTriggers = { id -> navController.navigate("workflow-triggers/$id") },
@@ -225,7 +237,7 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             ),
         ) { com.tapandgo.feature.automation.WorkflowLaunchScreen(onDone = { navController.popBackStack() }) }
         composable(WORKFLOW_EDIT_ROUTE, arguments = listOf(idArg)) { com.tapandgo.feature.automation.WorkflowEditorScreen(onDone = { navController.popBackStack() }) }
-        composable(TopLevelDestination.TOOLS.route) {
+        composable(TopLevelDestination.TOOLS.route, deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "tapandgo://tools" })) {
             com.tapandgo.feature.tools.ToolsScreen(
                 onTagOperations = { navController.navigate("tools/ops") },
                 onHistory = { navController.navigate(HISTORY_ROUTE) },
@@ -248,7 +260,7 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
         ) { entry ->
             OtherScreen(initialOp = entry.arguments?.getString("op"), restoreId = entry.arguments?.getLong("restore"))
         }
-        composable(LIBRARY_ROUTE) { com.tapandgo.feature.library.LibraryScreen(onOpen = { id -> navController.navigate("tools/library/$id") }) }
+        composable(LIBRARY_ROUTE, deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "tapandgo://library" })) { com.tapandgo.feature.library.LibraryScreen(onOpen = { id -> navController.navigate("tools/library/$id") }) }
         composable(LIBRARY_DETAIL_ROUTE, arguments = listOf(idArg)) {
             com.tapandgo.feature.library.LibraryDetailScreen(
                 onRestore = { id -> navController.navigate("tools/ops?restore=$id") },
@@ -256,7 +268,7 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             )
         }
         composable(ABOUT_ROUTE) { com.tapandgo.feature.tools.AboutScreen() }
-        composable(TopLevelDestination.TASKS.route) {
+        composable(TopLevelDestination.TASKS.route, deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "tapandgo://tasks" })) {
             TasksScreen(
                 onWorkflows = { navController.navigate(WORKFLOWS_ROUTE) },
                 onEdit = { id -> navController.navigate("tasks/edit/$id") },
