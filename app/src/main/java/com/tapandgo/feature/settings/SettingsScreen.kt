@@ -146,6 +146,12 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             }
         }
 
+        Section(stringResource(R.string.wf_title)) {
+            Toggle(stringResource(R.string.settings_external), stringResource(R.string.settings_external_detail), s.allowExternalTriggers) { v ->
+                vm.update { it.copy(allowExternalTriggers = v) }
+            }
+        }
+
         Section(stringResource(R.string.settings_data)) {
             Muted(stringResource(R.string.settings_data_detail))
             OutlinedButton(onClick = { exportPassword = null; exportLauncher.launch("tapandgo-backup.json") }) { Text(stringResource(R.string.settings_export)) }

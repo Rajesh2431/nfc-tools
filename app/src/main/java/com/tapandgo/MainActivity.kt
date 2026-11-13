@@ -24,12 +24,23 @@ class MainActivity : ComponentActivity() {
 
     @javax.inject.Inject lateinit var settingsRepository: com.tapandgo.data.settings.SettingsRepository
 
-    /** Token from a task tag that launched or resumed the app; validated, never executed. */
-    private val pendingToken = mutableStateOf<String?>(null)
+    /** Trigger token (tag, shortcut, tile, other app) that launched or resumed the app; validated, never executed. */
+    private val pendingLaunch = mutableStateOf<com.tapandgo.automation.LaunchRequest?>(null)
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        taskTokenFrom(intent)?.let { pendingToken.value = it }
+        launchFrom(intent)?.let { pendingLaunch.value = it }
+    }
+
+    private fun launchFrom(intent: Intent?): com.tapandgo.automation.LaunchRequest? {
+        if (intent == null) return null
+        taskTokenFrom(intent)?.let { return com.tapandgo.automation.LaunchRequest(it, com.tapandgo.automation.RunSource.NFC_TAG) }
+        return com.tapandgo.automation.WorkflowLaunch.parse(
+            intent.action,
+            intent.component?.className,
+            intent.getStringExtra(com.tapandgo.automation.WorkflowLaunch.EXTRA_TOKEN),
+            intent.getStringExtra(com.tapandgo.automation.WorkflowLaunch.EXTRA_SOURCE),
+        )
     }
 
     /**
@@ -50,7 +61,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val settingsFlow = settingsRepository.settings
-        pendingToken.value = taskTokenFrom(intent)
+        if (savedInstanceState == null) pendingLaunch.value = launchFrom(intent)
         setContent {
             val settings by settingsFlow.collectAsStateWithLifecycle(initialValue = null)
             val dark = when (settings?.theme ?: ThemeMode.SYSTEM) {
@@ -66,7 +77,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             TapAndGoTheme(darkTheme = dark, dynamicColor = settings?.dynamicColor ?: false) {
-                TapAndGoApp(pendingTaskToken = pendingToken.value, onTaskTokenConsumed = { pendingToken.value = null })
+                TapAndGoApp(pendingLaunch = pendingLaunch.value, onLaunchConsumed = { pendingLaunch.value = null })
             }
         }
     }

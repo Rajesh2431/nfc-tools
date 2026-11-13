@@ -30,6 +30,10 @@ data class AppSettings(
     val advancedMode: Boolean = false,
     /** Lets the APDU console send state-changing commands. */
     val allowStateChangingApdu: Boolean = false,
+    /** Lets other apps request workflow runs (each workflow must also opt in). Off by default. */
+    val allowExternalTriggers: Boolean = false,
+    /** Workflow started by the Quick Settings tile; 0 = none chosen. */
+    val tileWorkflowId: Long = 0,
 ) {
     companion object {
         val RETENTION_CHOICES = listOf(0, 30, 90, 365)
@@ -51,6 +55,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val RETENTION = intPreferencesKey("retention_days")
         val ADVANCED = booleanPreferencesKey("advanced_mode")
         val APDU_WRITE = booleanPreferencesKey("allow_state_changing_apdu")
+        val EXTERNAL = booleanPreferencesKey("allow_external_triggers")
+        val TILE = androidx.datastore.preferences.core.longPreferencesKey("tile_workflow_id")
+        val DEV_PREMIUM = booleanPreferencesKey("dev_premium_testing_only")
         val DASH_ORDER = stringPreferencesKey("dashboard_order")
         val DASH_HIDDEN = stringPreferencesKey("dashboard_hidden")
         val DASH_PINNED = stringPreferencesKey("dashboard_pinned")
@@ -68,6 +75,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         }
     }
 
+    /** Testing-only Premium switch (debug builds); read through EntitlementRepository only. */
+    val devPremium: Flow<Boolean> = store.data.map { it[Keys.DEV_PREMIUM] ?: false }
+    suspend fun setDevPremium(on: Boolean) { store.edit { it[Keys.DEV_PREMIUM] = on } }
+
     val settings: Flow<AppSettings> = store.data.map { p ->
         val defaults = AppSettings()
         AppSettings(
@@ -79,6 +90,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             retentionDays = p[Keys.RETENTION]?.takeIf { it in AppSettings.RETENTION_CHOICES } ?: defaults.retentionDays,
             advancedMode = p[Keys.ADVANCED] ?: defaults.advancedMode,
             allowStateChangingApdu = p[Keys.APDU_WRITE] ?: defaults.allowStateChangingApdu,
+            allowExternalTriggers = p[Keys.EXTERNAL] ?: defaults.allowExternalTriggers,
+            tileWorkflowId = p[Keys.TILE] ?: defaults.tileWorkflowId,
         )
     }
 
@@ -96,6 +109,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             p[Keys.ADVANCED] = next.advancedMode
             // State-changing APDUs are only meaningful inside advanced mode.
             p[Keys.APDU_WRITE] = next.allowStateChangingApdu && next.advancedMode
+            p[Keys.EXTERNAL] = next.allowExternalTriggers
+            p[Keys.TILE] = next.tileWorkflowId
         }
     }
 
@@ -108,5 +123,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         retentionDays = p[Keys.RETENTION] ?: 0,
         advancedMode = p[Keys.ADVANCED] ?: false,
         allowStateChangingApdu = p[Keys.APDU_WRITE] ?: false,
+        allowExternalTriggers = p[Keys.EXTERNAL] ?: false,
+        tileWorkflowId = p[Keys.TILE] ?: 0,
     )
 }

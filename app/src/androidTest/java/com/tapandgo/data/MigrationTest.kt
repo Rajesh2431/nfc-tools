@@ -8,6 +8,8 @@ import com.tapandgo.data.database.AppDatabase
 import com.tapandgo.data.database.MIGRATION_1_2
 import com.tapandgo.data.database.MIGRATION_2_3
 import com.tapandgo.data.database.MIGRATION_3_4
+import com.tapandgo.data.database.MIGRATION_4_5
+import com.tapandgo.data.database.MIGRATION_5_6
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -88,8 +90,42 @@ class MigrationTest {
     }
 
     @Test
+    fun migrate4To5AddsEmptyWorkflowTables() = runTest {
+        helper.createDatabase(dbName, 4).apply {
+            execSQL("INSERT INTO templates (name, description, recordsJson, createdAt, updatedAt) VALUES ('t', '', '[]', 1, 1)")
+            close()
+        }
+        helper.runMigrationsAndValidate(dbName, 5, true, MIGRATION_4_5).close()
+    }
+
+    @Test
+    fun migrate5To6KeepsWorkflowsWithTriggersOff() = runTest {
+        helper.createDatabase(dbName, 5).apply {
+            execSQL(
+                "INSERT INTO workflows (name, description, icon, category, workflowJson, createdAt, updatedAt) " +
+                    "VALUES ('w', '', 'BOLT', '', '{\"name\":\"w\",\"blocks\":[]}', 1, 1)",
+            )
+            execSQL("INSERT INTO workflow_runs (workflowId, workflowName, startTime, endTime, status, errorMessage, detailsJson) VALUES (1, 'w', 1, 2, 'SUCCESS', NULL, '[]')")
+            close()
+        }
+        helper.runMigrationsAndValidate(dbName, 6, true, MIGRATION_5_6).close()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val db = Room.databaseBuilder(context, AppDatabase::class.java, dbName).addMigrations(*AppDatabase.MIGRATIONS).build()
+        try {
+            val w = db.workflowDao().all().single()
+            assertEquals(null, w.triggerToken)
+            assertEquals(false, w.autoRun)
+            assertEquals(false, w.allowExternal)
+            assertEquals(0, w.scheduleMinutes)
+            assertEquals(0, db.workflowDao().scheduled().size)
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
     fun everyVersionHasAMigrationPath() {
         helper.createDatabase(dbName, 1).close()
-        helper.runMigrationsAndValidate(dbName, 4, true, *AppDatabase.MIGRATIONS).close()
+        helper.runMigrationsAndValidate(dbName, AppDatabase.VERSION, true, *AppDatabase.MIGRATIONS).close()
     }
 }

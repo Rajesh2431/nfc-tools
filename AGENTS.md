@@ -40,6 +40,8 @@ product scope: `docs/spec.md` (exported from the original specification docx).
    Exception (ADR 0001): a profile the user explicitly marked "run
    automatically" may start when its task-tag token or trigger matches; only
    in-app display and Settings-screen actions skip confirmation.
+   Workflows (ADR 0002) start from a trigger token only as configured by the
+   user: tags confirm unless opted in, other apps need two opt-ins.
 7. Destructive tag operations (overwrite, format, lock) require explicit
    confirmation UI and an explanation that they may be irreversible.
 8. Do not fake results: no mock tag data, no simulated scanner in production

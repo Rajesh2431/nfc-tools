@@ -29,6 +29,9 @@ hilt = "2.60.1"
 hiltNavigationCompose = "1.3.0"
 # Matches the kotlinx-coroutines version resolved transitively by lifecycle 2.11.0.
 coroutines = "1.9.0"
+# WorkManager 2.12.0: scheduled workflow triggers (periodic, min 15 min). Uses default
+# initializer + Hilt EntryPoint in the worker, so no hilt-work dependency.
+work = "2.12.0"
 
 compileSdk = "37"
 minSdk = "26"
@@ -68,4 +71,5 @@ androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version
 androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
+work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }

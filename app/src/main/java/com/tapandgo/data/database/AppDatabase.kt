@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
  */
 @Database(
     entities = [ScanEntryEntity::class, TemplateEntity::class, TaskProfileEntity::class, TaskLogEntity::class, SavedTagEntity::class, WorkflowEntity::class, WorkflowRunEntity::class],
-    version = 5,
+    version = AppDatabase.VERSION,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -24,9 +24,10 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         const val NAME = "tapandgo.db"
+        const val VERSION = 6
 
         /** All migrations, in order. Shared with migration tests. */
-        val MIGRATIONS = arrayOf<androidx.room.migration.Migration>(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+        val MIGRATIONS = arrayOf<androidx.room.migration.Migration>(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
 
         fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context, AppDatabase::class.java, NAME)

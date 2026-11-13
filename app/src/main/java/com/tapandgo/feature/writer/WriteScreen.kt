@@ -244,5 +244,6 @@ fun problemText(problem: RecordProblem): Int = when (problem) {
     RecordProblem.URI_INVALID -> R.string.uri_invalid
     RecordProblem.MIME_INVALID -> R.string.mime_invalid
     RecordProblem.PAYLOAD_TOO_LONG -> R.string.payload_too_long
+    RecordProblem.RAW_INVALID -> R.string.lab_record_rules
     RecordProblem.PAYLOAD_INVALID, RecordProblem.EXTERNAL_TYPE_INVALID -> R.string.form_invalid
 }

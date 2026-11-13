@@ -55,6 +55,11 @@ private const val ABOUT_ROUTE = "tools/about"
 private const val LIBRARY_ROUTE = "tools/library"
 private const val WORKFLOWS_ROUTE = "tasks/workflows"
 private const val WORKFLOW_EDIT_ROUTE = "tasks/workflows/{id}"
+private const val NDEF_LAB_ROUTE = "tools/ndef-lab"
+private const val PREMIUM_ROUTE = "tools/premium"
+private const val EMULATION_ROUTE = "tools/emulation"
+private const val WORKFLOW_TRIGGERS_ROUTE = "workflow-triggers/{id}"
+private const val WORKFLOW_LAUNCH_ROUTE = "workflow-launch?token={token}&source={source}"
 private const val LIBRARY_DETAIL_ROUTE = "tools/library/{id}"
 
 private fun titleFor(route: String?): Int = when {
@@ -62,6 +67,11 @@ private fun titleFor(route: String?): Int = when {
     route.startsWith("read/apdu") -> R.string.apdu_title
     route == WORKFLOWS_ROUTE -> R.string.wf_title
     route == WORKFLOW_EDIT_ROUTE -> R.string.wf_edit_title
+    route == WORKFLOW_TRIGGERS_ROUTE -> R.string.trg_title
+    route == NDEF_LAB_ROUTE -> R.string.lab_title
+    route == PREMIUM_ROUTE -> R.string.prem_title
+    route == EMULATION_ROUTE -> R.string.emu_title
+    route == WORKFLOW_LAUNCH_ROUTE -> R.string.run_title
     route.startsWith("tasks/edit") -> R.string.tasks_edit_title
     route.startsWith("tasks/run") -> R.string.run_title
     route == SETTINGS_ROUTE -> R.string.nav_settings
@@ -78,7 +88,7 @@ private fun titleFor(route: String?): Int = when {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TapAndGoApp(pendingTaskToken: String? = null, onTaskTokenConsumed: () -> Unit = {}) {
+fun TapAndGoApp(pendingLaunch: com.tapandgo.automation.LaunchRequest? = null, onLaunchConsumed: () -> Unit = {}) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val route = backStackEntry?.destination?.route
@@ -87,12 +97,11 @@ fun TapAndGoApp(pendingTaskToken: String? = null, onTaskTokenConsumed: () -> Uni
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val appViewModel: AppViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
 
-    // A task tag scanned while the app was not on screen (NDEF_DISCOVERED intent).
-    LaunchedEffect(pendingTaskToken) {
-        val token = pendingTaskToken ?: return@LaunchedEffect
-        onTaskTokenConsumed()
-        val profile = appViewModel.profileForToken(token)
-        if (profile != null) navController.navigate("tasks/run/${profile.id}?auto=${profile.autoRun}")
+    // A task tag, shortcut, tile or other app delivered a trigger token.
+    LaunchedEffect(pendingLaunch) {
+        val request = pendingLaunch ?: return@LaunchedEffect
+        onLaunchConsumed()
+        navController.navigate(appViewModel.routeFor(request))
     }
 
     fun isSelected(d: TopLevelDestination) = route == d.route || route?.startsWith(d.route + "/") == true
@@ -191,7 +200,28 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             )
         }
         composable(TopLevelDestination.WRITE.route) { WriteScreen() }
-        composable(WORKFLOWS_ROUTE) { com.tapandgo.feature.automation.WorkflowsScreen(onEdit = { id -> navController.navigate("tasks/workflows/$id") }) }
+        composable(WORKFLOWS_ROUTE) {
+            com.tapandgo.feature.automation.WorkflowsScreen(
+                onEdit = { id -> navController.navigate("tasks/workflows/$id") },
+                onTriggers = { id -> navController.navigate("workflow-triggers/$id") },
+                onOpenPremium = { navController.navigate(PREMIUM_ROUTE) },
+            )
+        }
+        composable(WORKFLOW_TRIGGERS_ROUTE, arguments = listOf(idArg)) {
+            com.tapandgo.feature.automation.WorkflowTriggersScreen(onOpenPremium = { navController.navigate(PREMIUM_ROUTE) }, onWriteTag = {
+                navController.navigate(TopLevelDestination.WRITE.route) {
+                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                    launchSingleTop = true
+                }
+            })
+        }
+        composable(
+            WORKFLOW_LAUNCH_ROUTE,
+            arguments = listOf(
+                navArgument("token") { type = NavType.StringType; defaultValue = "" },
+                navArgument("source") { type = NavType.StringType; defaultValue = "EXTERNAL" },
+            ),
+        ) { com.tapandgo.feature.automation.WorkflowLaunchScreen(onDone = { navController.popBackStack() }) }
         composable(WORKFLOW_EDIT_ROUTE, arguments = listOf(idArg)) { com.tapandgo.feature.automation.WorkflowEditorScreen(onDone = { navController.popBackStack() }) }
         composable(TopLevelDestination.TOOLS.route) {
             com.tapandgo.feature.tools.ToolsScreen(
@@ -199,6 +229,9 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                 onHistory = { navController.navigate(HISTORY_ROUTE) },
                 onLibrary = { navController.navigate(LIBRARY_ROUTE) },
                 onDeveloper = { navController.navigate(APDU_ROUTE) },
+                onNdefLab = { navController.navigate(NDEF_LAB_ROUTE) },
+                onPremium = { navController.navigate(PREMIUM_ROUTE) },
+                onEmulation = { navController.navigate(EMULATION_ROUTE) },
                 onSettings = { navController.navigate(SETTINGS_ROUTE) },
                 onAbout = { navController.navigate(ABOUT_ROUTE) },
             )
@@ -247,6 +280,22 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             )
         }
         composable(HISTORY_ROUTE) { HistoryScreen() }
+        composable(NDEF_LAB_ROUTE) {
+            com.tapandgo.feature.premium.PremiumGate(com.tapandgo.billing.PremiumFeature.RAW_NDEF_EDITOR, onOpenPremium = { navController.navigate(PREMIUM_ROUTE) }) {
+                com.tapandgo.feature.advanced.NdefLabScreen(onWrite = {
+                    navController.navigate(TopLevelDestination.WRITE.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                    }
+                })
+            }
+        }
+        composable(PREMIUM_ROUTE) { com.tapandgo.feature.premium.PremiumScreen() }
+        composable(EMULATION_ROUTE) {
+            com.tapandgo.feature.premium.PremiumGate(com.tapandgo.billing.PremiumFeature.NDEF_EMULATION, onOpenPremium = { navController.navigate(PREMIUM_ROUTE) }) {
+                com.tapandgo.feature.emulation.EmulationScreen()
+            }
+        }
         composable(SETTINGS_ROUTE) { SettingsScreen() }
         composable(APDU_ROUTE) { ApduConsoleScreen(onDone = { navController.popBackStack() }) }
     }

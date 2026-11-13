@@ -18,12 +18,44 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class WorkflowsViewModel @Inject constructor(private val repo: WorkflowRepository) : ViewModel() {
+class WorkflowsViewModel @Inject constructor(
+    private val repo: WorkflowRepository,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
+    entitlements: com.tapandgo.billing.EntitlementRepository,
+) : ViewModel() {
+    val premium: StateFlow<Boolean> = entitlements.entitlement.map { it.premium }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    /** Result of the last import/export: null, or a message resource with counts. */
+    private val _transfer = MutableStateFlow<Pair<Int, List<Int>>?>(null)
+    val transfer: StateFlow<Pair<Int, List<Int>>?> = _transfer.asStateFlow()
+    fun dismissTransfer() { _transfer.value = null }
+
+    fun export(target: android.net.Uri) = viewModelScope.launch {
+        val text = repo.exportAll()
+        val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { context.contentResolver.openOutputStream(target, "wt")!!.use { it.write(text.toByteArray()) } }.isSuccess
+        }
+        _transfer.value = (if (ok) com.tapandgo.R.string.wf_export_done else com.tapandgo.R.string.wf_export_failed) to emptyList()
+    }
+
+    fun import(source: android.net.Uri) = viewModelScope.launch {
+        val text = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                context.contentResolver.openInputStream(source)!!.use { input ->
+                    val bytes = input.readNBytesCompat(com.tapandgo.automation.WorkflowTransfer.MAX_BYTES + 1)
+                    if (bytes.size > com.tapandgo.automation.WorkflowTransfer.MAX_BYTES) null else bytes.toString(Charsets.UTF_8)
+                }
+            }.getOrNull()
+        }
+        val r = text?.let { repo.import(it) }
+        _transfer.value = if (r == null) com.tapandgo.R.string.wf_import_invalid to emptyList() else com.tapandgo.R.string.wf_import_done to listOf(r.first, r.second)
+    }
+
     val workflows: StateFlow<List<StoredWorkflow>?> = repo.observeAll().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     val runs: StateFlow<List<WorkflowRunEntity>> = repo.observeRuns(30).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     private val _running = MutableStateFlow<Long?>(null)
@@ -53,6 +85,7 @@ class WorkflowsViewModel @Inject constructor(private val repo: WorkflowRepositor
 @HiltViewModel
 class WorkflowEditorViewModel @Inject constructor(
     private val repo: WorkflowRepository,
+    private val entitlements: com.tapandgo.billing.EntitlementRepository,
     handle: SavedStateHandle,
 ) : ViewModel() {
     private var id: Long = handle.get<Long>("id") ?: 0L
@@ -64,6 +97,9 @@ class WorkflowEditorViewModel @Inject constructor(
     val problem: StateFlow<WorkflowJson.Problem?> = _problem.asStateFlow()
     private val _saved = MutableStateFlow(false)
     val saved: StateFlow<Boolean> = _saved.asStateFlow()
+    private val _limit = MutableStateFlow(false)
+    /** Saving a new workflow was refused by the free limit. */
+    val limit: StateFlow<Boolean> = _limit.asStateFlow()
 
     init {
         if (id != 0L) viewModelScope.launch {
@@ -87,8 +123,23 @@ class WorkflowEditorViewModel @Inject constructor(
         val w = _workflow.value
         WorkflowJson.validate(w, repo.allowedActions)?.let { _problem.value = it; return }
         viewModelScope.launch {
+            if (id == 0L && !entitlements.current().premium && repo.count() >= com.tapandgo.billing.Entitlement.FREE_WORKFLOW_LIMIT) {
+                _problem.value = WorkflowJson.Problem.NAME; _limit.value = true; return@launch
+            }
             val saved = repo.save(id, w, _description.value)
             if (saved == null) _problem.value = WorkflowJson.Problem.NAME else { id = saved; _saved.value = true }
         }
     }
+}
+
+/** Reads at most [limit] bytes (InputStream.readNBytes is API 33). */
+internal fun java.io.InputStream.readNBytesCompat(limit: Int): ByteArray {
+    val out = java.io.ByteArrayOutputStream()
+    val buf = ByteArray(8192)
+    while (out.size() < limit) {
+        val n = read(buf, 0, minOf(buf.size, limit - out.size()))
+        if (n < 0) break
+        out.write(buf, 0, n)
+    }
+    return out.toByteArray()
 }

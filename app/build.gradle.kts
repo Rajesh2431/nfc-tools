@@ -38,7 +38,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Testing-only Premium switch (no Play Billing configured). Never in release.
+            buildConfigField("boolean", "DEV_ENTITLEMENT", "true")
+        }
         release {
+            buildConfigField("boolean", "DEV_ENTITLEMENT", "false")
             signingConfig = signing
             isMinifyEnabled = true
             isShrinkResources = true
@@ -86,6 +91,7 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.datastore.preferences)
+    implementation(libs.work.runtime)
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit4)

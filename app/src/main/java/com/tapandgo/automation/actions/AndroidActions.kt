@@ -34,6 +34,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
 
+/** Coroutine marker for runs without a visible activity (WorkManager schedules). */
+object BackgroundRun : kotlin.coroutines.AbstractCoroutineContextElement(BackgroundRun), kotlin.coroutines.CoroutineContext.Key<BackgroundRun>
+
 /**
  * Allowlisted device actions implemented with public Android APIs only.
  * Restricted operations return [ActionResult.Unsupported] with the reason and
@@ -78,7 +81,15 @@ class AndroidActions @Inject constructor(@ApplicationContext private val context
         )
     }
 
-    private fun start(intent: Intent): ActionResult = try {
+    private suspend fun start(intent: Intent): ActionResult {
+        // Android blocks activity starts from background work; report it instead of "succeeding".
+        if (kotlin.coroutines.coroutineContext[BackgroundRun] != null) {
+            return ActionResult.Unsupported("Android does not allow opening screens from a scheduled run; use a tag, shortcut, tile or the app")
+        }
+        return startNow(intent)
+    }
+
+    private fun startNow(intent: Intent): ActionResult = try {
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         ActionResult.Success()
     } catch (_: ActivityNotFoundException) {

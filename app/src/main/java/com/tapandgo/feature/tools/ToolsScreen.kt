@@ -16,6 +16,9 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.DataObject
+import androidx.compose.material.icons.filled.Contactless
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -41,6 +44,9 @@ fun ToolsScreen(
     onHistory: () -> Unit,
     onLibrary: () -> Unit,
     onDeveloper: () -> Unit,
+    onNdefLab: () -> Unit,
+    onPremium: () -> Unit,
+    onEmulation: () -> Unit,
     onSettings: () -> Unit,
     onAbout: () -> Unit,
     modifier: Modifier = Modifier,
@@ -62,11 +68,16 @@ fun ToolsScreen(
         )
         ToolGroup(
             R.string.tools_group_developer,
-            listOf(ToolEntry(Icons.Filled.Terminal, R.string.tools_developer, R.string.tools_developer_detail, onDeveloper)),
+            listOf(
+                ToolEntry(Icons.Filled.Terminal, R.string.tools_developer, R.string.tools_developer_detail, onDeveloper),
+                ToolEntry(Icons.Filled.DataObject, R.string.lab_title, R.string.lab_tools_detail, onNdefLab),
+                ToolEntry(Icons.Filled.Contactless, R.string.emu_title, R.string.emu_tools_detail, onEmulation),
+            ),
         )
         ToolGroup(
             R.string.tools_group_app,
             listOf(
+                ToolEntry(Icons.Filled.WorkspacePremium, R.string.prem_title, R.string.prem_tools_detail, onPremium),
                 ToolEntry(Icons.Filled.Settings, R.string.nav_settings, R.string.tools_settings_detail, onSettings),
                 ToolEntry(Icons.Filled.Info, R.string.about_title, R.string.tools_about_detail, onAbout),
             ),

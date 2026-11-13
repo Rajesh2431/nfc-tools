@@ -82,6 +82,7 @@ fun WorkflowEditorScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
     val description by vm.description.collectAsStateWithLifecycle()
     val problem by vm.problem.collectAsStateWithLifecycle()
     val saved by vm.saved.collectAsStateWithLifecycle()
+    val limit by vm.limit.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<Editing?>(null) }
     var adding by remember { mutableStateOf<ListRef?>(null) }
     LaunchedEffect(saved) { if (saved) onDone() }
@@ -97,7 +98,8 @@ fun WorkflowEditorScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
             BlockList(wf.blocks, ListRef(), depth = 0, vm = vm, onEdit = { editing = it }, onAdd = { adding = it })
         }
         Text(stringResource(R.string.wf_variables_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        problem?.let { Text(stringResource(problemText(it)), color = MaterialTheme.colorScheme.error) }
+        if (limit) Text(stringResource(R.string.prem_workflow_limit, com.tapandgo.billing.Entitlement.FREE_WORKFLOW_LIMIT), color = MaterialTheme.colorScheme.error)
+        else problem?.let { Text(stringResource(problemText(it)), color = MaterialTheme.colorScheme.error) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = vm::save) { Text(stringResource(R.string.template_save_confirm)) }
             OutlinedButton(onClick = onDone) { Text(stringResource(R.string.writer_cancel)) }

@@ -210,6 +210,15 @@ interface WorkflowDao {
     @Query("DELETE FROM workflows WHERE id = :id")
     suspend fun delete(id: Long)
 
+    @Query("SELECT * FROM workflows WHERE triggerToken = :token LIMIT 1")
+    suspend fun byToken(token: String): WorkflowEntity?
+
+    @Query("SELECT * FROM workflows WHERE scheduleMinutes > 0")
+    suspend fun scheduled(): List<WorkflowEntity>
+
+    @Query("UPDATE workflows SET triggerToken = :token, autoRun = :autoRun, allowExternal = :allowExternal, scheduleMinutes = :scheduleMinutes WHERE id = :id")
+    suspend fun updateTriggers(id: Long, token: String?, autoRun: Boolean, allowExternal: Boolean, scheduleMinutes: Int)
+
     @Insert
     suspend fun insertRun(r: WorkflowRunEntity): Long
 

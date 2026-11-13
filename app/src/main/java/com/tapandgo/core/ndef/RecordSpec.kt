@@ -28,6 +28,9 @@ sealed interface RecordSpec {
     /** NFC Forum external type, e.g. "android.com:pkg" (app launch) or the task-tag token type. */
     data class External(val type: String, val payloadHex: String) : RecordSpec
 
+    /** Developer record: any TNF 0–5 with hex type, id and payload (raw NDEF editor). */
+    data class Raw(val tnf: Int, val typeHex: String, val idHex: String, val payloadHex: String) : RecordSpec
+
     /** TNF_EMPTY record; used only to clear a tag. */
     data object Empty : RecordSpec
 }
@@ -64,8 +67,20 @@ fun RecordSpec.toRawRecord(): RawRecord = when (this) {
         payload = payloadHex.hexToBytesOrNull() ?: ByteArray(0),
     )
 
+    is RecordSpec.Raw -> RawRecord(
+        tnf = tnf,
+        type = typeHex.hexToBytesOrNull() ?: ByteArray(0),
+        payload = payloadHex.hexToBytesOrNull() ?: ByteArray(0),
+        id = idHex.hexToBytesOrNull() ?: ByteArray(0),
+    )
+
     RecordSpec.Empty -> RawRecord(tnf = NdefParser.TNF_EMPTY, type = ByteArray(0), payload = ByteArray(0))
 }
+
+/** Exact raw form of any parsed record, for importing records into the raw editor. */
+fun RawRecord.toRawSpec(): RecordSpec.Raw = RecordSpec.Raw(tnf, type.toHexLower(), id.toHexLower(), payload.toHexLower())
+
+private fun ByteArray.toHexLower(): String = joinToString("") { "%02x".format(it) }
 
 /** Short label for lists and confirmations. */
 fun RecordSpec.describe(max: Int = 40): String = when (this) {
@@ -82,11 +97,12 @@ fun RecordSpec.describe(max: Int = 40): String = when (this) {
         else -> mimeType
     }.take(max)
     is RecordSpec.External -> (payloadHex.hexToBytesOrNull()?.toString(Charsets.US_ASCII) ?: type).take(max)
+    is RecordSpec.Raw -> "TNF $tnf · ${typeHex.hexToBytesOrNull()?.let { NdefParser.printableType(it) } ?: typeHex} · ${payloadHex.length / 2} B".take(max)
     RecordSpec.Empty -> "empty record"
 }
 
 /** Validation problems; the UI maps each to a localized message. */
-enum class RecordProblem { TEXT_EMPTY, TEXT_TOO_LONG, LANGUAGE_INVALID, URI_INVALID, MIME_INVALID, PAYLOAD_TOO_LONG, PAYLOAD_INVALID, EXTERNAL_TYPE_INVALID }
+enum class RecordProblem { TEXT_EMPTY, TEXT_TOO_LONG, LANGUAGE_INVALID, URI_INVALID, MIME_INVALID, PAYLOAD_TOO_LONG, PAYLOAD_INVALID, EXTERNAL_TYPE_INVALID, RAW_INVALID }
 
 object RecordValidator {
 
@@ -149,6 +165,28 @@ object RecordValidator {
             }
         }
 
+        is RecordSpec.Raw -> validateRaw(spec)
+
         RecordSpec.Empty -> null
+    }
+
+    /**
+     * Structural rules from the NFC Forum NDEF spec: TNF 6 (unchanged) only
+     * appears in chunks and 7 is reserved; empty records carry nothing;
+     * unknown records have no type; the others need one.
+     */
+    private fun validateRaw(r: RecordSpec.Raw): RecordProblem? {
+        val type = r.typeHex.hexToBytesOrNull()
+        val id = r.idHex.hexToBytesOrNull()
+        val payload = r.payloadHex.hexToBytesOrNull()
+        return when {
+            r.tnf !in 0..5 || type == null || id == null || payload == null -> RecordProblem.RAW_INVALID
+            type.size > 255 || id.size > 255 -> RecordProblem.RAW_INVALID
+            payload.size > MAX_PAYLOAD_BYTES -> RecordProblem.PAYLOAD_TOO_LONG
+            r.tnf == NdefParser.TNF_EMPTY && (type.isNotEmpty() || id.isNotEmpty() || payload.isNotEmpty()) -> RecordProblem.RAW_INVALID
+            r.tnf == NdefParser.TNF_UNKNOWN && type.isNotEmpty() -> RecordProblem.RAW_INVALID
+            r.tnf in 1..4 && type.isEmpty() -> RecordProblem.RAW_INVALID
+            else -> null
+        }
     }
 }

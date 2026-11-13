@@ -2,6 +2,7 @@
 
 Statuses: NOT_STARTED · IN_PROGRESS · IMPLEMENTED · TESTED · HARDWARE_VERIFIED · BLOCKED.
 No feature is HARDWARE_VERIFIED yet: no physical NFC test has been recorded.
+Unit tests: 186 passing (2026-11-13). Instrumented tests need an emulator/device run.
 Resume from the first IN_PROGRESS / NOT_STARTED row of the current phase.
 
 | Phase | Feature | Status | Notes / tests |
@@ -17,17 +18,17 @@ Resume from the first IN_PROGRESS / NOT_STARTED row of the current phase.
 | 2 | Encrypted backup (PBKDF2-SHA256 + AES-256-GCM) | TESTED | BackupCryptoTest (found + fixed missing envelope fields) |
 | 3 | Copy/erase/lock/format/NTAG password/memory dump | TESTED | hardware pending |
 | 3 | CSV/TXT export (library), tag comparison | TESTED | CSV formula-injection guard tested |
-| 3 | Raw NDEF editor, hex editor | NOT_STARTED | |
+| 3 | NDEF Lab: hex/TLV decoder, raw record builder (any TNF 0–5, type/id/payload hex), hexdump, import from last tag, write via Writer | TESTED | core/ndef/NdefLab.kt, RecordSpec.Raw + structural validation; NdefLabTest (5). Premium-gated |
 | 4 | Task profiles, allowlisted actions, task tags, opt-in auto-run | TESTED | ADR 0001 |
 | 4 | Workflow engine core: blocks (action/if/else-if/else/repeat/while/delay/set/break/continue/stop), ${VAR} interpolation + masking, and/or/not + comparison operators, step/loop/timeout limits, retries, continue/stop on error, allowlisted action registry | TESTED | automation/engine/*; WorkflowEngineTest (9). Not yet wired to UI, storage or Android actions |
 | 4 | Device actions (flashlight, volume, ringer, brightness, rotation, timeout, alarm, timer, TTS, notification, URL, app, settings panels, share; Wi-Fi/BT → Unsupported on 10+/13+) | IMPLEMENTED | automation/actions/AndroidActions.kt; ActionParamsTest; hardware/device run pending |
 | 4 | Built-in variables (date/time, battery, device, Wi-Fi/BT/network, storage) | IMPLEMENTED | BuiltinVariables.kt; location/SSID not offered (permission) |
 | 4 | Workflow storage (schema v5: workflows + workflow_runs with FK cascade) and execution history | IMPLEMENTED | tree stored as validated JSON instead of separate Action/Condition tables (deliberate: atomic edits, versionable import); MIGRATION_4_5 needs instrumented run |
 | 4 | Visual workflow builder (nested tree, add/edit/reorder/enable/duplicate/delete, condition editor all/any/not) and manual run with result log | IMPLEMENTED | WorkflowEditTest (5); UI test pending |
-| 4 | NFC-tag trigger for workflows, scheduled/shortcut/QS triggers | NOT_STARTED | task tags currently trigger profiles only |
-| 4 | Device actions (flashlight, volume, ringer, brightness, alarm, TTS…) | NOT_STARTED | Wi-Fi/BT toggles need root on Android 10+/13+ |
-| 5 | Premium entitlement abstraction | NOT_STARTED | no fake purchases |
-| 5 | HCE NDEF Type 4 emulation | NOT_STARTED | |
+| 4 | Workflow triggers: NFC tag (token), pinned shortcut, Quick Settings tile, WorkManager schedule (≥15 min), other apps (exported alias + token + 2 opt-ins); launch screen with confirm/auto-run; run source recorded | TESTED | ADR 0002; schema v6 + MIGRATION_5_6 (instrumented test written, not run: emulator stopped); WorkflowTriggerTest (6). Background runs report screen-opening actions as Unsupported. Device run pending |
+| 4 | Workflow import/export (JSON, strict validation, no tokens/triggers) | TESTED | WorkflowTransfer; WorkflowTriggerTest |
+| 5 | Premium entitlement abstraction (BillingProvider seam, NotConfiguredBilling, debug-only DEVELOPMENT entitlement labelled testing-only), comparison screen, gates (workflows > 3, schedule, shortcuts/tile, other apps, emulation, NDEF Lab) | TESTED | billing/Entitlements.kt; resolver test. No Play Billing configured, so release builds cannot unlock Premium (stated in UI). Features that shipped free stay free |
+| 5 | HCE NDEF Type 4 emulation (read-only, NDEF AID only, component disabled until enabled, APDU session log) | TESTED | nfc/hce/*; Type4EmulatorTest (4). Needs HCE-capable phone + reader for HARDWARE_VERIFIED |
 | 6 | Root manager, RootExecutionService (allowlist, timeout) | NOT_STARTED | |
 | 7 | QS tile, shortcuts, Tasker/intent API, webhooks | NOT_STARTED | |
 | 8 | Hardening, hardware tests, release signing | IN_PROGRESS | see docs/acceptance-v1.md |

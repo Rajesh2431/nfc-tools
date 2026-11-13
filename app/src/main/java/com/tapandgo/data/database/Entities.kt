@@ -105,7 +105,7 @@ data class SavedTagEntity(
 )
 
 /** Automation workflow (schema v5). The block tree is validated JSON; never code. */
-@Entity(tableName = "workflows")
+@Entity(tableName = "workflows", indices = [Index(value = ["triggerToken"], unique = true)])
 data class WorkflowEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
@@ -115,6 +115,14 @@ data class WorkflowEntity(
     val workflowJson: String,
     val createdAt: Long,
     val updatedAt: Long,
+    /** v6: random token for tag / shortcut / tile / external triggers; never exported. */
+    val triggerToken: String? = null,
+    /** v6: run without confirmation when a trigger token matches (opt-in, ADR 0002). */
+    @androidx.room.ColumnInfo(defaultValue = "0") val autoRun: Boolean = false,
+    /** v6: other apps may request a run with the token (also needs the global setting). */
+    @androidx.room.ColumnInfo(defaultValue = "0") val allowExternal: Boolean = false,
+    /** v6: periodic background run interval; 0 = off, otherwise >= 15 (WorkManager minimum). */
+    @androidx.room.ColumnInfo(defaultValue = "0") val scheduleMinutes: Int = 0,
 )
 
 /** One execution (schema v5). Details are masked step logs; no parameter values. */
@@ -132,4 +140,6 @@ data class WorkflowRunEntity(
     val status: String,
     val errorMessage: String?,
     val detailsJson: String,
+    /** v6: what started the run (RunSource name). */
+    @androidx.room.ColumnInfo(defaultValue = "MANUAL") val source: String = "MANUAL",
 )

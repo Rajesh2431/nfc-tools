@@ -63,3 +63,15 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_workflow_runs_startTime` ON `workflow_runs` (`startTime`)")
     }
 }
+
+/** v5 → v6: workflow triggers (token, auto-run, external, schedule) and run source. SQL from schemas/6.json. */
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `workflows` ADD COLUMN `triggerToken` TEXT")
+        db.execSQL("ALTER TABLE `workflows` ADD COLUMN `autoRun` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE `workflows` ADD COLUMN `allowExternal` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE `workflows` ADD COLUMN `scheduleMinutes` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_workflows_triggerToken` ON `workflows` (`triggerToken`)")
+        db.execSQL("ALTER TABLE `workflow_runs` ADD COLUMN `source` TEXT NOT NULL DEFAULT 'MANUAL'")
+    }
+}

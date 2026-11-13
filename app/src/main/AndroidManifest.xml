@@ -8,6 +8,10 @@
         android:name="android.hardware.nfc"
         android:required="false" />
 
+    <uses-feature
+        android:name="android.hardware.nfc.hce"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.NFC" />
 
     <!-- Automation actions (normal or user-granted; each action checks before use). -->
@@ -64,6 +68,55 @@
                     android:scheme="vnd.android.nfc" />
             </intent-filter>
         </activity>
+
+        <!-- Shortcut / Quick Settings tile entry point. Not exported: only this
+             app (and the launcher acting for it) can start it. -->
+        <activity-alias
+            android:name=".InternalLaunch"
+            android:exported="false"
+            android:targetActivity=".MainActivity" />
+
+        <!-- Integration API for other apps (Tasker, MacroDroid, …). Untrusted:
+             runs only when the global setting and the workflow both allow it,
+             and only with that workflow's secret token. Never executes
+             commands; it selects an existing, user-built workflow. -->
+        <activity-alias
+            android:name=".ExternalLaunch"
+            android:exported="true"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="com.tapandgo.action.RUN_WORKFLOW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- NDEF tag emulation (HCE). Disabled until the user turns it on. -->
+        <service
+            android:name=".nfc.hce.NdefHceService"
+            android:enabled="false"
+            android:exported="true"
+            android:permission="android.permission.BIND_NFC_SERVICE">
+            <intent-filter>
+                <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.cardemulation.host_apdu_service"
+                android:resource="@xml/apduservice" />
+        </service>
+
+        <service
+            android:name=".automation.WorkflowTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_monochrome"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.ACTIVE_TILE"
+                android:value="false" />
+        </service>
     </application>
 
 </manifest>

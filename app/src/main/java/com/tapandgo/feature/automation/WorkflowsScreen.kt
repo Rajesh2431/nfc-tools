@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -48,7 +49,7 @@ import java.text.DateFormat
 import java.util.Date
 
 @Composable
-fun WorkflowsScreen(onEdit: (Long) -> Unit, modifier: Modifier = Modifier) {
+fun WorkflowsScreen(onEdit: (Long) -> Unit, onTriggers: (Long) -> Unit, onOpenPremium: () -> Unit, modifier: Modifier = Modifier) {
     val vm: WorkflowsViewModel = hiltViewModel()
     val list by vm.workflows.collectAsStateWithLifecycle()
     val runs by vm.runs.collectAsStateWithLifecycle()
@@ -56,13 +57,34 @@ fun WorkflowsScreen(onEdit: (Long) -> Unit, modifier: Modifier = Modifier) {
     val result by vm.result.collectAsStateWithLifecycle()
     var pendingDelete by rememberSaveable { mutableStateOf<Long?>(null) }
     val copy = stringResource(R.string.template_copy_suffix)
+    val transfer by vm.transfer.collectAsStateWithLifecycle()
+    val premium by vm.premium.collectAsStateWithLifecycle()
+    val atLimit = !premium && (list?.size ?: 0) >= com.tapandgo.billing.Entitlement.FREE_WORKFLOW_LIMIT
+    val exportLauncher = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json")) { it?.let(vm::export) }
+    val importLauncher = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { it?.let(vm::import) }
 
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item { Text(stringResource(R.string.wf_intro), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         item {
-            Button(onClick = { onEdit(0) }) {
-                Icon(Icons.Filled.Add, contentDescription = null)
-                Text(stringResource(R.string.wf_new), Modifier.padding(start = 6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Button(onClick = { onEdit(0) }, enabled = !atLimit) {
+                    Icon(Icons.Filled.Add, contentDescription = null)
+                    Text(stringResource(R.string.wf_new), Modifier.padding(start = 6.dp))
+                }
+                TextButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) { Text(stringResource(R.string.wf_import)) }
+                TextButton(onClick = { exportLauncher.launch("tapandgo-workflows.json") }, enabled = !list.isNullOrEmpty()) { Text(stringResource(R.string.wf_export)) }
+            }
+        }
+        if (atLimit) item {
+            MessageCard(title = stringResource(R.string.prem_workflow_limit, com.tapandgo.billing.Entitlement.FREE_WORKFLOW_LIMIT)) {
+                TextButton(onClick = onOpenPremium) { Text(stringResource(R.string.prem_see)) }
+            }
+        }
+        transfer?.let { (res, args) ->
+            item {
+                MessageCard(title = stringResource(res, *args.toTypedArray())) {
+                    TextButton(onClick = vm::dismissTransfer) { Text(stringResource(R.string.writer_done)) }
+                }
             }
         }
         if (list?.isEmpty() == true) item { MessageCard(title = stringResource(R.string.wf_empty), body = stringResource(R.string.wf_empty_detail)) }
@@ -72,6 +94,7 @@ fun WorkflowsScreen(onEdit: (Long) -> Unit, modifier: Modifier = Modifier) {
                     IconBadge(Icons.Filled.AccountTree, container = MaterialTheme.colorScheme.tertiaryContainer, content = MaterialTheme.colorScheme.onTertiaryContainer)
                     Column(Modifier.padding(start = 12.dp).weight(1f)) {
                         Text(w.name, style = MaterialTheme.typography.titleSmall)
+                        triggerSummary(w.triggers)?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary) }
                         Text(
                             if (w.workflow == null) stringResource(R.string.wf_invalid) else w.description.ifBlank { stringResource(R.string.wf_blocks, com.tapandgo.automation.engine.WorkflowEdit.count(w.workflow.blocks)) },
                             style = MaterialTheme.typography.bodySmall,
@@ -83,6 +106,7 @@ fun WorkflowsScreen(onEdit: (Long) -> Unit, modifier: Modifier = Modifier) {
                 }
                 Row(Modifier.padding(start = 8.dp, bottom = 4.dp)) {
                     IconButton(onClick = { onEdit(w.id) }) { Icon(Icons.Filled.Edit, stringResource(R.string.tasks_edit, w.name)) }
+                    IconButton(onClick = { onTriggers(w.id) }) { Icon(Icons.Filled.Bolt, stringResource(R.string.trg_open, w.name)) }
                     IconButton(onClick = { vm.duplicate(w.id, copy) }) { Icon(Icons.Filled.ContentCopy, stringResource(R.string.template_duplicate, w.name)) }
                     IconButton(onClick = { pendingDelete = w.id }) { Icon(Icons.Filled.Delete, stringResource(R.string.template_delete, w.name)) }
                 }
@@ -134,3 +158,14 @@ private fun statusText(s: String): String = stringResource(
         RunStatus.LIMIT_EXCEEDED, null -> R.string.wf_status_limit
     },
 )
+
+@Composable
+private fun triggerSummary(t: com.tapandgo.automation.WorkflowTriggers): String? {
+    val parts = buildList {
+        if (t.token != null) add(stringResource(R.string.trg_badge_tag))
+        if (t.autoRun) add(stringResource(R.string.trg_badge_auto))
+        if (t.scheduleMinutes > 0) add(stringResource(R.string.trg_badge_schedule, t.scheduleMinutes))
+        if (t.allowExternal) add(stringResource(R.string.trg_badge_external))
+    }
+    return parts.takeIf { it.isNotEmpty() }?.joinToString(" · ")
+}

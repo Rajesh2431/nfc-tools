@@ -60,6 +60,8 @@ object AppModule {
     @Provides @Singleton fun backup(db: AppDatabase, s: SettingsRepository, @ApplicationContext c: Context) = BackupService(db, s, c.contentResolver)
     @Provides @Singleton fun tagStore() = CurrentTagStore()
     @Provides @Singleton fun pendingWrite() = PendingWriteStore()
+    @Provides @Singleton fun billing(): com.tapandgo.billing.BillingProvider = com.tapandgo.billing.NotConfiguredBilling()
+    @Provides fun workflowScheduler(s: com.tapandgo.automation.WorkManagerScheduler): com.tapandgo.automation.WorkflowScheduler = s
 
     /** Intents are started with FLAG_ACTIVITY_NEW_TASK, so the application context is valid. */
     @Provides fun performer(@ApplicationContext c: Context): IntentActionPerformer = IntentActionPerformer(c)
