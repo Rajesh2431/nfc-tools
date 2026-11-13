@@ -26,6 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -167,6 +168,10 @@ fun WorkflowTriggersScreen(onWriteTag: () -> Unit, onOpenPremium: () -> Unit, mo
             }
         } }
 
+        SectionCard(stringResource(R.string.ctx_title)) { PremiumGate(PremiumFeature.CONTEXT_TRIGGERS, onOpenPremium) {
+            ContextTriggerSection(vm)
+        } }
+
         SectionCard(stringResource(R.string.trg_external_title)) { PremiumGate(PremiumFeature.EXTERNAL_TRIGGERS, onOpenPremium) {
             Text(stringResource(R.string.trg_external_detail), style = MaterialTheme.typography.bodySmall)
             if (!externalEnabled) {
@@ -202,4 +207,80 @@ private fun SwitchRow(title: String, detail: String?, checked: Boolean, onChange
         }
         Switch(checked, null)
     }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ContextTriggerSection(vm: WorkflowTriggersViewModel) {
+    val list by vm.contextTriggers.collectAsStateWithLifecycle()
+    val problem by vm.contextProblem.collectAsStateWithLifecycle()
+    var refresh by remember { mutableStateOf(0) }
+    val fine = remember(refresh) { vm.contextManager.hasFineLocation() }
+    val background = remember(refresh) { vm.contextManager.hasBackgroundLocation() }
+    val askFine = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()) { refresh++ }
+    val askBackground = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { refresh++ }
+    var type by rememberSaveable { mutableStateOf(com.tapandgo.automation.ContextType.WIFI_CONNECT) }
+    var ssid by rememberSaveable { mutableStateOf("") }
+    var lat by rememberSaveable { mutableStateOf("") }
+    var lng by rememberSaveable { mutableStateOf("") }
+    var radius by rememberSaveable { mutableStateOf("200") }
+
+    Text(stringResource(R.string.ctx_detail), style = MaterialTheme.typography.bodySmall)
+    if (!fine) {
+        Text(stringResource(R.string.ctx_need_location), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        Button(onClick = { askFine.launch(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION)) }) { Text(stringResource(R.string.ctx_allow_location)) }
+    } else if (!background && Build.VERSION.SDK_INT >= 29) {
+        Text(stringResource(R.string.ctx_need_background), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        OutlinedButton(onClick = { askBackground.launch(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) }) { Text(stringResource(R.string.ctx_allow_background)) }
+    }
+    list.forEach { t ->
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                when (t.type) {
+                    "WIFI_CONNECT" -> stringResource(R.string.ctx_wifi_connect) + " “${t.ssid}”"
+                    "WIFI_DISCONNECT" -> stringResource(R.string.ctx_wifi_disconnect) + " “${t.ssid}”"
+                    "AREA_ENTER" -> stringResource(R.string.ctx_area_enter) + " %.5f, %.5f · %d m".format(t.latitude, t.longitude, t.radiusMeters)
+                    else -> stringResource(R.string.ctx_area_exit) + " %.5f, %.5f · %d m".format(t.latitude, t.longitude, t.radiusMeters)
+                },
+                Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
+            )
+            TextButton(onClick = { vm.deleteContext(t.id) }) { Text(stringResource(R.string.writer_remove)) }
+        }
+    }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        com.tapandgo.automation.ContextType.entries.forEach { c ->
+            FilterChip(selected = type == c, onClick = { type = c }, label = {
+                Text(stringResource(when (c) {
+                    com.tapandgo.automation.ContextType.WIFI_CONNECT -> R.string.ctx_wifi_connect
+                    com.tapandgo.automation.ContextType.WIFI_DISCONNECT -> R.string.ctx_wifi_disconnect
+                    com.tapandgo.automation.ContextType.AREA_ENTER -> R.string.ctx_area_enter
+                    com.tapandgo.automation.ContextType.AREA_EXIT -> R.string.ctx_area_exit
+                }))
+            })
+        }
+    }
+    if (type.name.startsWith("WIFI")) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            androidx.compose.material3.OutlinedTextField(ssid, { ssid = it.take(32) }, Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.ctx_ssid)) })
+            TextButton(onClick = { vm.contextManager.currentSsid()?.let { ssid = it } }, enabled = fine) { Text(stringResource(R.string.ctx_current)) }
+        }
+    } else {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            androidx.compose.material3.OutlinedTextField(lat, { lat = it.take(12) }, Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.p_lat)) })
+            androidx.compose.material3.OutlinedTextField(lng, { lng = it.take(12) }, Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.p_lng)) })
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            androidx.compose.material3.OutlinedTextField(radius, { radius = it.filter(Char::isDigit).take(5) }, Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.ctx_radius)) })
+            TextButton(onClick = { vm.contextManager.lastLocation()?.let { (a, b) -> lat = "%.6f".format(java.util.Locale.ROOT, a); lng = "%.6f".format(java.util.Locale.ROOT, b) } }, enabled = fine) { Text(stringResource(R.string.ctx_here)) }
+        }
+    }
+    problem?.let {
+        Text(stringResource(when (it) {
+            com.tapandgo.automation.ContextRules.Problem.SSID -> R.string.ctx_problem_ssid
+            com.tapandgo.automation.ContextRules.Problem.LOCATION -> R.string.ctx_problem_location
+            com.tapandgo.automation.ContextRules.Problem.RADIUS -> R.string.ctx_problem_radius
+        }), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+    }
+    Button(onClick = { vm.addContext(type, ssid, lat.toDoubleOrNull(), lng.toDoubleOrNull(), radius.toIntOrNull()) }, enabled = fine) { Text(stringResource(R.string.ctx_add)) }
+    Text(stringResource(R.string.ctx_limits), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }

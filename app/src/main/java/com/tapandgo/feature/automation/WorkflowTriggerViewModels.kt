@@ -81,9 +81,32 @@ class WorkflowTriggersViewModel @Inject constructor(
     private val repo: WorkflowRepository,
     private val settingsRepo: SettingsRepository,
     private val pending: PendingWriteStore,
+    private val contextDao: com.tapandgo.data.database.ContextTriggerDao,
+    val contextManager: com.tapandgo.automation.ContextTriggerManager,
     handle: SavedStateHandle,
 ) : ViewModel() {
     val id: Long = handle.get<Long>("id") ?: 0L
+    val contextTriggers: StateFlow<List<com.tapandgo.data.database.ContextTriggerEntity>> = contextDao.observeFor(id)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    private val _contextProblem = MutableStateFlow<com.tapandgo.automation.ContextRules.Problem?>(null)
+    val contextProblem: StateFlow<com.tapandgo.automation.ContextRules.Problem?> = _contextProblem.asStateFlow()
+
+    fun addContext(type: com.tapandgo.automation.ContextType, ssid: String?, lat: Double?, lng: Double?, radius: Int?) = viewModelScope.launch {
+        val s = com.tapandgo.automation.ContextRules.normalizeSsid(ssid)
+        com.tapandgo.automation.ContextRules.validate(type, s, lat, lng, radius)?.let { _contextProblem.value = it; return@launch }
+        _contextProblem.value = null
+        val isWifi = type.name.startsWith("WIFI")
+        contextDao.insert(
+            com.tapandgo.data.database.ContextTriggerEntity(
+                workflowId = id, type = type.name, ssid = if (isWifi) s else null,
+                latitude = if (isWifi) null else lat, longitude = if (isWifi) null else lng, radiusMeters = if (isWifi) null else radius,
+                createdAt = System.currentTimeMillis(),
+            ),
+        )
+        contextManager.sync()
+    }
+
+    fun deleteContext(triggerId: Long) = viewModelScope.launch { contextDao.delete(triggerId); contextManager.sync() }
     private val _workflow = MutableStateFlow<StoredWorkflow?>(null)
     val workflow: StateFlow<StoredWorkflow?> = _workflow.asStateFlow()
     private val _missing = MutableStateFlow(false)

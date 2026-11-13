@@ -63,6 +63,14 @@ class WorkflowWorker(context: Context, params: WorkerParameters) : CoroutineWork
         val id = inputData.getLong(KEY_ID, 0L)
         val deps = EntryPointAccessors.fromApplication(applicationContext, Deps::class.java)
         val repo = deps.workflows()
+        val source = inputData.getString(KEY_SOURCE)?.let { runCatching { RunSource.valueOf(it) }.getOrNull() } ?: RunSource.SCHEDULE
+        if (source == RunSource.CONTEXT) {
+            // Wi-Fi / location trigger (Premium, checked again here).
+            if (deps.entitlements().current().allows(com.tapandgo.billing.PremiumFeature.CONTEXT_TRIGGERS) && repo.load(id) != null) {
+                withContext(BackgroundRun) { repo.run(id, RunSource.CONTEXT) }
+            }
+            return Result.success()
+        }
         // Scheduling is Premium; without it the schedule stays saved but nothing runs.
         if (!deps.entitlements().current().allows(com.tapandgo.billing.PremiumFeature.SCHEDULED_WORKFLOWS)) return Result.success()
         val stored = repo.load(id)
@@ -78,5 +86,6 @@ class WorkflowWorker(context: Context, params: WorkerParameters) : CoroutineWork
 
     companion object {
         const val KEY_ID = "workflow_id"
+        const val KEY_SOURCE = "source"
     }
 }

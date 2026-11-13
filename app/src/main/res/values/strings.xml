@@ -1028,4 +1028,26 @@
     <string name="widget_show_detail">Adds a button for this workflow to the Tap &amp; Go home-screen widget (up to 4).</string>
     <string name="widget_full">The widget already shows 4 workflows. Remove one first.</string>
     <string name="sh_tap_toggle">Tap to toggle</string>
+
+    <!-- Context triggers -->
+    <string name="ctx_title">Wi-Fi &amp; location</string>
+    <string name="ctx_detail">Run this workflow when you join or leave a Wi-Fi network or enter or leave an area. Runs in the background: actions that open a screen are reported as unsupported.</string>
+    <string name="ctx_need_location">Needs precise location to read the Wi-Fi name and use areas.</string>
+    <string name="ctx_allow_location">Allow location</string>
+    <string name="ctx_need_background">For triggers while Tap &amp; Go is closed, choose “Allow all the time”.</string>
+    <string name="ctx_allow_background">Allow all the time</string>
+    <string name="ctx_wifi_connect">Join Wi-Fi</string>
+    <string name="ctx_wifi_disconnect">Leave Wi-Fi</string>
+    <string name="ctx_area_enter">Enter area</string>
+    <string name="ctx_area_exit">Leave area</string>
+    <string name="ctx_ssid">Wi-Fi name (SSID)</string>
+    <string name="ctx_current">Current</string>
+    <string name="ctx_radius">Radius (50–10000 m)</string>
+    <string name="ctx_here">Here</string>
+    <string name="ctx_add">Add trigger</string>
+    <string name="ctx_problem_ssid">Enter a Wi-Fi name (up to 32 bytes).</string>
+    <string name="ctx_problem_location">Enter a valid latitude and longitude.</string>
+    <string name="ctx_problem_radius">Radius must be 50–10000 m.</string>
+    <string name="ctx_limits">Android decides when these fire: area triggers can be delayed by minutes, and leaving Wi-Fi is noticed when the phone switches to another network. Locations stay on this device.</string>
+    <string name="prem_row_context">Wi-Fi and location triggers</string>
 </resources>

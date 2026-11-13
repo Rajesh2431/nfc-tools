@@ -63,6 +63,7 @@ private val COMPARISON = listOf(
     Triple(R.string.prem_row_schedule, false, true),
     Triple(R.string.prem_row_shortcuts, false, true),
     Triple(R.string.prem_row_external, false, true),
+    Triple(R.string.prem_row_context, false, true),
     Triple(R.string.prem_row_emulation, false, true),
     Triple(R.string.prem_row_raw, false, true),
 )

@@ -13,6 +13,7 @@ enum class PremiumFeature {
     EXTERNAL_TRIGGERS,
     NDEF_EMULATION,
     RAW_NDEF_EDITOR,
+    CONTEXT_TRIGGERS,
 }
 
 /** Where Premium came from. DEVELOPMENT exists only in debug builds and is labelled as such. */

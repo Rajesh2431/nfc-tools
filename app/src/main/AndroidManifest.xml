@@ -29,6 +29,12 @@
     <!-- Only for the user-configured https webhook workflow action. Tag data
          is never uploaded on its own (docs/privacy.md). -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Wi-Fi name and geofence triggers only (requested in Workflow › Triggers). -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- Re-register geofences and network triggers after a reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- Package visibility for the "Open app" task action: only launcher
          activities are queried (no QUERY_ALL_PACKAGES). -->
@@ -145,6 +151,18 @@
                 android:name="android.nfc.cardemulation.host_apdu_service"
                 android:resource="@xml/apduservice" />
         </service>
+
+        <receiver
+            android:name=".automation.ContextTriggerReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".automation.ContextBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name=".automation.WorkflowWidget"
