@@ -58,6 +58,7 @@ private const val WORKFLOW_EDIT_ROUTE = "tasks/workflows/{id}"
 private const val NDEF_LAB_ROUTE = "tools/ndef-lab"
 private const val PREMIUM_ROUTE = "tools/premium"
 private const val EMULATION_ROUTE = "tools/emulation"
+private const val ROOT_ROUTE = "tools/root"
 private const val WORKFLOW_TRIGGERS_ROUTE = "workflow-triggers/{id}"
 private const val WORKFLOW_LAUNCH_ROUTE = "workflow-launch?token={token}&source={source}"
 private const val LIBRARY_DETAIL_ROUTE = "tools/library/{id}"
@@ -71,6 +72,7 @@ private fun titleFor(route: String?): Int = when {
     route == NDEF_LAB_ROUTE -> R.string.lab_title
     route == PREMIUM_ROUTE -> R.string.prem_title
     route == EMULATION_ROUTE -> R.string.emu_title
+    route == ROOT_ROUTE -> R.string.root_title
     route == WORKFLOW_LAUNCH_ROUTE -> R.string.run_title
     route.startsWith("tasks/edit") -> R.string.tasks_edit_title
     route.startsWith("tasks/run") -> R.string.run_title
@@ -232,6 +234,7 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                 onNdefLab = { navController.navigate(NDEF_LAB_ROUTE) },
                 onPremium = { navController.navigate(PREMIUM_ROUTE) },
                 onEmulation = { navController.navigate(EMULATION_ROUTE) },
+                onRoot = { navController.navigate(ROOT_ROUTE) },
                 onSettings = { navController.navigate(SETTINGS_ROUTE) },
                 onAbout = { navController.navigate(ABOUT_ROUTE) },
             )
@@ -291,6 +294,7 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             }
         }
         composable(PREMIUM_ROUTE) { com.tapandgo.feature.premium.PremiumScreen() }
+        composable(ROOT_ROUTE) { com.tapandgo.feature.root.RootManagerScreen() }
         composable(EMULATION_ROUTE) {
             com.tapandgo.feature.premium.PremiumGate(com.tapandgo.billing.PremiumFeature.NDEF_EMULATION, onOpenPremium = { navController.navigate(PREMIUM_ROUTE) }) {
                 com.tapandgo.feature.emulation.EmulationScreen()

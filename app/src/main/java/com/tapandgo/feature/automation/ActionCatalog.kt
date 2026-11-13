@@ -18,6 +18,15 @@ import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Sms
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Http
+import androidx.compose.material.icons.filled.AirplanemodeActive
+import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.tapandgo.R
 
@@ -53,6 +62,22 @@ object ActionCatalog {
             ParamSpec("panel", R.string.p_panel, listOf("wifi", "internet", "bluetooth", "nfc", "volume", "sound", "display", "location", "hotspot", "write_settings", "dnd_access")),
         )),
         ActionSpec("share.text", R.string.act_share, Icons.Filled.Share, listOf(ParamSpec("text", R.string.p_text))),
+        ActionSpec("phone.dial", R.string.act_dial, Icons.Filled.Call, listOf(ParamSpec("number", R.string.p_number, hint = "+1 555 0100")), R.string.note_dial),
+        ActionSpec("sms.compose", R.string.act_sms, Icons.Filled.Sms, listOf(ParamSpec("number", R.string.p_number), ParamSpec("text", R.string.p_text)), R.string.note_sms),
+        ActionSpec("email.compose", R.string.act_email, Icons.Filled.Email, listOf(ParamSpec("to", R.string.p_to), ParamSpec("subject", R.string.p_title), ParamSpec("text", R.string.p_text))),
+        ActionSpec("map.open", R.string.act_map, Icons.Filled.Map, listOf(ParamSpec("lat", R.string.p_lat), ParamSpec("lng", R.string.p_lng), ParamSpec("query", R.string.p_query))),
+        ActionSpec("app.info", R.string.act_app_info, Icons.Filled.Info, listOf(ParamSpec("package", R.string.p_package, hint = "com.example.app"))),
+        ActionSpec("calendar.event", R.string.act_calendar, Icons.Filled.Event, listOf(ParamSpec("title", R.string.p_title), ParamSpec("in_minutes", R.string.p_in_minutes, hint = "60"))),
+        ActionSpec("http.request", R.string.act_http, Icons.Filled.Http, listOf(
+            ParamSpec("url", R.string.p_url, hint = "https://"),
+            ParamSpec("method", R.string.p_method, listOf("POST", "GET")),
+            ParamSpec("content_type", R.string.p_content_type, listOf("json", "text")),
+            ParamSpec("body", R.string.p_body, hint = "{\"battery\": \"\${BATTERY_LEVEL}\"}"),
+        ), R.string.note_http),
+        ActionSpec("root.airplane", R.string.act_root_airplane, Icons.Filled.AirplanemodeActive, listOf(ParamSpec("state", R.string.p_state, ONOFF)), R.string.note_root),
+        ActionSpec("root.mobile_data", R.string.act_root_data, Icons.Filled.SignalCellularAlt, listOf(ParamSpec("state", R.string.p_state, ONOFF)), R.string.note_root),
+        ActionSpec("root.wifi", R.string.act_root_wifi, Icons.Filled.Wifi, listOf(ParamSpec("state", R.string.p_state, ONOFF)), R.string.note_root),
+        ActionSpec("root.bluetooth", R.string.act_root_bt, Icons.Filled.Bluetooth, listOf(ParamSpec("state", R.string.p_state, ONOFF)), R.string.note_root),
     )
 
     fun byId(id: String) = all.firstOrNull { it.id == id }

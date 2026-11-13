@@ -43,7 +43,11 @@ object BackgroundRun : kotlin.coroutines.AbstractCoroutineContextElement(Backgro
  * the legitimate alternative; nothing reports success it did not achieve.
  */
 @Singleton
-class AndroidActions @Inject constructor(@ApplicationContext private val context: Context) {
+class AndroidActions @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val root: com.tapandgo.root.RootExecutionService,
+    private val settings: com.tapandgo.data.settings.SettingsRepository,
+) {
 
     private val audio get() = context.getSystemService(AudioManager::class.java)
     private val notifications get() = context.getSystemService(NotificationManager::class.java)
@@ -77,6 +81,17 @@ class AndroidActions @Inject constructor(@ApplicationContext private val context
                 "app.launch" to ActionHandler(::launchApp),
                 "settings.open" to ActionHandler(::openSettings),
                 "share.text" to ActionHandler(::shareText),
+                "phone.dial" to ActionHandler(::dial),
+                "sms.compose" to ActionHandler(::smsCompose),
+                "email.compose" to ActionHandler(::emailCompose),
+                "map.open" to ActionHandler(::mapOpen),
+                "app.info" to ActionHandler(::appInfo),
+                "calendar.event" to ActionHandler(::calendarEvent),
+                "http.request" to ActionHandler(::httpRequest),
+                "root.airplane" to ActionHandler { rootSwitch(it) { on -> com.tapandgo.root.RootCommand.Airplane(on) } },
+                "root.mobile_data" to ActionHandler { rootSwitch(it) { on -> com.tapandgo.root.RootCommand.MobileData(on) } },
+                "root.wifi" to ActionHandler { rootSwitch(it) { on -> com.tapandgo.root.RootCommand.Wifi(on) } },
+                "root.bluetooth" to ActionHandler { rootSwitch(it) { on -> com.tapandgo.root.RootCommand.Bluetooth(on) } },
             ),
         )
     }
@@ -299,6 +314,109 @@ class AndroidActions @Inject constructor(@ApplicationContext private val context
         val text = p["text"]?.takeIf { it.isNotBlank() } ?: return ActionResult.Failure("text is empty")
         val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text.take(10_000))
         return start(Intent.createChooser(send, null))
+    }
+
+    private suspend fun dial(p: Map<String, String>): ActionResult {
+        val n = ActionParams.phone(p["number"]) ?: return ActionResult.Failure("invalid phone number")
+        // ACTION_DIAL only opens the dialer; the user places the call (no CALL_PHONE permission).
+        return start(Intent(Intent.ACTION_DIAL, "tel:$n".toUri()))
+    }
+
+    private suspend fun smsCompose(p: Map<String, String>): ActionResult {
+        val n = ActionParams.phone(p["number"]) ?: return ActionResult.Failure("invalid phone number")
+        // Opens the SMS app with a draft; Tap & Go never sends SMS itself.
+        return start(Intent(Intent.ACTION_SENDTO, "smsto:$n".toUri()).putExtra("sms_body", p["text"].orEmpty().take(1000)))
+    }
+
+    private suspend fun emailCompose(p: Map<String, String>): ActionResult {
+        val to = p["to"]?.trim().orEmpty()
+        if (!ActionParams.isEmail(to)) return ActionResult.Failure("invalid email address")
+        return start(
+            Intent(Intent.ACTION_SENDTO, "mailto:".toUri())
+                .putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
+                .putExtra(Intent.EXTRA_SUBJECT, p["subject"].orEmpty().take(200))
+                .putExtra(Intent.EXTRA_TEXT, p["text"].orEmpty().take(5000)),
+        )
+    }
+
+    private suspend fun mapOpen(p: Map<String, String>): ActionResult {
+        val ll = ActionParams.latLng(p["lat"], p["lng"])
+        val q = p["query"]?.trim().orEmpty().take(200)
+        val uri = when {
+            ll != null -> "geo:${ll.first},${ll.second}?q=${ll.first},${ll.second}"
+            q.isNotEmpty() -> "geo:0,0?q=" + android.net.Uri.encode(q)
+            else -> return ActionResult.Failure("give lat/lng or a search query")
+        }
+        return start(Intent(Intent.ACTION_VIEW, uri.toUri()))
+    }
+
+    private suspend fun appInfo(p: Map<String, String>): ActionResult {
+        val pkg = p["package"]?.trim().orEmpty().ifBlank { context.packageName }
+        if (!com.tapandgo.core.ndef.RichRecords.isValidPackage(pkg)) return ActionResult.Failure("invalid package name")
+        return start(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$pkg".toUri()))
+    }
+
+    private suspend fun calendarEvent(p: Map<String, String>): ActionResult {
+        val title = p["title"]?.trim()?.take(200).orEmpty().ifBlank { return ActionResult.Failure("title is empty") }
+        val minutes = p["in_minutes"]?.trim()?.toIntOrNull()?.takeIf { it in 0..525_600 } ?: 0
+        val start = System.currentTimeMillis() + minutes * 60_000L
+        // Opens the calendar's own editor (no calendar permission); the user saves the event.
+        return start(
+            Intent(Intent.ACTION_INSERT).setData(android.provider.CalendarContract.Events.CONTENT_URI)
+                .putExtra(android.provider.CalendarContract.Events.TITLE, title)
+                .putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, start)
+                .putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, start + 3_600_000L),
+        )
+    }
+
+    /** User-configured HTTPS webhook. No redirects, bounded time and size; output is the status code. */
+    private suspend fun httpRequest(p: Map<String, String>): ActionResult = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val req = ActionParams.webhook(p["url"], p["method"], p["body"], p["content_type"]) ?: return@withContext ActionResult.Failure("needs an https:// URL, method GET or POST, body ≤ 16 KB")
+        val conn = try {
+            java.net.URL(req.url).openConnection() as javax.net.ssl.HttpsURLConnection
+        } catch (e: Exception) {
+            return@withContext ActionResult.Failure("invalid URL")
+        }
+        try {
+            conn.instanceFollowRedirects = false
+            conn.connectTimeout = 10_000
+            conn.readTimeout = 10_000
+            conn.requestMethod = req.method
+            conn.setRequestProperty("User-Agent", "TapAndGo-Workflow")
+            if (req.method == "POST") {
+                conn.doOutput = true
+                conn.setRequestProperty("Content-Type", req.contentType)
+                conn.outputStream.use { it.write(req.body.toByteArray()) }
+            }
+            val code = conn.responseCode
+            if (code in 200..299) ActionResult.Success(code.toString()) else ActionResult.Failure("HTTP $code")
+        } catch (e: java.io.IOException) {
+            ActionResult.Failure("network error: ${e.javaClass.simpleName}")
+        } finally {
+            conn.disconnect()
+        }
+    }
+
+    /**
+     * Root radio switches for workflows: only when the user enabled root
+     * workflow actions in Root Manager, never for runs requested by other
+     * apps, and only with real root access (checked, not assumed).
+     */
+    private suspend fun rootSwitch(p: Map<String, String>, make: (Boolean) -> com.tapandgo.root.RootCommand): ActionResult {
+        val on = ActionParams.onOff(p["state"]) ?: return ActionResult.Failure("state must be on or off")
+        if (!settings.current().rootWorkflowActions) return ActionResult.Unsupported("root actions are turned off (Tools › Root Manager)")
+        if (kotlin.coroutines.coroutineContext[com.tapandgo.automation.RunSourceElement]?.source == com.tapandgo.automation.RunSource.EXTERNAL) {
+            return ActionResult.Unsupported("root actions cannot run when another app started the workflow")
+        }
+        if (root.status.value.access != com.tapandgo.root.RootAccess.GRANTED) root.checkAccess()
+        if (root.status.value.access != com.tapandgo.root.RootAccess.GRANTED) return ActionResult.Unsupported("root access not available or denied")
+        val r = root.execute(make(on))
+        return when {
+            r.ok -> ActionResult.Success(if (on) "on" else "off")
+            r.error != null -> ActionResult.Unsupported(r.error)
+            r.timedOut -> ActionResult.Failure("root command timed out")
+            else -> ActionResult.Failure("root command failed (exit ${r.exitCode})")
+        }
     }
 
     companion object {

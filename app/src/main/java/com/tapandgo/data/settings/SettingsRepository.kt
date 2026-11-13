@@ -34,6 +34,8 @@ data class AppSettings(
     val allowExternalTriggers: Boolean = false,
     /** Workflow started by the Quick Settings tile; 0 = none chosen. */
     val tileWorkflowId: Long = 0,
+    /** Workflows may use root radio actions (needs real root). Off by default. */
+    val rootWorkflowActions: Boolean = false,
 ) {
     companion object {
         val RETENTION_CHOICES = listOf(0, 30, 90, 365)
@@ -57,6 +59,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val APDU_WRITE = booleanPreferencesKey("allow_state_changing_apdu")
         val EXTERNAL = booleanPreferencesKey("allow_external_triggers")
         val TILE = androidx.datastore.preferences.core.longPreferencesKey("tile_workflow_id")
+        val ROOT_WF = booleanPreferencesKey("root_workflow_actions")
         val DEV_PREMIUM = booleanPreferencesKey("dev_premium_testing_only")
         val DASH_ORDER = stringPreferencesKey("dashboard_order")
         val DASH_HIDDEN = stringPreferencesKey("dashboard_hidden")
@@ -92,6 +95,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             allowStateChangingApdu = p[Keys.APDU_WRITE] ?: defaults.allowStateChangingApdu,
             allowExternalTriggers = p[Keys.EXTERNAL] ?: defaults.allowExternalTriggers,
             tileWorkflowId = p[Keys.TILE] ?: defaults.tileWorkflowId,
+            rootWorkflowActions = p[Keys.ROOT_WF] ?: defaults.rootWorkflowActions,
         )
     }
 
@@ -111,6 +115,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             p[Keys.APDU_WRITE] = next.allowStateChangingApdu && next.advancedMode
             p[Keys.EXTERNAL] = next.allowExternalTriggers
             p[Keys.TILE] = next.tileWorkflowId
+            p[Keys.ROOT_WF] = next.rootWorkflowActions
         }
     }
 
@@ -125,5 +130,6 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         allowStateChangingApdu = p[Keys.APDU_WRITE] ?: false,
         allowExternalTriggers = p[Keys.EXTERNAL] ?: false,
         tileWorkflowId = p[Keys.TILE] ?: 0,
+        rootWorkflowActions = p[Keys.ROOT_WF] ?: false,
     )
 }

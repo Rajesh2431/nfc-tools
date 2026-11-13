@@ -28,6 +28,11 @@ data class StoredWorkflow(
 /** What started a run. Only SCHEDULE runs without a visible activity. */
 enum class RunSource { MANUAL, NFC_TAG, SHORTCUT, TILE, EXTERNAL, SCHEDULE }
 
+/** Lets actions see who started the run (e.g. root actions refuse EXTERNAL). */
+class RunSourceElement(val source: RunSource) : kotlin.coroutines.AbstractCoroutineContextElement(Key) {
+    companion object Key : kotlin.coroutines.CoroutineContext.Key<RunSourceElement>
+}
+
 /** Trigger configuration kept outside the workflow JSON (tokens are never exported). */
 data class WorkflowTriggers(
     val token: String? = null,
@@ -135,7 +140,7 @@ class WorkflowRepository @Inject constructor(
         val secrets = workflow.variables.filterKeys { it.contains("PASSWORD") || it.contains("SECRET") || it.contains("TOKEN") }.values
         val engine = WorkflowEngine(actions.registry, builtins = { builtins.resolve(it) }, secrets = { secrets })
         val start = now()
-        val result = engine.run(workflow)
+        val result = kotlinx.coroutines.withContext(RunSourceElement(source)) { engine.run(workflow) }
         val details = Json.encodeToString(
             ListSerializer(String.serializer()),
             result.log.map { "${it.path} ${it.actionId} ${it.status}" + (it.detail?.let { d -> ": " + d.take(200) } ?: "") },

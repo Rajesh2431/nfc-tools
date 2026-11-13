@@ -2,7 +2,7 @@
 
 Statuses: NOT_STARTED · IN_PROGRESS · IMPLEMENTED · TESTED · HARDWARE_VERIFIED · BLOCKED.
 No feature is HARDWARE_VERIFIED yet: no physical NFC test has been recorded.
-Unit tests: 186 passing (2026-11-13). Instrumented tests need an emulator/device run.
+Unit tests: 192 passing (2026-11-13). Instrumented tests need an emulator/device run.
 Resume from the first IN_PROGRESS / NOT_STARTED row of the current phase.
 
 | Phase | Feature | Status | Notes / tests |
@@ -29,7 +29,11 @@ Resume from the first IN_PROGRESS / NOT_STARTED row of the current phase.
 | 4 | Workflow import/export (JSON, strict validation, no tokens/triggers) | TESTED | WorkflowTransfer; WorkflowTriggerTest |
 | 5 | Premium entitlement abstraction (BillingProvider seam, NotConfiguredBilling, debug-only DEVELOPMENT entitlement labelled testing-only), comparison screen, gates (workflows > 3, schedule, shortcuts/tile, other apps, emulation, NDEF Lab) | TESTED | billing/Entitlements.kt; resolver test. No Play Billing configured, so release builds cannot unlock Premium (stated in UI). Features that shipped free stay free |
 | 5 | HCE NDEF Type 4 emulation (read-only, NDEF AID only, component disabled until enabled, APDU session log) | TESTED | nfc/hce/*; Type4EmulatorTest (4). Needs HCE-capable phone + reader for HARDWARE_VERIFIED |
-| 6 | Root manager, RootExecutionService (allowlist, timeout) | NOT_STARTED | |
+| 6 | Root detection (su paths, Magisk/KernelSU/APatch packages, test-keys) and access check via `su` (uid=0), implementation + version, SELinux | TESTED | root/RootExecution.kt; RootExecutionTest with fake shell. Never assumes root: no su → NOT_ROOTED, refused grant → DENIED |
+| 6 | RootExecutionService: allowlisted commands built from constants/validated numbers, stdin script, 15 s timeout, exit code + bounded stdout/stderr, redaction, history (category/outcome only) | TESTED | single mutex; not reachable from exported components |
+| 6 | Root Manager UI: connectivity (airplane/data/Wi-Fi/BT/network reset), display (density, resolution, animation scale, brightness), power (reboot targets, power off, restart SystemUI) with confirmation, 7 profiles with per-step SDK checks, console with per-run consent, diagnostics, history | IMPLEMENTED | needs a rooted device for HARDWARE_VERIFIED |
+| 6 | Root workflow actions (airplane, mobile data, Wi-Fi, BT) | IMPLEMENTED | opt-in setting; refused for runs started by other apps |
+| 4 | More actions: dialer, SMS draft, email draft, map, app info, calendar event, HTTPS webhook | TESTED | params tested; intents only (no SMS sending, no CALL_PHONE); INTERNET permission only for webhook |
 | 7 | QS tile, shortcuts, Tasker/intent API, webhooks | NOT_STARTED | |
 | 8 | Hardening, hardware tests, release signing | IN_PROGRESS | see docs/acceptance-v1.md |
 | 8 | GitHub Actions CI (build, unit tests, lint, unsigned release, artifacts) | IMPLEMENTED | .github/workflows/android.yml |

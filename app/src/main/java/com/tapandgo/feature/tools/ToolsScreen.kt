@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.DataObject
 import androidx.compose.material.icons.filled.Contactless
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.HorizontalDivider
@@ -47,6 +48,7 @@ fun ToolsScreen(
     onNdefLab: () -> Unit,
     onPremium: () -> Unit,
     onEmulation: () -> Unit,
+    onRoot: () -> Unit,
     onSettings: () -> Unit,
     onAbout: () -> Unit,
     modifier: Modifier = Modifier,
@@ -72,6 +74,7 @@ fun ToolsScreen(
                 ToolEntry(Icons.Filled.Terminal, R.string.tools_developer, R.string.tools_developer_detail, onDeveloper),
                 ToolEntry(Icons.Filled.DataObject, R.string.lab_title, R.string.lab_tools_detail, onNdefLab),
                 ToolEntry(Icons.Filled.Contactless, R.string.emu_title, R.string.emu_tools_detail, onEmulation),
+                ToolEntry(Icons.Filled.AdminPanelSettings, R.string.root_title, R.string.root_tools_detail, onRoot),
             ),
         )
         ToolGroup(
