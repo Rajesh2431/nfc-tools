@@ -17,11 +17,15 @@ class BackupService(
     private val settings: SettingsRepository,
     private val resolver: ContentResolver,
     private val now: () -> Long = System::currentTimeMillis,
+    /** Allowlisted workflow action ids (validation of exported/imported workflows). */
+    private val allowedActions: () -> Set<String> = { emptySet() },
+    /** How many workflows may still be added (free limit). */
+    private val workflowSlots: suspend () -> Int = { Int.MAX_VALUE },
 ) {
-    enum class Section { HISTORY, TEMPLATES, PROFILES, LIBRARY }
+    enum class Section { HISTORY, TEMPLATES, PROFILES, LIBRARY, WORKFLOWS, SMART_HOME }
 
     sealed interface Outcome {
-        data class Exported(val history: Int, val templates: Int, val profiles: Int, val library: Int = 0, val encrypted: Boolean = false) : Outcome
+        data class Exported(val history: Int, val templates: Int, val profiles: Int, val library: Int = 0, val encrypted: Boolean = false, val workflows: Int = 0, val smartHome: Int = 0) : Outcome
 
         /** The file is encrypted; ask for the password and call import again. */
         data object NeedsPassword : Outcome
@@ -36,11 +40,15 @@ class BackupService(
         val templates = if (Section.TEMPLATES in sections) db.templateDao().all() else emptyList()
         val profiles = if (Section.PROFILES in sections) db.taskDao().allProfiles() else emptyList()
         val library = if (Section.LIBRARY in sections) db.savedTagDao().all() else emptyList()
-        val plain = ExportCodec.encode(history, templates, now(), profiles, library)
+        val workflows = if (Section.WORKFLOWS in sections) db.workflowDao().all().mapNotNull { e ->
+            com.tapandgo.automation.engine.WorkflowJson.decode(e.workflowJson, allowedActions())?.let { com.tapandgo.automation.WorkflowDto(e.description, it) }
+        } else emptyList()
+        val smart = if (Section.SMART_HOME in sections) db.smartHomeDao().all().map { SmartConnectionDto(it.kind, it.name, it.address, it.port, it.useTls, it.username) } else emptyList()
+        val plain = ExportCodec.encode(history, templates, now(), profiles, library, workflows, smart)
         val text = if (password != null) com.tapandgo.core.security.BackupCrypto.encrypt(plain, password) else plain
         resolver.openOutputStream(target, "wt")?.use { it.write(text.toByteArray(Charsets.UTF_8)) }
             ?: throw IOException("no output stream")
-        Outcome.Exported(history.size, templates.size, profiles.size, library.size, encrypted = password != null)
+        Outcome.Exported(history.size, templates.size, profiles.size, library.size, encrypted = password != null, workflows = workflows.size, smartHome = smart.size)
     } catch (_: IOException) {
         Outcome.IoFailed
     } catch (_: SecurityException) {
@@ -70,13 +78,32 @@ class BackupService(
             raw
         }
         val s = settings.current()
-        return when (val r = ExportCodec.decode(text, now(), keepPayload = s.savePayload, keepUid = s.storeUid)) {
+        return when (val r = ExportCodec.decode(text, now(), keepPayload = s.savePayload, keepUid = s.storeUid, allowedActions = allowedActions())) {
             is ImportResult.Ok -> {
                 db.withTransaction {
                     db.scanDao().insertAll(r.bundle.history)
                     db.templateDao().insertAll(r.bundle.templates)
                     db.taskDao().insertProfiles(r.bundle.profiles)
                     db.savedTagDao().insertAll(r.bundle.library)
+                    // Workflows respect the free limit; connections with a taken name are kept as they are.
+                    var slots = workflowSlots()
+                    val t = now()
+                    r.bundle.workflows.forEach { w ->
+                        if (slots-- > 0) db.workflowDao().insert(
+                            com.tapandgo.data.database.WorkflowEntity(
+                                name = w.workflow.name.trim(), description = w.description.trim(),
+                                workflowJson = com.tapandgo.automation.engine.WorkflowJson.encode(w.workflow), createdAt = t, updatedAt = t,
+                            ),
+                        )
+                    }
+                    r.bundle.smartHome.forEach { c ->
+                        if (db.smartHomeDao().byName(c.name.trim()) == null) db.smartHomeDao().insert(
+                            com.tapandgo.data.database.SmartConnectionEntity(
+                                kind = c.kind, name = c.name.trim(), address = c.address.trim(), port = c.port, useTls = c.useTls,
+                                username = c.username.take(100), secretEnc = null, createdAt = t, updatedAt = t,
+                            ),
+                        )
+                    }
                 }
                 Outcome.Imported(r.bundle)
             }

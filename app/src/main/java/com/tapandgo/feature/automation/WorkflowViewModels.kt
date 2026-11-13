@@ -27,8 +27,12 @@ import javax.inject.Inject
 class WorkflowsViewModel @Inject constructor(
     private val repo: WorkflowRepository,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
-    entitlements: com.tapandgo.billing.EntitlementRepository,
+    private val entitlements: com.tapandgo.billing.EntitlementRepository,
 ) : ViewModel() {
+    /** Workflows the free version may still add (Int.MAX_VALUE with Premium). */
+    private suspend fun freeSlots(): Int =
+        if (entitlements.current().premium) Int.MAX_VALUE else (com.tapandgo.billing.Entitlement.FREE_WORKFLOW_LIMIT - repo.count()).coerceAtLeast(0)
+
     val premium: StateFlow<Boolean> = entitlements.entitlement.map { it.premium }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     /** Result of the last import/export: null, or a message resource with counts. */
     private val _transfer = MutableStateFlow<Pair<Int, List<Int>>?>(null)
@@ -52,7 +56,7 @@ class WorkflowsViewModel @Inject constructor(
                 }
             }.getOrNull()
         }
-        val r = text?.let { repo.import(it) }
+        val r = text?.let { repo.import(it, freeSlots()) }
         _transfer.value = if (r == null) com.tapandgo.R.string.wf_import_invalid to emptyList() else com.tapandgo.R.string.wf_import_done to listOf(r.first, r.second)
     }
 
@@ -78,7 +82,10 @@ class WorkflowsViewModel @Inject constructor(
 
     fun dismissResult() { _result.value = null }
     fun delete(id: Long) = viewModelScope.launch { repo.delete(id); com.tapandgo.automation.WorkflowWidget.refresh(context) }
-    fun duplicate(id: Long, suffix: String) = viewModelScope.launch { repo.duplicate(id, suffix) }
+    fun duplicate(id: Long, suffix: String) = viewModelScope.launch {
+        if (freeSlots() <= 0) { _transfer.value = com.tapandgo.R.string.prem_workflow_limit to listOf(com.tapandgo.billing.Entitlement.FREE_WORKFLOW_LIMIT); return@launch }
+        repo.duplicate(id, suffix)
+    }
     fun clearRuns() = viewModelScope.launch { repo.clearRuns() }
 }
 

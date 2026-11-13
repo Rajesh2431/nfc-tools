@@ -107,8 +107,9 @@ class SmartHomeRepository(
 
     suspend fun delete(id: Long) = dao.delete(id)
 
+    /** Workflows refer to connections by name; the in-app screens pass the numeric id. Name wins. */
     private suspend fun entity(nameOrId: String): SmartConnectionEntity? =
-        nameOrId.toLongOrNull()?.let { dao.byId(it) } ?: dao.byName(nameOrId.trim())
+        dao.byName(nameOrId.trim()) ?: nameOrId.trim().toLongOrNull()?.let { dao.byId(it) }
 
     private fun secretOf(e: SmartConnectionEntity): String? = e.secretEnc?.let(box::open)
 

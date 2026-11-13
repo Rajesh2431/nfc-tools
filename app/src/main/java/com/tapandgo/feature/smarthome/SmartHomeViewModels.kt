@@ -103,12 +103,12 @@ class SmartDevicesViewModel @Inject constructor(private val repo: SmartHomeRepos
 
     fun toggle(e: HaEntity) = work { repo.haToggle(id, e).report(); repo.haStates(id).report { _entities.value = it } }
     fun hue(light: String, on: Boolean?, bri: Int? = null) = work { repo.hueSet(id, light, on, bri).report(); repo.hueLights(id).report { _lights.value = it } }
-    fun scene(s: HueScene) = work { repo.hueScene(id.toString(), s.id, s.group ?: "0").report(ok = s.name) }
+    fun scene(s: HueScene) = work { val c = _connection.value ?: return@work; repo.hueScene(c.name, s.id, s.group ?: "0").report(ok = s.name) }
     fun pair() = work { repo.pairHue(id).report(ok = "paired") ; _connection.value = repo.byId(id); if (_connection.value?.hasSecret == true) refreshLights() }
     private suspend fun refreshLights() { repo.hueLights(id).report { _lights.value = it }; repo.hueScenes(id).report { _scenes.value = it } }
     fun device(on: Boolean?, channel: Int = 0, bri: Int? = null) = work { repo.deviceSwitch(id, on, channel, bri).report(ok = "OK") }
     fun publish(topic: String, payload: String, qos: Int, retain: Boolean) = work {
         val c = _connection.value ?: return@work
-        repo.mqttPublish(c.id.toString(), topic, payload, qos, retain).report(ok = "published")
+        repo.mqttPublish(c.name, topic, payload, qos, retain).report(ok = "published")
     }
 }

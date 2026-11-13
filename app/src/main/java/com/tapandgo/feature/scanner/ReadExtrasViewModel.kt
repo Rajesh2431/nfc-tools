@@ -26,7 +26,11 @@ class ReadExtrasViewModel @Inject constructor(
     settings: SettingsRepository,
     private val exporter: DiagnosticsExporter,
     private val library: com.tapandgo.data.library.LibraryRepository,
+    private val workflows: com.tapandgo.automation.WorkflowRepository,
 ) : ViewModel() {
+
+    /** True when [token] belongs to a saved workflow (task tag scanned on the Read screen). */
+    suspend fun isWorkflowToken(token: String): Boolean = workflows.byToken(token)?.workflow != null
 
     sealed interface SaveState {
         data class Duplicates(val names: List<String>) : SaveState

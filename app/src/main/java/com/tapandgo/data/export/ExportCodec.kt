@@ -31,6 +31,10 @@ data class ExportFile(
     val templates: List<TemplateDto> = emptyList(),
     val profiles: List<ProfileDto> = emptyList(),
     val library: List<LibraryDto> = emptyList(),
+    /** Workflows without trigger tokens, auto-run, schedules or external access. */
+    val workflows: List<com.tapandgo.automation.WorkflowDto> = emptyList(),
+    /** Connection settings only; tokens/passwords are never exported. */
+    val smartHome: List<SmartConnectionDto> = emptyList(),
 ) {
     companion object {
         const val FORMAT = "tapandgo-export"
@@ -73,6 +77,16 @@ data class ProfileDto(
 )
 
 @Serializable
+data class SmartConnectionDto(
+    val kind: String,
+    val name: String,
+    val address: String,
+    val port: Int,
+    val useTls: Boolean,
+    val username: String = "",
+)
+
+@Serializable
 data class LibraryDto(
     val name: String,
     val description: String = "",
@@ -103,6 +117,9 @@ data class ImportBundle(
     val skippedProfiles: Int = 0,
     val library: List<SavedTagEntity> = emptyList(),
     val skippedLibrary: Int = 0,
+    val workflows: List<com.tapandgo.automation.WorkflowDto> = emptyList(),
+    val smartHome: List<SmartConnectionDto> = emptyList(),
+    val skippedOther: Int = 0,
 )
 
 sealed interface ImportResult {
@@ -138,6 +155,8 @@ object ExportCodec {
         now: Long,
         profiles: List<TaskProfileEntity> = emptyList(),
         library: List<SavedTagEntity> = emptyList(),
+        workflows: List<com.tapandgo.automation.WorkflowDto> = emptyList(),
+        smartHome: List<SmartConnectionDto> = emptyList(),
     ): String = json.encodeToString(
         ExportFile.serializer(),
         ExportFile(
@@ -146,6 +165,8 @@ object ExportCodec {
             templates = templates.mapNotNull { it.toDto() },
             profiles = profiles.mapNotNull { row -> TaskRepository.toModel(row)?.toDto() },
             library = library.map { it.toDto() },
+            workflows = workflows,
+            smartHome = smartHome,
         ),
     )
 
@@ -153,7 +174,7 @@ object ExportCodec {
      * @param keepPayload/keepUid current privacy settings; imported payloads
      * and UIDs are dropped when the user has not enabled storing them.
      */
-    fun decode(text: String, now: Long, keepPayload: Boolean, keepUid: Boolean): ImportResult {
+    fun decode(text: String, now: Long, keepPayload: Boolean, keepUid: Boolean, allowedActions: Set<String> = emptySet()): ImportResult {
         if (text.toByteArray(Charsets.UTF_8).size > MAX_FILE_BYTES) return ImportResult.TooLarge
         val root = runCatching { Json.parseToJsonElement(text) }.getOrNull() ?: return ImportResult.NotJson
         val obj = root as? kotlinx.serialization.json.JsonObject ?: return ImportResult.WrongFormat
@@ -164,7 +185,8 @@ object ExportCodec {
         if (version != SCHEMA_VERSION) return ImportResult.UnsupportedVersion(version)
         val file = runCatching { json.decodeFromJsonElement(ExportFile.serializer(), root) }.getOrNull()
             ?: return ImportResult.WrongFormat
-        if (file.history.size > MAX_HISTORY || file.templates.size > MAX_TEMPLATES || file.profiles.size > MAX_PROFILES || file.library.size > MAX_HISTORY) {
+        if (file.history.size > MAX_HISTORY || file.templates.size > MAX_TEMPLATES || file.profiles.size > MAX_PROFILES || file.library.size > MAX_HISTORY ||
+            file.workflows.size > MAX_PROFILES || file.smartHome.size > MAX_PROFILES) {
             return ImportResult.TooManyItems
         }
 
@@ -172,11 +194,21 @@ object ExportCodec {
         val templates = file.templates.mapNotNull { it.toEntity(now) }
         val profiles = file.profiles.mapNotNull { it.toEntity(now) }
         val library = file.library.mapNotNull { it.toEntity(now) }
+        // Same checks as the workflow import and connection editor.
+        val workflows = file.workflows.filter { com.tapandgo.automation.engine.WorkflowJson.validate(it.workflow, allowedActions) == null && it.description.length <= 500 }
+        val smart = file.smartHome.filter { d ->
+            val kind = runCatching { com.tapandgo.smarthome.SmartKind.valueOf(d.kind) }.getOrNull() ?: return@filter false
+            com.tapandgo.smarthome.ConnectionValidator.validate(
+                com.tapandgo.smarthome.ConnectionDraft(0, kind, d.name, d.address, d.port, d.useTls, d.username.take(100), secret = null),
+                hasStoredSecret = true,
+            ) == null
+        }
         return ImportResult.Ok(
             ImportBundle(
                 history, templates, file.history.size - history.size, file.templates.size - templates.size,
                 profiles, file.profiles.size - profiles.size,
                 library, file.library.size - library.size,
+                workflows, smart, (file.workflows.size - workflows.size) + (file.smartHome.size - smart.size),
             ),
         )
     }

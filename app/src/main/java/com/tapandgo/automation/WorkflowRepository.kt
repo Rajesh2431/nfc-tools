@@ -118,10 +118,10 @@ class WorkflowRepository @Inject constructor(
     )
 
     /** @return imported and skipped counts, or null if the file is not a workflow export. */
-    suspend fun import(text: String): Pair<Int, Int>? {
+    suspend fun import(text: String, maxNew: Int = Int.MAX_VALUE): Pair<Int, Int>? {
         val parsed = WorkflowTransfer.decode(text, allowedActions) ?: return null
         var n = 0
-        parsed.valid.forEach { if (save(0, it.workflow, it.description) != null) n++ }
+        parsed.valid.forEach { if (n < maxNew && save(0, it.workflow, it.description) != null) n++ }
         return n to (parsed.skipped + parsed.valid.size - n)
     }
 

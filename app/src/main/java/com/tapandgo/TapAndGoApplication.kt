@@ -21,5 +21,7 @@ class TapAndGoApplication : Application() {
         // Wi-Fi/location registrations live in the platform and are lost on process
         // death of some OEM builds; re-register idempotently.
         scope.launch { runCatching { contextTriggers.sync() } }
+        // Widget content depends on workflows and Premium, which may have changed since last run.
+        com.tapandgo.automation.WorkflowWidget.refresh(this)
     }
 }

@@ -227,6 +227,7 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
         composable(TopLevelDestination.READ.route, deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "tapandgo://read" })) {
             ScanScreen(
                 onRunProfile = { id, auto -> navController.navigate("tasks/run/$id?auto=$auto") },
+                onWorkflowTag = { token -> navController.navigate("workflow-launch?token=$token&source=NFC_TAG") },
                 onOpenApdu = { navController.navigate(APDU_ROUTE) },
             )
         }

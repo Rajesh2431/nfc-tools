@@ -58,6 +58,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ScanScreen(
     onRunProfile: (id: Long, autoStarted: Boolean) -> Unit,
+    onWorkflowTag: (token: String) -> Unit = {},
     onOpenApdu: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -90,6 +91,18 @@ fun ScanScreen(
     val snapshot = state.snapshot
     val records = (snapshot?.ndef?.content as? NdefContent.Records)?.records.orEmpty()
     val matching = profiles.mapNotNull { p -> p.profile?.takeIf { TaskValidator.matches(it, records) } }
+
+    // Workflow trigger tag scanned while Read is open: same path as anywhere else in the
+    // app (launch screen applies confirm / auto-run, ADR 0002). Profiles take precedence.
+    // Saved across the back stack so returning to Read does not launch the same scan again.
+    var workflowHandledFor by rememberSaveable { mutableStateOf(-1) }
+    LaunchedEffect(state.scanCount) {
+        if (snapshot == null || matching.isNotEmpty() || workflowHandledFor == state.scanCount) return@LaunchedEffect
+        workflowHandledFor = state.scanCount
+        val token = records.firstOrNull { it.kind == com.tapandgo.core.ndef.RecordKind.TASK }
+            ?.details?.firstOrNull { it.label == com.tapandgo.core.ndef.Detail.Label.TOKEN }?.value ?: return@LaunchedEffect
+        if (extras.isWorkflowToken(token)) onWorkflowTag(token)
+    }
 
     // Opt-in auto-run (ADR 0001): start only when exactly one auto-run profile matches.
     var autoStartedFor by rememberSaveable { mutableStateOf(-1) }

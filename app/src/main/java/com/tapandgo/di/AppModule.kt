@@ -60,7 +60,20 @@ object AppModule {
     @Provides @Singleton fun history(dao: ScanDao, s: SettingsRepository) = HistoryRepository(dao, s)
     @Provides @Singleton fun templates(dao: TemplateDao) = TemplateRepository(dao)
     @Provides @Singleton fun tasks(dao: TaskDao) = TaskRepository(dao)
-    @Provides @Singleton fun backup(db: AppDatabase, s: SettingsRepository, @ApplicationContext c: Context) = BackupService(db, s, c.contentResolver)
+    @Provides @Singleton fun backup(
+        db: AppDatabase,
+        s: SettingsRepository,
+        @ApplicationContext c: Context,
+        actions: dagger.Lazy<com.tapandgo.automation.actions.AndroidActions>,
+        entitlements: com.tapandgo.billing.EntitlementRepository,
+    ) = BackupService(
+        db, s, c.contentResolver,
+        allowedActions = { actions.get().registry.ids },
+        workflowSlots = {
+            if (entitlements.current().premium) Int.MAX_VALUE
+            else (com.tapandgo.billing.Entitlement.FREE_WORKFLOW_LIMIT - db.workflowDao().all().size).coerceAtLeast(0)
+        },
+    )
     @Provides @Singleton fun tagStore() = CurrentTagStore()
     @Provides @Singleton fun pendingWrite() = PendingWriteStore()
     @Provides @Singleton fun billing(): com.tapandgo.billing.BillingProvider = com.tapandgo.billing.NotConfiguredBilling()

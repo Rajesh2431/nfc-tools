@@ -14,7 +14,8 @@ fun BackupMessage(outcome: BackupService.Outcome, onDismiss: () -> Unit) {
     val (title, body, tone) = when (outcome) {
         is BackupService.Outcome.Exported -> Triple(
             stringResource(R.string.export_done),
-            stringResource(R.string.export_done_detail, outcome.history, outcome.templates, outcome.profiles, outcome.library) +
+            stringResource(R.string.export_done_detail, outcome.history, outcome.templates, outcome.profiles, outcome.library) + " " +
+                stringResource(R.string.export_done_more, outcome.workflows, outcome.smartHome) +
                 if (outcome.encrypted) " " + stringResource(R.string.export_encrypted_note) else "",
             Tone.SUCCESS,
         )
@@ -27,8 +28,8 @@ fun BackupMessage(outcome: BackupService.Outcome, onDismiss: () -> Unit) {
                 outcome.bundle.templates.size,
                 outcome.bundle.profiles.size,
                 outcome.bundle.library.size,
-                outcome.bundle.skippedHistory + outcome.bundle.skippedTemplates + outcome.bundle.skippedProfiles + outcome.bundle.skippedLibrary,
-            ),
+                outcome.bundle.skippedHistory + outcome.bundle.skippedTemplates + outcome.bundle.skippedProfiles + outcome.bundle.skippedLibrary + outcome.bundle.skippedOther,
+            ) + " " + stringResource(R.string.import_done_more, outcome.bundle.workflows.size, outcome.bundle.smartHome.size),
             Tone.SUCCESS,
         )
 

@@ -738,7 +738,7 @@
     <string name="wf_export">Export</string>
     <string name="wf_export_done">Workflows exported. Triggers and tokens are not included.</string>
     <string name="wf_export_failed">Could not write the file.</string>
-    <string name="wf_import_done">Imported %1$d workflows, skipped %2$d invalid. Imported workflows have no triggers until you add them.</string>
+    <string name="wf_import_done">Imported %1$d workflows, skipped %2$d (invalid, or over the free limit). Imported workflows have no triggers until you add them.</string>
     <string name="wf_import_invalid">This is not a valid Tap &amp; Go workflow file (or it is larger than 2 MB).</string>
     <string name="trg_title">Triggers</string>
     <string name="trg_open">Triggers for %1$s</string>
@@ -1056,4 +1056,6 @@
     <string name="tpl_intro">Start from a ready-made workflow. Each one is added as your own copy that you can edit, then give it a tag, shortcut, schedule or Wi-Fi/location trigger.</string>
     <string name="tpl_add">Add and edit</string>
     <string name="tpl_needs_connection">Uses the smart-home connection “%1$s” (create it in Tools › Smart home or change the blocks).</string>
+    <string name="export_done_more">Workflows: %1$d, smart-home connections: %2$d (tokens, passwords and triggers are not included).</string>
+    <string name="import_done_more">Workflows: %1$d (up to the free limit, without triggers), smart-home connections: %2$d (enter their tokens/passwords again; names already in use were skipped).</string>
 </resources>
