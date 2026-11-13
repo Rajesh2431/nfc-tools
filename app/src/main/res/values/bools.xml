@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Device Controls exist from Android 11 (API 30). -->
+    <bool name="controls_enabled">false</bool>
+</resources>

@@ -49,7 +49,7 @@ import java.text.DateFormat
 import java.util.Date
 
 @Composable
-fun WorkflowsScreen(onEdit: (Long) -> Unit, onTriggers: (Long) -> Unit, onOpenPremium: () -> Unit, modifier: Modifier = Modifier) {
+fun WorkflowsScreen(onEdit: (Long) -> Unit, onTriggers: (Long) -> Unit, onOpenPremium: () -> Unit, onTemplates: () -> Unit, modifier: Modifier = Modifier) {
     val vm: WorkflowsViewModel = hiltViewModel()
     val list by vm.workflows.collectAsStateWithLifecycle()
     val runs by vm.runs.collectAsStateWithLifecycle()
@@ -71,6 +71,7 @@ fun WorkflowsScreen(onEdit: (Long) -> Unit, onTriggers: (Long) -> Unit, onOpenPr
                     Icon(Icons.Filled.Add, contentDescription = null)
                     Text(stringResource(R.string.wf_new), Modifier.padding(start = 6.dp))
                 }
+                TextButton(onClick = onTemplates) { Text(stringResource(R.string.tpl_title)) }
                 TextButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) { Text(stringResource(R.string.wf_import)) }
                 TextButton(onClick = { exportLauncher.launch("tapandgo-workflows.json") }, enabled = !list.isNullOrEmpty()) { Text(stringResource(R.string.wf_export)) }
             }

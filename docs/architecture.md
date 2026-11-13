@@ -18,6 +18,7 @@ com.tapandgo
 │   ├── engine/    Workflow model, WorkflowEngine, conditions, variables, edit ops, JSON
 │   ├── actions/   AndroidActions (allowlisted registry), params, built-in variables
 │   └── *.kt       WorkflowRepository, triggers (launch policy, scheduler, tile, shortcuts), transfer
+├── smarthome/    LanPolicy, HTTP transport, HA/Hue/HTTP-device/MQTT clients, repository, Device Controls
 ├── root/          RootExecutionService (su, allowlist, timeouts), commands, profiles, diagnostics
 ├── billing/       Entitlement seam (BillingProvider, resolver, repository)
 ├── feature/*      Compose screens + Hilt view models per feature
@@ -52,6 +53,7 @@ Platform-dependent parts sit behind interfaces (`TagGateway`, `ShellRunner`,
 | 4 | tag library |
 | 5 | workflows, workflow runs |
 | 6 | workflow triggers (token, auto-run, external, schedule), run source |
+| 7 | smart-home connections, Wi-Fi/location triggers |
 
 The workflow block tree is stored as validated JSON (`WorkflowJson`) instead
 of separate action/condition/variable tables: edits are atomic, imports are

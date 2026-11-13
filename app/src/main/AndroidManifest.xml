@@ -179,7 +179,9 @@
         <!-- Android 11+ Device Controls (power menu / Quick Settings device panel). -->
         <service
             android:name=".smarthome.TapAndGoControlsService"
+            android:enabled="@bool/controls_enabled"
             android:exported="true"
+            tools:targetApi="30"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_CONTROLS">
             <intent-filter>

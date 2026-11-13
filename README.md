@@ -18,6 +18,8 @@ offline-first. Specification: `docs/spec.md`; agent rules: `AGENTS.md`.
 | **Triggers** | NFC tag, home-screen shortcut, Quick Settings tile, schedule (WorkManager), other apps via a token-protected intent (ADR 0002, `docs/integration-api.md`). |
 | **Developer** | APDU console, NDEF Lab (hex/TLV decoder, raw record builder, hexdump), HCE NDEF tag emulation. |
 | **Root Manager** | Optional: detection (Magisk/KernelSU/APatch), access check, allowlisted connectivity/display/power commands, profiles, console with consent, diagnostics, history. |
+| **Smart home** | Home Assistant, MQTT, Philips Hue, Shelly, Tasmota, WLED: control in-app, from workflows, Android Device Controls and the home-screen widget (`docs/smart-home.md`). |
+| **More triggers** | Wi-Fi join/leave, area enter/leave, widget buttons, device-control buttons; 10 workflow templates. |
 | **Premium** | Entitlement seam; no billing configured in this build, debug-only testing switch (`docs/premium.md`). |
 
 ## Status
@@ -28,7 +30,7 @@ pass JVM tests; **no feature is hardware-verified yet**
 
 ## Documentation
 
-`docs/architecture.md` · `docs/permissions.md` · `docs/integration-api.md` ·
+`docs/architecture.md` · `docs/smart-home.md` · `docs/permissions.md` · `docs/integration-api.md` ·
 `docs/premium.md` · `docs/hardware-testing.md` · `docs/privacy.md` ·
 `docs/threat-model.md` · `docs/adr/`
 

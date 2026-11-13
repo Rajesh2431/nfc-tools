@@ -19,3 +19,6 @@
 | HCE emulating sensitive cards | Only the NDEF AID registered, read-only Type 4 file, writes refused, component disabled until enabled | `Type4EmulatorTest`, `apduservice.xml` |
 | Fake Premium | Single entitlement source; no billing → no purchase; dev switch debug-only and labelled | `Type4EmulatorTest` (resolver) |
 | Webhook data exfiltration | https only, no redirects, no credentials in URL, 16 KB body, user-entered URL, warning in action note | `RootExecutionTest` (params) |
+| Smart-home credentials theft | Keystore AES-GCM secrets, never exported/logged; plain HTTP/MQTT refused for non-LAN hosts; no redirects; response caps | `SmartHomeTest` |
+| Malicious control ids / device responses | Ids parsed against strict patterns; JSON parsed defensively; errors shown, not guessed state | `ControlIdsTest`, `SmartHomeTest` |
+| Background triggers doing hidden UI work | CONTEXT/DEVICE_CONTROL runs marked background; screen-opening actions Unsupported | `ContextRulesTest`, `AndroidActions.start` |

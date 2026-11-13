@@ -1050,4 +1050,10 @@
     <string name="ctx_problem_radius">Radius must be 50–10000 m.</string>
     <string name="ctx_limits">Android decides when these fire: area triggers can be delayed by minutes, and leaving Wi-Fi is noticed when the phone switches to another network. Locations stay on this device.</string>
     <string name="prem_row_context">Wi-Fi and location triggers</string>
+
+    <!-- Templates -->
+    <string name="tpl_title">Templates</string>
+    <string name="tpl_intro">Start from a ready-made workflow. Each one is added as your own copy that you can edit, then give it a tag, shortcut, schedule or Wi-Fi/location trigger.</string>
+    <string name="tpl_add">Add and edit</string>
+    <string name="tpl_needs_connection">Uses the smart-home connection “%1$s” (create it in Tools › Smart home or change the blocks).</string>
 </resources>

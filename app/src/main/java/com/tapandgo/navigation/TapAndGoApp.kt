@@ -61,6 +61,7 @@ private const val PREMIUM_ROUTE = "tools/premium"
 private const val EMULATION_ROUTE = "tools/emulation"
 private const val ROOT_ROUTE = "tools/root"
 private const val SMART_ROUTE = "tools/smarthome"
+private const val TEMPLATES_ROUTE = "workflow-templates"
 private const val SMART_DEVICES_ROUTE = "tools/smarthome/{id}"
 private const val WORKFLOW_TRIGGERS_ROUTE = "workflow-triggers/{id}"
 private const val WORKFLOW_LAUNCH_ROUTE = "workflow-launch?token={token}&source={source}"
@@ -77,6 +78,7 @@ private fun titleFor(route: String?): Int = when {
     route == EMULATION_ROUTE -> R.string.emu_title
     route == ROOT_ROUTE -> R.string.root_title
     route == SMART_ROUTE || route == SMART_DEVICES_ROUTE -> R.string.sh_title
+    route == TEMPLATES_ROUTE -> R.string.tpl_title
     route == WORKFLOW_LAUNCH_ROUTE -> R.string.run_title
     route.startsWith("tasks/edit") -> R.string.tasks_edit_title
     route.startsWith("tasks/run") -> R.string.run_title
@@ -233,6 +235,13 @@ private fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             com.tapandgo.feature.automation.WorkflowsScreen(
                 onEdit = { id -> navController.navigate("tasks/workflows/$id") },
                 onTriggers = { id -> navController.navigate("workflow-triggers/$id") },
+                onOpenPremium = { navController.navigate(PREMIUM_ROUTE) },
+                onTemplates = { navController.navigate(TEMPLATES_ROUTE) },
+            )
+        }
+        composable(TEMPLATES_ROUTE) {
+            com.tapandgo.feature.automation.TemplatesScreen(
+                onAdded = { id -> navController.navigate("tasks/workflows/$id") { popUpTo(WORKFLOWS_ROUTE) } },
                 onOpenPremium = { navController.navigate(PREMIUM_ROUTE) },
             )
         }
